@@ -1,0 +1,3 @@
+(globalThis.TURBOPACK=globalThis.TURBOPACK||[]).push(["object"==typeof document?document.currentScript:void 0,{35016:e=>{"use strict";var{g:t,__dirname:n}=e;e.s({useMobile:()=>r});var i=e.i(38653);function r(e=768){let[t,n]=(0,i.useState)(!1);return(0,i.useEffect)(()=>{let t=()=>n(window.innerWidth<e);t();let i=window.matchMedia(`(max-width: ${e-1}px)`);return i.addEventListener("change",t),()=>i.removeEventListener("change",t)},[e]),t}}}]);
+
+//# sourceMappingURL=bca0e14ee2c40d6c.js.map
