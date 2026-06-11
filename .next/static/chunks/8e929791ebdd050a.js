@@ -1,3 +1,0 @@
-(globalThis.TURBOPACK=globalThis.TURBOPACK||[]).push(["object"==typeof document?document.currentScript:void 0,{74860:a=>{var{g:s,__dirname:t}=a;a.v(s=>Promise.all(["static/chunks/d6ea86a34b819f0d.js"].map(s=>a.l(s))).then(()=>s(59197)))},65182:a=>{var{g:s,__dirname:t}=a;a.v(s=>Promise.all(["static/chunks/1df50504707e432f.js","static/chunks/fb74a8e66dbfbf62.js"].map(s=>a.l(s))).then(()=>s(82224)))}}]);
-
-//# sourceMappingURL=8e877058416cc7cc.js.map
