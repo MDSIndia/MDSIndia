@@ -17,6 +17,7 @@ export function FinalSection() {
         }}
       />
 
+
       {/* Vignette edges */}
       <div
         className="absolute inset-0 pointer-events-none"
