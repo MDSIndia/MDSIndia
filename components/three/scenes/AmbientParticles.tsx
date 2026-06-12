@@ -28,6 +28,18 @@ export function AmbientParticles() {
     return geo;
   }, [positions]);
 
+  const circleTexture = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 32;
+    canvas.height = 32;
+    const ctx = canvas.getContext("2d")!;
+    ctx.beginPath();
+    ctx.arc(16, 16, 16, 0, Math.PI * 2);
+    ctx.fillStyle = "white";
+    ctx.fill();
+    return new THREE.CanvasTexture(canvas);
+  }, []);
+
   const material = useMemo(() => new THREE.PointsMaterial({
     size: 0.06,
     color: "#00E5FF",
@@ -36,7 +48,10 @@ export function AmbientParticles() {
     sizeAttenuation: true,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
-  }), []);
+    map: circleTexture,
+    alphaMap: circleTexture,
+    alphaTest: 0.1,
+  }), [circleTexture]);
 
   useFrame(() => {
     const attr = geometry.attributes.position as THREE.BufferAttribute;

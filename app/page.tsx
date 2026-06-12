@@ -12,6 +12,7 @@ import { HowNoorvaWorksSection } from "@/components/sections/HowNoorvaWorksSecti
 import { FutureAISection } from "@/components/sections/FutureAISection";
 import { InvestorSection } from "@/components/sections/InvestorSection";
 import { CareersSection } from "@/components/sections/CareersSection";
+import { TeamSection } from "@/components/sections/TeamSection";
 import { ContactSection } from "@/components/sections/ContactSection";
 
 const CustomCursor = dynamic(
@@ -34,7 +35,7 @@ function GlobalDots() {
           inset: "-80px",
           backgroundImage: "radial-gradient(circle, rgba(0,85,255,0.18) 1.5px, transparent 1.5px)",
           backgroundSize: "38px 38px",
-          animation: "dotsFloat1 18s linear infinite",
+          animation: "dotsFloat1 10s linear infinite",
         }}
       />
       <div
@@ -44,7 +45,7 @@ function GlobalDots() {
           backgroundImage: "radial-gradient(circle, rgba(123,47,190,0.13) 2px, transparent 2px)",
           backgroundSize: "68px 68px",
           backgroundPosition: "19px 19px",
-          animation: "dotsFloat2 26s linear infinite reverse",
+          animation: "dotsFloat2 14s linear infinite reverse",
         }}
       />
       <div
@@ -54,7 +55,7 @@ function GlobalDots() {
           backgroundImage: "radial-gradient(circle, rgba(0,212,255,0.10) 1px, transparent 1px)",
           backgroundSize: "54px 54px",
           backgroundPosition: "27px 0",
-          animation: "dotsFloat3 22s linear infinite",
+          animation: "dotsFloat3 12s linear infinite",
         }}
       />
     </div>
@@ -79,6 +80,7 @@ export default function Home() {
           <HowNoorvaWorksSection />
           <FutureAISection />
           <InvestorSection />
+          <TeamSection />
           <CareersSection />
           <ContactSection />
         </main>

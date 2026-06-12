@@ -99,7 +99,7 @@ export function TeamSection() {
                 >
                   {member.tagline}
                 </p>
-                <p className="text-white/40 text-sm leading-relaxed mb-6">{member.description}</p>
+                <p className="text-white/80 text-sm leading-relaxed mb-6">{member.description}</p>
                 <a
                   href={member.linkedin}
                   className={`inline-flex items-center gap-2 text-sm font-medium bg-gradient-to-r ${member.color} bg-clip-text text-transparent hover:opacity-80 transition-opacity`}
