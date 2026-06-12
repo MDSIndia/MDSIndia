@@ -2,7 +2,6 @@
 
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import Image from "next/image";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -24,7 +23,6 @@ export function HeroSection() {
     offset: ["start start", "end start"],
   });
 
-  const bgY            = useTransform(scrollYProgress, [0, 1], [0, 100]);
   const contentY       = useTransform(scrollYProgress, [0, 1], ["0%", "-12%"]);
   const contentOpacity = useTransform(scrollYProgress, [0, 0.65], [1, 0]);
 
@@ -33,92 +31,23 @@ export function HeroSection() {
       ref={sectionRef}
       id="hero"
       className="relative min-h-screen overflow-hidden"
-      style={{ background: "#020510" }}
     >
-      {/* ── FULL-VIEWPORT IMAGE ── */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        <motion.div
-          style={{ y: bgY, scale: 1.15, willChange: "transform" }}
-          className="absolute inset-0"
-        >
-          <Image
-            src="/MDSsilhouette.png"
-            alt=""
-            fill
-            priority
-            style={{
-              objectFit: "cover",
-              objectPosition: "58% 5%",
-              filter: "brightness(1.05) contrast(1.12) saturate(1.5)",
-              maskImage: "radial-gradient(ellipse 100% 135% at 56% 44%, black 55%, rgba(0,0,0,0.72) 68%, rgba(0,0,0,0.18) 82%, transparent 93%)",
-              WebkitMaskImage: "radial-gradient(ellipse 100% 135% at 56% 44%, black 55%, rgba(0,0,0,0.72) 68%, rgba(0,0,0,0.18) 82%, transparent 93%)",
-            }}
-          />
-        </motion.div>
-      </div>
-
-      {/* ── OVERLAY STACK ── */}
-
-      {/* Barely-there base tint — only suppresses residual white fringe */}
-      <div className="absolute inset-0 z-[1] pointer-events-none"
-        style={{ background: "rgba(2, 5, 16, 0.07)" }} />
-
-      {/* Very soft edge vignette — keeps hard corners dark */}
-      <div className="absolute inset-0 z-[2] pointer-events-none"
+      {/* Ambient center glow — focal point */}
+      <div
+        className="absolute inset-0 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse 92% 105% at 56% 44%, transparent 0%, rgba(2,5,16,0.08) 62%, rgba(2,5,16,0.60) 100%)",
-        }} />
+          background: "radial-gradient(ellipse 70% 60% at 50% 48%, rgba(0,85,255,0.10) 0%, rgba(0,50,180,0.05) 50%, transparent 80%)",
+        }}
+      />
 
-      {/* Top fade — navbar */}
-      <div className="absolute top-0 left-0 right-0 z-[4] pointer-events-none"
-        style={{
-          height: "200px",
-          background: "linear-gradient(to bottom, rgba(2,5,16,0.96) 0%, rgba(2,5,16,0.30) 70%, transparent 100%)",
-        }} />
-
-      {/* Bottom fade — site connection */}
+      {/* Bottom fade — connects to next section */}
       <div className="absolute bottom-0 left-0 right-0 z-[4] pointer-events-none"
         style={{
-          height: "300px",
-          background: "linear-gradient(to top, rgba(2,5,16,1) 0%, rgba(2,5,16,0.85) 35%, rgba(2,5,16,0.40) 70%, transparent 100%)",
+          height: "280px",
+          background: "linear-gradient(to top, #020208 0%, rgba(2,2,8,0.80) 40%, transparent 100%)",
         }} />
 
-      {/* ── ATMOSPHERIC GLOWS ── */}
-
-      {/* Orange nebula — left side */}
-      <motion.div className="absolute z-[5] pointer-events-none"
-        animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.08, 1] }}
-        transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
-        style={{
-          width: "500px", height: "500px",
-          top: "22%", left: "30%", transform: "translate(-50%, 0)",
-          background: "radial-gradient(ellipse, rgba(255,100,20,0.22) 0%, rgba(220,55,10,0.08) 50%, transparent 72%)",
-          filter: "blur(22px)",
-        }} />
-
-      {/* Blue nebula — right side */}
-      <motion.div className="absolute z-[5] pointer-events-none"
-        animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.10, 1] }}
-        transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        style={{
-          width: "500px", height: "500px",
-          top: "18%", left: "72%", transform: "translate(-50%, 0)",
-          background: "radial-gradient(ellipse, rgba(0,150,255,0.24) 0%, rgba(0,80,230,0.10) 50%, transparent 72%)",
-          filter: "blur(22px)",
-        }} />
-
-      {/* Crown glow — head */}
-      <motion.div className="absolute z-[5] pointer-events-none"
-        animate={{ opacity: [0.7, 1, 0.7] }}
-        transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut" }}
-        style={{
-          width: "360px", height: "360px",
-          top: "2%", left: "60%", transform: "translate(-50%, 0)",
-          background: "radial-gradient(ellipse, rgba(0,215,255,0.30) 0%, rgba(60,140,255,0.14) 50%, transparent 72%)",
-          filter: "blur(24px)",
-        }} />
-
-      {/* ── PARTICLES ── */}
+      {/* Floating particles */}
       {particles.map((p, i) => (
         <div key={i} className="absolute rounded-full pointer-events-none z-[6]"
           style={{
@@ -129,14 +58,14 @@ export function HeroSection() {
           }} />
       ))}
 
-      {/* ── CONTENT — overlaid on the image ── */}
+      {/* ── CONTENT ── */}
       <motion.div
         style={{
           y: contentY,
           opacity: contentOpacity,
           willChange: "transform, opacity",
         }}
-        className="relative z-20 flex flex-col items-center justify-end min-h-screen text-center px-6 pb-20"
+        className="relative z-20 flex flex-col items-center justify-center min-h-screen text-center px-6"
       >
 
         {/* THINK BEYOND */}
@@ -199,16 +128,7 @@ export function HeroSection() {
         </motion.p>
 
         {/* Body */}
-        <motion.p
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.84, ease: EASE }}
-          className="text-sm md:text-base font-light mb-11 max-w-2xl mx-auto leading-relaxed"
-          style={{ color: "rgba(255,255,255,0.40)" }}
-        >
-          At Mahadeva Digital Solutions, we are building the future through intelligence,
-          innovation, and Noorva — our next-generation AI companion.
-        </motion.p>
+        
 
         {/* CTAs */}
         <motion.div

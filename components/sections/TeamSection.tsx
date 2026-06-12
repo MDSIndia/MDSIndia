@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -12,10 +13,10 @@ const team = [
     tagline: "Visionary. Builder. Dreamer.",
     description:
       "The architect of MDS's grand vision — a believer that AI should serve humanity's highest potential, not just its productivity. Sumanth leads MDS with purpose, pushing the boundaries of what intelligent technology can mean for human life.",
+    photo: "/Sumanth.jpeg",
     initials: "SM",
     accent: "#00D4FF",
     glow: "0,212,255",
-    linkedin: "#",
   },
   {
     name: "Seshagiri Rao",
@@ -24,10 +25,10 @@ const team = [
     tagline: "Strategist. Leader. Enabler.",
     description:
       "Turning vision into reality — building the systems, teams, and culture that will take MDS from a bold idea to a global AI company. Seshagiri bridges strategy and execution with clarity and conviction.",
+    photo: "/Seshu.jpeg",
     initials: "SR",
     accent: "#818CF8",
     glow: "129,140,248",
-    linkedin: "#",
   },
   {
     name: "Rakesh Nerella",
@@ -36,10 +37,10 @@ const team = [
     tagline: "Engineer. Architect. Innovator.",
     description:
       "The technical force behind Noorva's intelligence — designing AI systems that genuinely understand the complexity of human life. Rakesh builds the future one breakthrough at a time.",
+    photo: "/Rakesh.jpeg",
     initials: "RN",
     accent: "#A855F7",
     glow: "168,85,247",
-    linkedin: "#",
   },
 ];
 
@@ -153,18 +154,20 @@ export function TeamSection() {
 
                 {/* Avatar row */}
                 <div className="flex items-start justify-between mb-8">
-                  {/* Initials avatar */}
+                  {/* Photo avatar */}
                   <div
-                    className="relative w-16 h-16 rounded-2xl flex items-center justify-center text-white font-black text-lg flex-shrink-0"
+                    className="relative w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0"
                     style={{
-                      background: `linear-gradient(135deg, rgba(${member.glow},0.25) 0%, rgba(${member.glow},0.08) 100%)`,
-                      border: `1px solid rgba(${member.glow},0.30)`,
-                      boxShadow: `0 0 20px rgba(${member.glow},0.15)`,
-                      fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-                      letterSpacing: "0.04em",
+                      border: `1px solid rgba(${member.glow},0.35)`,
+                      boxShadow: `0 0 20px rgba(${member.glow},0.18)`,
                     }}
                   >
-                    {member.initials}
+                    <Image
+                      src={member.photo}
+                      alt={member.name}
+                      fill
+                      style={{ objectFit: "cover", objectPosition: "center top" }}
+                    />
                   </div>
 
                   {/* Short role badge */}
@@ -225,7 +228,7 @@ export function TeamSection() {
 
                 {/* Description */}
                 <p
-                  className="mb-7 leading-relaxed"
+                  className="leading-relaxed"
                   style={{
                     fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
                     fontSize: "0.875rem",
@@ -236,23 +239,6 @@ export function TeamSection() {
                   {member.description}
                 </p>
 
-                {/* LinkedIn */}
-                <a
-                  href={member.linkedin}
-                  className="inline-flex items-center gap-2.5 text-xs font-semibold tracking-[0.12em] uppercase transition-opacity duration-200 hover:opacity-70"
-                  style={{
-                    color: member.accent,
-                    fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-                  }}
-                >
-                  <span
-                    className="w-5 h-5 rounded flex items-center justify-center text-white font-bold text-[0.6rem]"
-                    style={{ background: "#0A66C2" }}
-                  >
-                    in
-                  </span>
-                  Connect
-                </a>
 
               </div>
             </motion.div>

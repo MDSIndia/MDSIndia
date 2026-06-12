@@ -68,7 +68,23 @@ export function Footer() {
           <p className="text-white/25 text-xs">
             © 2025 Mahadeva Digital Solutions. All rights reserved.
           </p>
-          <p className="text-white/20 text-xs tracking-widest uppercase">Think Beyond</p>
+          <div className="flex items-center gap-5">
+            <a
+              href="https://in.linkedin.com/company/mahadeva-digital-solutions-private-limited"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-white/30 hover:text-white/70 transition-colors duration-300 text-xs"
+            >
+              <span
+                className="w-5 h-5 rounded flex items-center justify-center text-white font-bold text-[0.6rem] flex-shrink-0"
+                style={{ background: "#0A66C2" }}
+              >
+                in
+              </span>
+              LinkedIn
+            </a>
+            <p className="text-white/20 text-xs tracking-widest uppercase">Think Beyond</p>
+          </div>
         </div>
       </div>
     </footer>
