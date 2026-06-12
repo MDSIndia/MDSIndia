@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { LenisProvider } from "@/components/providers/LenisProvider";
 
@@ -7,6 +7,13 @@ const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+  display: "swap",
+  weight: ["400", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -56,7 +63,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable} style={{ backgroundColor: "#020208" }}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${spaceGrotesk.variable}`}
+      style={{ backgroundColor: "#020208" }}
+    >
       <head>
         <link rel="preconnect" href="https://api.fontshare.com" />
         <link
@@ -64,7 +75,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={`${inter.className} noise`} style={{ backgroundColor: "#020208", color: "#ffffff" }}>
+      <body
+        className={`${inter.className} noise`}
+        style={{ backgroundColor: "#020208", color: "#ffffff" }}
+      >
         <LenisProvider>{children}</LenisProvider>
       </body>
     </html>

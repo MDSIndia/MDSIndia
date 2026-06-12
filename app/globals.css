@@ -58,6 +58,26 @@ html, body {
   font-weight: 800;
 }
 
+.space-grotesk {
+  font-family: var(--font-space-grotesk), 'Inter', sans-serif;
+}
+
+@keyframes principleFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-14px); }
+}
+
+@keyframes ambitionPulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%       { opacity: 0.90; transform: scale(1.04); }
+}
+
+@keyframes innovationParticle {
+  0%   { transform: translateY(0)   scale(1);   opacity: 0.3; }
+  50%  { transform: translateY(-18px) scale(1.4); opacity: 0.8; }
+  100% { transform: translateY(0)   scale(1);   opacity: 0.3; }
+}
+
 /* THINK BEYOND hero — metallic white → platinum → blue → cyan (static, no repaint) */
 .text-gradient-hero {
   background: linear-gradient(

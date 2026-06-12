@@ -103,7 +103,7 @@ export function InvestorSection() {
             >
               <div className="p-5 md:p-6">
                 <div
-                  className={`text-3xl md:text-4xl font-black mb-2 bg-gradient-to-r ${metric.textGradient} bg-clip-text text-transparent`}
+                  className={`text-2xl md:text-4xl font-black mb-2 bg-gradient-to-r ${metric.textGradient} bg-clip-text text-transparent`}
                 >
                   {metric.prefix}
                   <AnimatedNumber target={metric.value} suffix={metric.suffix} />

@@ -206,7 +206,7 @@ export function ContactSection() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
                     services@mdsindia.in · Hyderabad, Telangana, India
                   </div>
