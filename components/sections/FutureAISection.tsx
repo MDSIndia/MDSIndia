@@ -1,10 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { GraduationCap, Handshake, HeartPulse, Leaf, Sparkles, Zap } from "lucide-react";
 
 const domains = [
   {
     icon: "🏥",
+    iconComponent: HeartPulse,
     title: "Healthcare",
     description: "AI companions that support mental health, chronic condition management, and proactive wellness — making quality care accessible to all.",
     accent: "from-rose-500 to-pink-400",
@@ -13,6 +15,7 @@ const domains = [
   },
   {
     icon: "🎓",
+    iconComponent: GraduationCap,
     title: "Education",
     description: "Personalized learning companions that adapt to each student's pace, style, and potential — reimagining what it means to truly learn.",
     accent: "from-amber-500 to-yellow-400",
@@ -21,6 +24,7 @@ const domains = [
   },
   {
     icon: "⚡",
+    iconComponent: Zap,
     title: "Productivity",
     description: "AI that understands your work style, eliminates friction, and helps you do your best work — without burnout or overwhelm.",
     accent: "from-blue-500 to-cyan-400",
@@ -29,6 +33,7 @@ const domains = [
   },
   {
     icon: "🌱",
+    iconComponent: Leaf,
     title: "Personal Growth",
     description: "A companion that knows your dreams, tracks your patterns, and helps you consistently become the person you want to be.",
     accent: "from-emerald-500 to-teal-400",
@@ -37,6 +42,7 @@ const domains = [
   },
   {
     icon: "🧘",
+    iconComponent: Sparkles,
     title: "Mental Wellness",
     description: "Compassionate support for anxiety, stress, and emotional challenges — available 24/7, without judgment, without stigma.",
     accent: "from-violet-500 to-purple-400",
@@ -45,6 +51,7 @@ const domains = [
   },
   {
     icon: "🤝",
+    iconComponent: Handshake,
     title: "Human-AI Collaboration",
     description: "The future isn't humans vs. AI — it's humans and AI creating together, solving harder problems, and achieving more than either could alone.",
     accent: "from-cyan-500 to-blue-500",
@@ -90,30 +97,30 @@ export function FutureAISection() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {domains.map((domain, i) => (
-            <motion.div
-              key={domain.title}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-              whileHover={{ y: -5, transition: { duration: 0.2 } }}
-              className="rounded-2xl overflow-hidden cursor-default"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                boxShadow: `0 0 35px ${domain.glow}`,
-              }}
-            >
-              {/* Gradient top accent */}
-              <div className={`h-0.5 w-full bg-gradient-to-r ${domain.accent}`} />
+          {domains.map((domain, i) => {
+            const Icon = domain.iconComponent;
 
-              <div className="p-6">
+            return (
+              <motion.div
+                key={domain.title}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.7, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                className="rounded-2xl overflow-hidden cursor-default"
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  boxShadow: `0 0 35px ${domain.glow}`,
+                }}
+              >
+                <div className="p-6">
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4"
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
                   style={{ background: "rgba(255,255,255,0.06)" }}
                 >
-                  {domain.icon}
+                  <Icon className="size-5 text-white" strokeWidth={2} />
                 </div>
                 <span
                   className={`text-xs font-bold tracking-widest uppercase mb-2 block bg-gradient-to-r ${domain.labelGradient} bg-clip-text text-transparent`}
@@ -125,7 +132,8 @@ export function FutureAISection() {
                 </p>
               </div>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

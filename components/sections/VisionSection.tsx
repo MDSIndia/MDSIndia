@@ -1,27 +1,28 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Globe2, Sparkles, Zap } from "lucide-react";
 
 const cards = [
   {
-    number: "I",
     icon: "⚡",
+    iconComponent: Zap,
     label: "Mission",
     headline: "To create AI that genuinely understands human life — in all its complexity, emotion, and beauty.",
     accent: "from-blue-500 to-cyan-400",
     glow: "rgba(0,85,255,0.2)",
   },
   {
-    number: "II",
     icon: "🌐",
+    iconComponent: Globe2,
     label: "Vision",
     headline: "A world where every person has an intelligent companion that helps them live more fully, intentionally, and meaningfully.",
     accent: "from-violet-500 to-blue-500",
     glow: "rgba(123,47,190,0.2)",
   },
   {
-    number: "III",
     icon: "✦",
+    iconComponent: Sparkles,
     label: "Purpose",
     headline: "We don't build technology for technology's sake. We build it to advance what it means to be human.",
     accent: "from-cyan-400 to-teal-400",
@@ -72,35 +73,27 @@ export function VisionSection() {
 
         {/* Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
-          {cards.map((card, i) => (
-            <motion.div
-              key={card.label}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.9, delay: i * 0.15, ease: [0.22, 1, 0.36, 1] }}
-              whileHover={{ y: -6, transition: { duration: 0.25 } }}
-              className="relative rounded-2xl overflow-hidden cursor-default"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                boxShadow: `0 0 40px ${card.glow}`,
-              }}
-            >
-              {/* Top gradient bar */}
-              <div className={`h-0.5 w-full bg-gradient-to-r ${card.accent}`} />
+          {cards.map((card, i) => {
+            const Icon = card.iconComponent;
 
-              <div className="p-6 md:p-8">
-                {/* Number */}
-                <span
-                  className="text-xs font-mono block mb-5"
-                  style={{ color: "rgba(255,255,255,0.18)" }}
-                >
-                  {card.number}
-                </span>
-
-                {/* Icon */}
-                <div className="text-3xl mb-5">{card.icon}</div>
+            return (
+              <motion.div
+                key={card.label}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.9, delay: i * 0.15, ease: [0.22, 1, 0.36, 1] }}
+                whileHover={{ y: -6, transition: { duration: 0.25 } }}
+                className="relative rounded-2xl overflow-hidden cursor-default"
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  boxShadow: `0 0 40px ${card.glow}`,
+                }}
+              >
+                <div className="p-6 md:p-8">
+                  {/* Icon */}
+                  <Icon className="mb-5 size-8 text-white" strokeWidth={2} />
 
                 {/* Label */}
                 <span
@@ -117,8 +110,9 @@ export function VisionSection() {
                   {card.headline}
                 </p>
               </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Quote */}

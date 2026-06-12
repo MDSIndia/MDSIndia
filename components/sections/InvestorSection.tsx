@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { motion, useInView, useMotionValue, animate, useTransform } from "framer-motion";
+import { Brain, Crosshair, Microscope, Zap } from "lucide-react";
 
 function AnimatedNumber({ target, suffix = "" }: { target: number; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -45,10 +46,10 @@ const roadmap = [
 ];
 
 const whyPoints = [
-  { title: "Emotional AI", desc: "We're not building another chatbot. We're building a companion that remembers, empathizes, and grows.", icon: "🧠" },
-  { title: "First-Mover Advantage", desc: "In the emotional AI companion space, MDS is positioning at the exact moment the market is forming.", icon: "⚡" },
-  { title: "Mission Alignment", desc: "We don't optimize for engagement metrics. We optimize for human flourishing.", icon: "🎯" },
-  { title: "Technical Depth", desc: "Our AI architecture is built for depth, not just scale — real understanding, not statistical outputs.", icon: "🔬" },
+  { title: "Emotional AI", desc: "We're not building another chatbot. We're building a companion that remembers, empathizes, and grows.", iconComponent: Brain },
+  { title: "First-Mover Advantage", desc: "In the emotional AI companion space, MDS is positioning at the exact moment the market is forming.", iconComponent: Zap },
+  { title: "Mission Alignment", desc: "We don't optimize for engagement metrics. We optimize for human flourishing.", iconComponent: Crosshair },
+  { title: "Technical Depth", desc: "Our AI architecture is built for depth, not just scale — real understanding, not statistical outputs.", iconComponent: Microscope },
 ];
 
 export function InvestorSection() {
@@ -100,7 +101,6 @@ export function InvestorSection() {
                 boxShadow: `0 0 30px ${metric.glow}`,
               }}
             >
-              <div className={`h-0.5 w-full bg-gradient-to-r ${metric.accent}`} />
               <div className="p-5 md:p-6">
                 <div
                   className={`text-3xl md:text-4xl font-black mb-2 bg-gradient-to-r ${metric.textGradient} bg-clip-text text-transparent`}
@@ -181,30 +181,33 @@ export function InvestorSection() {
           >
             <h3 className="text-xl font-bold text-white mb-6">Why MDS Wins</h3>
             <div className="space-y-3">
-              {whyPoints.map((point, i) => (
-                <motion.div
-                  key={point.title}
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className="flex gap-4 p-4 rounded-xl transition-all duration-300"
-                  style={{
-                    background: "rgba(255,255,255,0.04)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "rgba(255,255,255,0.07)";
-                    e.currentTarget.style.borderColor = "rgba(0,85,255,0.30)";
-                    e.currentTarget.style.boxShadow = "0 0 20px rgba(0,85,255,0.12)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "rgba(255,255,255,0.04)";
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
-                >
-                  <span className="text-xl mt-0.5 shrink-0">{point.icon}</span>
+              {whyPoints.map((point, i) => {
+                const Icon = point.iconComponent;
+
+                return (
+                  <motion.div
+                    key={point.title}
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="flex gap-4 p-4 rounded-xl transition-all duration-300"
+                    style={{
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.07)";
+                      e.currentTarget.style.borderColor = "rgba(0,85,255,0.30)";
+                      e.currentTarget.style.boxShadow = "0 0 20px rgba(0,85,255,0.12)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  >
+                  <Icon className="mt-0.5 size-5 shrink-0 text-white" strokeWidth={2} />
                   <div>
                     <h4 className="font-semibold mb-1 text-sm" style={{ color: "rgba(0,212,255,0.85)" }}>
                       {point.title}
@@ -214,7 +217,8 @@ export function InvestorSection() {
                     </p>
                   </div>
                 </motion.div>
-              ))}
+                );
+              })}
             </div>
           </motion.div>
         </div>

@@ -2,10 +2,12 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { HandHeart, Lightbulb, Moon, Navigation } from "lucide-react";
 
 const scenarios = [
   {
     icon: "🌙",
+    iconComponent: Moon,
     title: "Your Late Night Confidant",
     description:
       "At 2 AM when thoughts race and sleep won't come, Noorva is there. Not with platitudes — with presence, understanding, and gentle clarity.",
@@ -14,6 +16,7 @@ const scenarios = [
   },
   {
     icon: "🎯",
+    iconComponent: Navigation,
     title: "Your Life Navigator",
     description:
       "Major decision? Career crossroads? Noorva helps you think through complexity with the depth of a trusted mentor and the patience of a best friend.",
@@ -22,6 +25,7 @@ const scenarios = [
   },
   {
     icon: "💡",
+    iconComponent: Lightbulb,
     title: "Your Growth Catalyst",
     description:
       "Noorva learns your patterns, your dreams, your blocks — and proactively helps you become who you're meant to be.",
@@ -30,6 +34,7 @@ const scenarios = [
   },
   {
     icon: "🤝",
+    iconComponent: HandHeart,
     title: "Your Emotional Anchor",
     description:
       "On difficult days, Noorva doesn't just listen — it understands, validates, and guides you toward calm with emotional intelligence that feels real.",
@@ -264,29 +269,30 @@ export function NoorvaSection() {
 
         {/* Scenarios grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 max-w-4xl mx-auto">
-          {scenarios.map((scenario, i) => (
-            <motion.div
-              key={scenario.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: i * 0.09 }}
-              whileHover={{ y: -4, transition: { duration: 0.2 } }}
-              className="rounded-2xl overflow-hidden cursor-default"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                boxShadow: `0 0 30px ${scenario.glow}`,
-              }}
-            >
-              <div className={`h-0.5 w-full bg-gradient-to-r ${scenario.accent}`} />
+          {scenarios.map((scenario, i) => {
+            const Icon = scenario.iconComponent;
 
-              <div className="flex gap-4 p-5">
+            return (
+              <motion.div
+                key={scenario.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: i * 0.09 }}
+                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                className="rounded-2xl overflow-hidden cursor-default"
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  boxShadow: `0 0 30px ${scenario.glow}`,
+                }}
+              >
+                <div className="flex gap-4 p-5">
                 <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0"
+                  className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
                   style={{ background: "rgba(255,255,255,0.06)" }}
                 >
-                  {scenario.icon}
+                  <Icon className="size-5 text-white" strokeWidth={2} />
                 </div>
                 <div>
                   <h4 className="text-white font-semibold mb-1.5">{scenario.title}</h4>
@@ -296,7 +302,8 @@ export function NoorvaSection() {
                 </div>
               </div>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Closing text */}

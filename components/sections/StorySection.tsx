@@ -1,11 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Globe2, Sparkles, Zap } from "lucide-react";
 
 const pillars = [
   {
-    number: "01",
-    icon: "🌍",
+    iconComponent: Globe2,
     label: "The Challenge",
     headline: "Humanity is overwhelmed.",
     body: "1 in 4 people experience mental health challenges globally. Loneliness, anxiety, and information overload are at epidemic levels. Technology has made us more connected — yet more isolated than ever before.",
@@ -13,8 +13,7 @@ const pillars = [
     glow: "rgba(0,85,255,0.18)",
   },
   {
-    number: "02",
-    icon: "⚡",
+    iconComponent: Zap,
     label: "The Turning Point",
     headline: "AI has crossed the threshold.",
     body: "For the first time in history, artificial intelligence can truly understand human emotion, context, and personal nuance — not just process language. We are at the inflection point that changes everything.",
@@ -22,8 +21,7 @@ const pillars = [
     glow: "rgba(123,47,190,0.18)",
   },
   {
-    number: "03",
-    icon: "✦",
+    iconComponent: Sparkles,
     label: "Our Answer",
     headline: "MDS was built for this moment.",
     body: "We don't build software. We build understanding. MDS exists to create AI that genuinely knows you — your patterns, your goals, your emotions — and helps you live with greater clarity, purpose, and joy.",
@@ -55,7 +53,7 @@ export function StorySection() {
         >
           <span
             className="text-xs font-medium tracking-[0.5em] uppercase"
-            style={{ color: "rgba(0,212,255,0.8)" }}
+            style={{ color: "rgba(255,255,255,0.50)" }}
           >
             Why We Exist
           </span>
@@ -77,7 +75,7 @@ export function StorySection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 mb-16">
           {pillars.map((pillar, i) => (
             <motion.div
-              key={pillar.number}
+              key={pillar.label}
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -90,20 +88,9 @@ export function StorySection() {
                 boxShadow: `0 0 40px ${pillar.glow}`,
               }}
             >
-              {/* Colored top bar */}
-              <div className={`h-0.5 w-full bg-gradient-to-r ${pillar.accent}`} />
-
               <div className="p-6 md:p-8">
-                {/* Number */}
-                <div
-                  className="text-xs font-mono mb-5"
-                  style={{ color: "rgba(255,255,255,0.20)" }}
-                >
-                  {pillar.number}
-                </div>
-
                 {/* Icon */}
-                <div className="text-3xl mb-5">{pillar.icon}</div>
+                <pillar.iconComponent className="mb-5 size-8 text-white" strokeWidth={2} />
 
                 {/* Label */}
                 <span

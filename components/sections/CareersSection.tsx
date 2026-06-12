@@ -94,8 +94,6 @@ export function CareersSection() {
                 boxShadow: "0 0 30px rgba(0,0,0,0.3)",
               }}
             >
-              <div className={`h-0.5 w-full bg-gradient-to-r ${role.accent}`} />
-
               <div className="p-5 md:p-6">
                 <div className="flex items-start justify-between mb-3">
                   <div>
