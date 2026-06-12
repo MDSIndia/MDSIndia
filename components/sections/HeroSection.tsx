@@ -46,11 +46,11 @@ export function HeroSection() {
           className="absolute inset-0"
         >
           <Image
-            src="/silhouette.png"
+            src="/silhouetteMDS.png"
             alt=""
             fill
             priority
-            style={{ objectFit: "cover", objectPosition: "58% 15%" }}
+            style={{ objectFit: "cover", objectPosition: "center 12%" }}
           />
         </motion.div>
       </div>
