@@ -158,7 +158,7 @@ export function HeroSection() {
           y: contentY,
           opacity: contentOpacity,
           willChange: "transform, opacity",
-          paddingTop: "clamp(220px, 42vh, 480px)",
+          paddingTop: "clamp(120px, 24vh, 260px)",
           paddingBottom: "clamp(60px, 7vh, 100px)",
         }}
         className="relative z-20 flex flex-col items-center text-center px-6"
@@ -167,7 +167,7 @@ export function HeroSection() {
         <h1
           className="neue-machina leading-[0.88] mb-7"
           style={{
-            fontSize: "clamp(3.8rem, 8.5vw, 9rem)",
+            fontSize: "clamp(4.2rem, 11vw, 11rem)",
             letterSpacing: "0.03em",
             filter:
               "drop-shadow(0 0 40px rgba(0,140,255,0.45)) drop-shadow(0 0 90px rgba(0,70,220,0.20))",
