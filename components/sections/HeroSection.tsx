@@ -229,17 +229,7 @@ export function HeroSection() {
         </motion.p>
 
         {/* Body */}
-        <motion.p
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.84, ease: EASE }}
-          className="text-sm md:text-base font-light mb-11 max-w-2xl mx-auto leading-relaxed"
-          style={{ color: "rgba(255,255,255,0.42)" }}
-        >
-          At Mahadeva Digital Solutions, we believe technology should push humanity forward.
-          We are building the future through intelligence, innovation,
-          and Noorva — our next-generation AI companion.
-        </motion.p>
+      
 
         {/* CTAs */}
         <motion.div
