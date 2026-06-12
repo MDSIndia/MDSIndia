@@ -138,44 +138,8 @@ export function NoorvaSection() {
   return (
     <section
       id="noorva"
-      className="relative py-20 md:py-28 overflow-hidden"
+      className="section-padding relative overflow-hidden"
     >
-      {/* Animated dots background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div
-          className="absolute inset-[-60px]"
-          style={{
-            backgroundImage: "radial-gradient(circle, rgba(0,85,255,0.30) 1.5px, transparent 1.5px)",
-            backgroundSize: "38px 38px",
-            animation: "dotsFloat1 18s linear infinite",
-            maskImage: "radial-gradient(ellipse 80% 90% at 50% 50%, black 0%, transparent 100%)",
-            WebkitMaskImage: "radial-gradient(ellipse 80% 90% at 50% 50%, black 0%, transparent 100%)",
-          }}
-        />
-        <div
-          className="absolute inset-[-60px]"
-          style={{
-            backgroundImage: "radial-gradient(circle, rgba(123,47,190,0.22) 2px, transparent 2px)",
-            backgroundSize: "68px 68px",
-            backgroundPosition: "19px 19px",
-            animation: "dotsFloat2 26s linear infinite reverse",
-            maskImage: "radial-gradient(ellipse 80% 90% at 50% 50%, black 0%, transparent 100%)",
-            WebkitMaskImage: "radial-gradient(ellipse 80% 90% at 50% 50%, black 0%, transparent 100%)",
-          }}
-        />
-        <div
-          className="absolute inset-[-60px]"
-          style={{
-            backgroundImage: "radial-gradient(circle, rgba(0,212,255,0.18) 1px, transparent 1px)",
-            backgroundSize: "54px 54px",
-            backgroundPosition: "27px 0",
-            animation: "dotsFloat3 22s linear infinite",
-            maskImage: "radial-gradient(ellipse 80% 90% at 50% 50%, black 0%, transparent 100%)",
-            WebkitMaskImage: "radial-gradient(ellipse 80% 90% at 50% 50%, black 0%, transparent 100%)",
-          }}
-        />
-      </div>
-
       <div className="scene-top-fade" />
       <div className="scene-bottom-fade" />
 

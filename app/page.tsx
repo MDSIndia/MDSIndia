@@ -5,6 +5,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { StorySection } from "@/components/sections/StorySection";
+import { WhyWeExistSection } from "@/components/sections/WhyWeExistSection";
 import { VisionSection } from "@/components/sections/VisionSection";
 import { NoorvaSection } from "@/components/sections/NoorvaSection";
 import { HowNoorvaWorksSection } from "@/components/sections/HowNoorvaWorksSection";
@@ -71,6 +72,7 @@ export default function Home() {
         <Navbar />
         <main>
           <HeroSection />
+          <WhyWeExistSection />
           <StorySection />
           <VisionSection />
           <NoorvaSection />

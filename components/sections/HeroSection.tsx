@@ -108,7 +108,7 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, delay: 0.36, ease: EASE }}
-            className="text-gradient-beyond block"
+            className="block text-white"
 
           >
             BEYOND

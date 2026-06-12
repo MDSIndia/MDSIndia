@@ -127,7 +127,7 @@ export function FutureAISection() {
                 >
                   {domain.title}
                 </span>
-                <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.50)" }}>
+                <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.90)" }}>
                   {domain.description}
                 </p>
               </div>
