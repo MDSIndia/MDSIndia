@@ -9,17 +9,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#050505",
-        surface: "rgba(255,255,255,0.03)",
+        background: "#020208",
+        surface: "rgba(255,255,255,0.04)",
         border: "rgba(255,255,255,0.08)",
-        "accent-blue": "#0066FF",
-        "accent-cyan": "#00E5FF",
+        "accent-blue": "#0055FF",
+        "accent-cyan": "#00D4FF",
         "accent-purple": "#7B2FBE",
-        "glow-blue": "rgba(0,102,255,0.3)",
-        "glow-cyan": "rgba(0,229,255,0.2)",
+        "glow-blue": "rgba(0,85,255,0.35)",
+        "glow-cyan": "rgba(0,212,255,0.25)",
         "text-primary": "#FFFFFF",
-        "text-secondary": "rgba(255,255,255,0.6)",
-        "text-muted": "rgba(255,255,255,0.3)",
+        "text-secondary": "rgba(255,255,255,0.65)",
+        "text-muted": "rgba(255,255,255,0.35)",
       },
       fontFamily: {
         inter: ["Inter", "sans-serif"],

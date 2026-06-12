@@ -56,8 +56,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className={`${inter.className} noise`}>
+    <html lang="en" className={inter.variable} style={{ backgroundColor: "#020208" }}>
+      <head>
+        <link rel="preconnect" href="https://api.fontshare.com" />
+        <link
+          href="https://api.fontshare.com/v2/css?f[]=neue-machina@800,700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className={`${inter.className} noise`} style={{ backgroundColor: "#020208", color: "#ffffff" }}>
         <LenisProvider>{children}</LenisProvider>
       </body>
     </html>

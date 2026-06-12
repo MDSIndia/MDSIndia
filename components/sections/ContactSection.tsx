@@ -31,7 +31,12 @@ export function ContactSection() {
 
   return (
     <section id="contact" className="section-padding relative overflow-hidden">
-      <div className="ambient-glow ambient-glow-blue w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: "radial-gradient(ellipse 60% 60% at 50% 50%, rgba(0,55,210,0.12) 0%, transparent 70%)",
+        }}
+      />
 
       <div className="relative max-w-4xl mx-auto">
         <motion.div
@@ -40,13 +45,16 @@ export function ContactSection() {
           viewport={{ once: true }}
           className="text-center mb-10"
         >
-          <span className="text-xs font-medium tracking-[0.5em] text-cyan-400 uppercase">
+          <span
+            className="text-xs font-medium tracking-[0.5em] uppercase"
+            style={{ color: "rgba(0,212,255,0.8)" }}
+          >
             AI Communication Portal
           </span>
           <h2 className="text-4xl md:text-7xl font-black mt-4">
             Start a <span className="text-gradient">Conversation</span>
           </h2>
-          <p className="text-white/40 text-xl mt-6">
+          <p className="text-xl mt-6" style={{ color: "rgba(255,255,255,0.45)" }}>
             We read every message. We respond to every vision.
           </p>
         </motion.div>
@@ -56,9 +64,17 @@ export function ContactSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="rounded-3xl glass-strong border border-white/10 p-5 sm:p-8 md:p-12 relative overflow-hidden"
+          className="rounded-3xl p-5 sm:p-8 md:p-12 relative overflow-hidden"
+          style={{
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.10)",
+            boxShadow: "0 0 60px rgba(0,85,255,0.12)",
+          }}
         >
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+          <div
+            className="absolute top-0 left-0 right-0 h-px"
+            style={{ background: "linear-gradient(to right, transparent, rgba(0,212,255,0.5), transparent)" }}
+          />
 
           <AnimatePresence mode="wait">
             {!sent ? (
@@ -71,7 +87,10 @@ export function ContactSection() {
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="text-white/40 text-xs uppercase tracking-widest mb-2 block">
+                    <label
+                      className="text-xs uppercase tracking-widest mb-2 block"
+                      style={{ color: "rgba(255,255,255,0.35)" }}
+                    >
                       Name
                     </label>
                     <input
@@ -80,12 +99,27 @@ export function ContactSection() {
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="Your name"
-                      className="w-full rounded-xl px-4 py-3 text-white text-sm focus:outline-none transition-colors duration-300"
-                      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", colorScheme: "dark" }}
+                      className="w-full rounded-xl px-4 py-3 text-white text-sm focus:outline-none transition-all duration-300"
+                      style={{
+                        background: "rgba(255,255,255,0.06)",
+                        border: "1px solid rgba(255,255,255,0.10)",
+                        colorScheme: "dark",
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = "rgba(0,212,255,0.35)";
+                        e.target.style.boxShadow = "0 0 20px rgba(0,212,255,0.08)";
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = "rgba(255,255,255,0.10)";
+                        e.target.style.boxShadow = "none";
+                      }}
                     />
                   </div>
                   <div>
-                    <label className="text-white/40 text-xs uppercase tracking-widest mb-2 block">
+                    <label
+                      className="text-xs uppercase tracking-widest mb-2 block"
+                      style={{ color: "rgba(255,255,255,0.35)" }}
+                    >
                       Email
                     </label>
                     <input
@@ -94,14 +128,29 @@ export function ContactSection() {
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       placeholder="your@email.com"
-                      className="w-full rounded-xl px-4 py-3 text-white text-sm focus:outline-none transition-colors duration-300"
-                      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", colorScheme: "dark" }}
+                      className="w-full rounded-xl px-4 py-3 text-white text-sm focus:outline-none transition-all duration-300"
+                      style={{
+                        background: "rgba(255,255,255,0.06)",
+                        border: "1px solid rgba(255,255,255,0.10)",
+                        colorScheme: "dark",
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = "rgba(0,212,255,0.35)";
+                        e.target.style.boxShadow = "0 0 20px rgba(0,212,255,0.08)";
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = "rgba(255,255,255,0.10)";
+                        e.target.style.boxShadow = "none";
+                      }}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-white/40 text-xs uppercase tracking-widest mb-2 block">
+                  <label
+                    className="text-xs uppercase tracking-widest mb-2 block"
+                    style={{ color: "rgba(255,255,255,0.35)" }}
+                  >
                     Subject
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -110,11 +159,16 @@ export function ContactSection() {
                         key={s}
                         type="button"
                         onClick={() => setFormData({ ...formData, subject: s })}
-                        className={`px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs font-medium transition-colors duration-200 ${
+                        className="px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs font-medium transition-all duration-200"
+                        style={
                           formData.subject === s
-                            ? "bg-gradient-to-r from-blue-600 to-cyan-400 text-white"
-                            : "glass border border-white/8 text-white/40 hover:text-white hover:border-white/20"
-                        }`}
+                            ? { background: "linear-gradient(135deg, #0055FF, #00D4FF)", color: "white" }
+                            : {
+                                background: "rgba(255,255,255,0.05)",
+                                border: "1px solid rgba(255,255,255,0.10)",
+                                color: "rgba(255,255,255,0.50)",
+                              }
+                        }
                       >
                         {s}
                       </button>
@@ -123,7 +177,10 @@ export function ContactSection() {
                 </div>
 
                 <div>
-                  <label className="text-white/40 text-xs uppercase tracking-widest mb-2 block">
+                  <label
+                    className="text-xs uppercase tracking-widest mb-2 block"
+                    style={{ color: "rgba(255,255,255,0.35)" }}
+                  >
                     Message
                   </label>
                   <textarea
@@ -132,20 +189,35 @@ export function ContactSection() {
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     placeholder="Share your vision, question, or idea..."
-                    className="w-full rounded-xl px-4 py-3 text-white text-sm focus:outline-none transition-colors duration-300 resize-none"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", colorScheme: "dark" }}
+                    className="w-full rounded-xl px-4 py-3 text-white text-sm focus:outline-none transition-all duration-300 resize-none"
+                    style={{
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.10)",
+                      colorScheme: "dark",
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = "rgba(0,212,255,0.35)";
+                      e.target.style.boxShadow = "0 0 20px rgba(0,212,255,0.08)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = "rgba(255,255,255,0.10)";
+                      e.target.style.boxShadow = "none";
+                    }}
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="text-xs text-white/20">
+                  <div className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
                     services@mdsindia.in · Hyderabad, Telangana, India
                   </div>
                   <button
                     type="submit"
                     disabled={sending}
-                    className="relative px-8 py-4 rounded-full font-semibold text-white overflow-hidden disabled:opacity-50 transition-opacity duration-300 hover:opacity-90"
-                    style={{ background: "linear-gradient(135deg, #0066FF, #00E5FF)" }}
+                    className="relative px-8 py-4 rounded-full font-semibold text-white overflow-hidden disabled:opacity-50 transition-all duration-300 hover:scale-105"
+                    style={{
+                      background: "linear-gradient(135deg, #0055FF, #00D4FF)",
+                      boxShadow: "0 0 25px rgba(0,85,255,0.4)",
+                    }}
                   >
                     <span className="relative z-10">
                       {sending ? "Transmitting..." : "Send Message"}
@@ -166,10 +238,9 @@ export function ContactSection() {
                 transition={{ duration: 0.5 }}
                 className="text-center py-16"
               >
-                {/* Static star — no pulse animation */}
                 <span className="text-6xl mb-6 block">✦</span>
                 <h3 className="text-3xl font-bold text-white mb-3">Message Received</h3>
-                <p className="text-white/40 text-lg">
+                <p className="text-lg" style={{ color: "rgba(255,255,255,0.50)" }}>
                   We&apos;ll be in touch soon. The future is being built one conversation at a time.
                 </p>
               </motion.div>

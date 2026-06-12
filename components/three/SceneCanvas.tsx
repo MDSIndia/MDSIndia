@@ -3,7 +3,6 @@ import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useMobile } from "@/hooks/useMobile";
 import { AmbientParticles } from "./scenes/AmbientParticles";
-import { NoorvaOrb } from "./scenes/NoorvaOrb";
 import { EarthGlobe } from "./scenes/EarthGlobe";
 
 type Scene = "hero" | "noorva" | "earth";
@@ -11,7 +10,6 @@ type Scene = "hero" | "noorva" | "earth";
 export function SceneCanvas() {
   const isMobile = useMobile();
   const [activeScene, setActiveScene] = useState<Scene>("hero");
-  const [noorvaProgress, setNoorvaProgress] = useState(0);
   const visibleRef = useRef<Set<Scene>>(new Set(["hero"]));
 
   useEffect(() => {
@@ -48,20 +46,8 @@ export function SceneCanvas() {
       if (el) obs.observe(el);
     });
 
-    const onScroll = () => {
-      const el = document.getElementById("noorva");
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const p = Math.max(0, Math.min(1,
-        -rect.top / Math.max(1, rect.height - window.innerHeight)
-      ));
-      setNoorvaProgress(p);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-
     return () => {
       obs.disconnect();
-      window.removeEventListener("scroll", onScroll);
     };
   }, [isMobile]);
 
@@ -83,7 +69,6 @@ export function SceneCanvas() {
       >
         <Suspense fallback={null}>
           {activeScene === "hero"   && <AmbientParticles />}
-          {activeScene === "noorva" && <NoorvaOrb scrollProgress={noorvaProgress} />}
           {activeScene === "earth"  && <EarthGlobe />}
         </Suspense>
       </Canvas>

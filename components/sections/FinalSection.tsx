@@ -6,26 +6,43 @@ export function FinalSection() {
   return (
     <section
       id="finale"
-      className="relative py-32 md:py-40 overflow-hidden flex items-center justify-center"
+      className="relative py-32 md:py-48 overflow-hidden flex items-center justify-center"
     >
-      {/* Atmospheric glow */}
+      {/* Deep atmospheric glow */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background:
-            "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(0,102,255,0.12) 0%, transparent 70%)",
+          background: "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(0,55,210,0.20) 0%, rgba(100,30,180,0.10) 50%, transparent 75%)",
         }}
       />
 
-
-      {/* Vignette edges */}
+      {/* Dark edge vignette */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background:
-            "radial-gradient(ellipse at center, transparent 40%, rgba(5,5,5,0.8) 100%)",
+          background: "radial-gradient(ellipse at center, transparent 35%, rgba(2,2,8,0.90) 100%)",
         }}
       />
+
+      {/* Particle dots */}
+      {[
+        { left: "10%", top: "20%", size: 2, color: "rgba(0,212,255,0.6)" },
+        { left: "90%", top: "30%", size: 2, color: "rgba(0,85,255,0.6)" },
+        { left: "15%", top: "75%", size: 1.5, color: "rgba(123,47,190,0.5)" },
+        { left: "85%", top: "70%", size: 2, color: "rgba(0,212,255,0.5)" },
+      ].map((p, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            left: p.left, top: p.top,
+            width: `${p.size}px`, height: `${p.size}px`,
+            background: p.color,
+            boxShadow: `0 0 ${p.size * 5}px ${p.color}`,
+            animation: `particleFloat ${8 + i * 2}s ease-in-out infinite ${i}s`,
+          }}
+        />
+      ))}
 
       <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
         {/* Sub-line */}
@@ -34,7 +51,8 @@ export function FinalSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="text-white/30 text-sm tracking-[0.4em] uppercase mb-6"
+          className="text-xs tracking-[0.5em] uppercase mb-8"
+          style={{ color: "rgba(255,255,255,0.25)" }}
         >
           We Don&apos;t Just Build Software — We Build The Future
         </motion.p>
@@ -45,7 +63,8 @@ export function FinalSection() {
           whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           viewport={{ once: true }}
           transition={{ duration: 1.1, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-          className="text-[clamp(5rem,18vw,14rem)] font-black leading-none tracking-[-0.04em] text-gradient mb-10"
+          className="font-black leading-none tracking-[-0.04em] text-gradient mb-10"
+          style={{ fontSize: "clamp(5rem, 18vw, 14rem)" }}
         >
           THINK
           <br />
@@ -60,18 +79,24 @@ export function FinalSection() {
           transition={{ duration: 0.8, delay: 0.4 }}
           className="flex flex-col items-center gap-5"
         >
-          <div className="w-px h-12 bg-gradient-to-b from-cyan-400/60 to-transparent" />
+          <div
+            className="w-px h-12"
+            style={{ background: "linear-gradient(to bottom, rgba(0,212,255,0.5), transparent)" }}
+          />
           <a
             href="#noorva"
-            className="px-10 py-5 rounded-full text-white font-semibold text-lg transition-opacity duration-300 hover:opacity-90"
+            className="px-10 py-5 rounded-full text-white font-semibold text-lg transition-all duration-300 hover:scale-105 hover:brightness-110"
             style={{
-              background: "linear-gradient(135deg, #0066FF, #00E5FF)",
-              boxShadow: "0 0 60px rgba(0,102,255,0.3)",
+              background: "linear-gradient(135deg, #0055FF, #00D4FF)",
+              boxShadow: "0 0 50px rgba(0,85,255,0.40), 0 0 100px rgba(0,85,255,0.18)",
             }}
           >
             Begin The Journey
           </a>
-          <p className="text-white/20 text-xs tracking-widest uppercase">
+          <p
+            className="text-xs tracking-widest uppercase"
+            style={{ color: "rgba(255,255,255,0.20)" }}
+          >
             Mahadeva Digital Solutions
           </p>
         </motion.div>

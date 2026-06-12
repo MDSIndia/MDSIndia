@@ -1,116 +1,163 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion } from "framer-motion";
 
-const milestones = [
+const pillars = [
   {
-    year: "2025",
-    label: "Foundation",
-    description:
-      "Mahadeva Digital Solutions is born from a singular vision — to create AI that truly understands humanity, not just processes it.",
-    color: "from-blue-600 to-cyan-400",
+    number: "01",
+    icon: "🌍",
+    label: "The Challenge",
+    headline: "Humanity is overwhelmed.",
+    body: "1 in 4 people experience mental health challenges globally. Loneliness, anxiety, and information overload are at epidemic levels. Technology has made us more connected — yet more isolated than ever before.",
+    accent: "from-blue-500 to-cyan-400",
+    glow: "rgba(0,85,255,0.18)",
   },
   {
-    year: "Now",
-    label: "Noorva Development",
-    description:
-      "Deep in development, Noorva is being trained on the nuances of human emotion, cognition, and life — becoming the world's most empathetic AI.",
-    color: "from-cyan-400 to-purple-500",
+    number: "02",
+    icon: "⚡",
+    label: "The Turning Point",
+    headline: "AI has crossed the threshold.",
+    body: "For the first time in history, artificial intelligence can truly understand human emotion, context, and personal nuance — not just process language. We are at the inflection point that changes everything.",
+    accent: "from-violet-500 to-blue-500",
+    glow: "rgba(123,47,190,0.18)",
   },
   {
-    year: "Tomorrow",
-    label: "Global AI Leadership",
-    description:
-      "MDS leads a new era where AI is not a tool but a companion — trusted, present, and profoundly human in its understanding.",
-    color: "from-purple-500 to-blue-600",
+    number: "03",
+    icon: "✦",
+    label: "Our Answer",
+    headline: "MDS was built for this moment.",
+    body: "We don't build software. We build understanding. MDS exists to create AI that genuinely knows you — your patterns, your goals, your emotions — and helps you live with greater clarity, purpose, and joy.",
+    accent: "from-cyan-400 to-teal-400",
+    glow: "rgba(0,212,255,0.15)",
   },
 ];
 
 export function StorySection() {
   return (
     <section id="story" className="section-padding relative overflow-hidden">
-      <div className="ambient-glow ambient-glow-blue w-[600px] h-[400px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: "radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,55,210,0.08) 0%, transparent 70%)",
+        }}
+      />
+      <div className="scene-top-fade" />
+      <div className="scene-bottom-fade" />
 
       <div className="relative max-w-7xl mx-auto">
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
-          className="text-center mb-10"
+          transition={{ duration: 0.8 }}
+          className="text-center mb-16"
         >
-          <span className="text-xs font-medium tracking-[0.5em] text-cyan-400 uppercase">
-            Our Story
+          <span
+            className="text-xs font-medium tracking-[0.5em] uppercase"
+            style={{ color: "rgba(0,212,255,0.8)" }}
+          >
+            Why We Exist
           </span>
           <h2 className="text-4xl md:text-7xl font-black mt-4 leading-tight">
-            The <span className="text-gradient">MDS</span>
+            Technology Should{" "}
+            <span className="text-gradient">Elevate</span>
             <br />
-            Journey
+            Humanity
           </h2>
+          <p
+            className="text-lg md:text-xl mt-6 max-w-2xl mx-auto leading-relaxed"
+            style={{ color: "rgba(255,255,255,0.45)" }}
+          >
+            Not just automate it. Not just optimize it. Truly elevate it.
+          </p>
         </motion.div>
 
-        <div className="relative">
-          <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white/10 to-transparent" />
-          <div className="flex flex-col gap-12">
-            {milestones.map((milestone, i) => (
-              <StoryCard key={milestone.year} milestone={milestone} index={i} />
-            ))}
-          </div>
+        {/* Pillars grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 mb-16">
+          {pillars.map((pillar, i) => (
+            <motion.div
+              key={pillar.number}
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.9, delay: i * 0.15, ease: [0.22, 1, 0.36, 1] }}
+              whileHover={{ y: -6, transition: { duration: 0.25 } }}
+              className="relative rounded-2xl overflow-hidden cursor-default group"
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                boxShadow: `0 0 40px ${pillar.glow}`,
+              }}
+            >
+              {/* Colored top bar */}
+              <div className={`h-0.5 w-full bg-gradient-to-r ${pillar.accent}`} />
+
+              <div className="p-6 md:p-8">
+                {/* Number */}
+                <div
+                  className="text-xs font-mono mb-5"
+                  style={{ color: "rgba(255,255,255,0.20)" }}
+                >
+                  {pillar.number}
+                </div>
+
+                {/* Icon */}
+                <div className="text-3xl mb-5">{pillar.icon}</div>
+
+                {/* Label */}
+                <span
+                  className={`text-xs font-bold tracking-widest uppercase mb-3 block bg-gradient-to-r ${pillar.accent} bg-clip-text text-transparent`}
+                >
+                  {pillar.label}
+                </span>
+
+                {/* Headline */}
+                <h3 className="text-xl font-bold text-white mb-4 leading-tight">
+                  {pillar.headline}
+                </h3>
+
+                {/* Body */}
+                <p
+                  className="text-sm leading-relaxed"
+                  style={{ color: "rgba(255,255,255,0.50)" }}
+                >
+                  {pillar.body}
+                </p>
+              </div>
+            </motion.div>
+          ))}
         </div>
+
+        {/* Cinematic quote */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.0, delay: 0.3 }}
+          className="text-center"
+        >
+          <div
+            className="w-px h-12 bg-gradient-to-b from-transparent via-cyan-400/50 to-transparent mx-auto mb-8"
+          />
+          <blockquote
+            className="text-2xl md:text-4xl lg:text-5xl font-light leading-relaxed max-w-4xl mx-auto"
+            style={{ color: "rgba(255,255,255,0.65)" }}
+          >
+            &ldquo;The question is not whether AI will change humanity.{" "}
+            <span className="text-gradient font-medium">
+              It&apos;s whether humanity will shape AI first.
+            </span>
+            &rdquo;
+          </blockquote>
+          <p
+            className="text-xs tracking-[0.4em] uppercase mt-8"
+            style={{ color: "rgba(255,255,255,0.20)" }}
+          >
+            — Mahadeva Digital Solutions
+          </p>
+        </motion.div>
       </div>
     </section>
-  );
-}
-
-function StoryCard({
-  milestone,
-  index,
-}: {
-  milestone: (typeof milestones)[0];
-  index: number;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-20%" });
-  const isLeft = index % 2 === 0;
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, x: isLeft ? -60 : 60 }}
-      animate={inView ? { opacity: 1, x: 0 } : {}}
-      transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-      className={`flex items-center gap-6 md:gap-16 ${
-        isLeft ? "md:flex-row" : "md:flex-row-reverse"
-      } flex-col`}
-    >
-      <div className="flex-1 text-left">
-        <div
-          className={`inline-block px-4 py-1.5 rounded-full text-xs font-bold mb-4 bg-gradient-to-r ${milestone.color} text-white tracking-widest`}
-        >
-          {milestone.year}
-        </div>
-        <h3 className="text-2xl md:text-4xl font-bold text-white mb-4">{milestone.label}</h3>
-        <p className="text-white/50 text-base md:text-lg leading-relaxed max-w-md">{milestone.description}</p>
-      </div>
-
-      {/* Central node — static dot, no pulse */}
-      <div className="hidden md:flex w-16 h-16 shrink-0 items-center justify-center">
-        <div
-          className={`w-4 h-4 rounded-full bg-gradient-to-br ${milestone.color} opacity-70`}
-        />
-      </div>
-
-      {/* Accent visual — static, no float */}
-      <div className="flex-1 flex justify-center">
-        <div className="w-36 h-36 sm:w-48 sm:h-48 md:w-64 md:h-64 rounded-3xl glass gradient-border flex items-center justify-center">
-          <div
-            className={`text-7xl md:text-8xl font-black text-transparent bg-gradient-to-br ${milestone.color} bg-clip-text opacity-25`}
-          >
-            {index + 1}
-          </div>
-        </div>
-      </div>
-    </motion.div>
   );
 }

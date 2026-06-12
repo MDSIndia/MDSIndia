@@ -27,35 +27,41 @@ export function Navbar() {
       <motion.nav
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 1.1, delay: 3.2, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 1.1, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
         className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-700 ${
           scrolled ? "py-2.5" : "py-4"
         }`}
       >
-        {/* Glassmorphism backdrop — only visible when scrolled */}
+        {/* Dark glassmorphism backdrop */}
         <div
           className={`absolute inset-0 transition-opacity duration-700 ${
             scrolled ? "opacity-100" : "opacity-0"
           }`}
           style={{
-            background: "rgba(5, 5, 5, 0.70)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.04)",
+            background: "rgba(2, 2, 8, 0.85)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
           }}
         />
 
         <div className="relative max-w-7xl mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
-          <a href="#" className="flex items-center group">
+          <a href="#" className="flex items-center gap-2.5 group">
             <Image
-              src="/name_logo.png"
-              alt="Mahadeva Digital Solutions"
-              width={160}
+              src="/fevicon.png"
+              alt="MDS"
+              width={40}
               height={40}
-              className="h-8 w-auto object-contain"
+              className="w-9 h-9 rounded-xl object-contain"
               priority
             />
+            <span
+              className="font-bold text-sm tracking-wide hidden sm:block transition-colors duration-300"
+              style={{ color: "rgba(255,255,255,0.75)" }}
+            >
+              
+            </span>
           </a>
 
           {/* Desktop Links */}
@@ -64,20 +70,23 @@ export function Navbar() {
               <a
                 key={link.label}
                 href={link.href}
-                className="relative text-white/40 hover:text-white/90 text-sm font-medium tracking-wide transition-colors duration-400 group py-1"
+                className="relative text-white/45 hover:text-white text-sm font-medium tracking-wide transition-colors duration-300 group py-1"
               >
                 {link.label}
-                <span className="absolute -bottom-0.5 left-0 h-px bg-gradient-to-r from-cyan-400 to-blue-500 w-0 group-hover:w-full transition-all duration-500 ease-out" />
+                <span className="absolute -bottom-0.5 left-0 h-px bg-gradient-to-r from-blue-500 to-cyan-400 w-0 group-hover:w-full transition-all duration-500 ease-out" />
               </a>
             ))}
           </nav>
 
-          {/* Primary CTA only — minimal */}
+          {/* Primary CTA */}
           <div className="hidden md:flex items-center">
             <a
               href="#noorva"
-              className="px-5 py-2 rounded-full text-sm font-medium text-white/80 hover:text-white border border-white/10 hover:border-white/20 transition-all duration-300"
-              style={{ background: "rgba(255,255,255,0.03)" }}
+              className="px-5 py-2 rounded-full text-sm font-medium text-white/80 hover:text-white transition-all duration-300"
+              style={{
+                background: "rgba(0,85,255,0.15)",
+                border: "1px solid rgba(0,85,255,0.3)",
+              }}
             >
               Discover Noorva
             </a>
@@ -96,9 +105,9 @@ export function Navbar() {
         </div>
 
         {/* Scroll progress bar */}
-        <div className="absolute bottom-0 left-0 h-px w-full" style={{ background: "rgba(255,255,255,0.03)" }}>
+        <div className="absolute bottom-0 left-0 h-px w-full" style={{ background: "rgba(255,255,255,0.05)" }}>
           <div
-            className="h-full bg-gradient-to-r from-cyan-400/60 to-blue-600/60 transition-all duration-100"
+            className="h-full bg-gradient-to-r from-blue-500/70 to-cyan-400/70 transition-all duration-100"
             style={{ width: `${progress * 100}%` }}
           />
         </div>
@@ -114,10 +123,10 @@ export function Navbar() {
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-y-0 right-0 z-[99] w-64 flex flex-col justify-center p-8"
             style={{
-              background: "rgba(5,5,5,0.92)",
+              background: "rgba(4, 4, 16, 0.97)",
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)",
-              borderLeft: "1px solid rgba(255,255,255,0.05)",
+              borderLeft: "1px solid rgba(255,255,255,0.07)",
             }}
           >
             <div className="flex flex-col gap-7">
@@ -138,7 +147,7 @@ export function Navbar() {
             <a
               href="#noorva"
               className="mt-10 text-center py-3.5 rounded-2xl text-sm font-medium text-white"
-              style={{ background: "linear-gradient(135deg, #0066FF, #00E5FF)" }}
+              style={{ background: "linear-gradient(135deg, #0055FF, #00D4FF)" }}
               onClick={() => setMobileOpen(false)}
             >
               Discover Noorva
