@@ -1,29 +1,40 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
-const NM = "'Neue Machina', 'Inter', sans-serif";
-const SG = "var(--font-space-grotesk), 'Inter', sans-serif";
 
 const pillars = [
   {
     number: "01",
-    title: "Technology Without Soul",
+    title1: "Technology",
+    title2: "Without Soul",
     body: "The world's most advanced technology still fails to understand a single human soul. It processes. It responds. But it does not truly know you.",
-    color: "rgba(0,212,255,0.80)",
+    image: "/technlogy.png",
+    accentGradient: "linear-gradient(135deg, #C084FC 0%, #9333EA 100%)",
+    accentDot: "#A855F7",
+    glow: "168,85,247",
   },
   {
     number: "02",
-    title: "A World Left Alone",
+    title1: "A World",
+    title2: "Left Alone",
     body: "Billions of people navigate life's most important moments — career crossroads, personal struggles, late nights of doubt — without anyone truly there to help them think, grow, and thrive.",
-    color: "rgba(80,130,255,0.80)",
+    image: "/worldleftalone.png",
+    accentGradient: "linear-gradient(135deg, #818CF8 0%, #6366F1 100%)",
+    accentDot: "#818CF8",
+    glow: "129,140,248",
   },
   {
     number: "03",
-    title: "The Gap We Fill",
+    title1: "The Gap",
+    title2: "We Fill",
     body: "We exist to bridge the distance between human potential and human reality. Through AI that doesn't just respond — but remembers, understands, and grows alongside you.",
-    color: "rgba(160,80,255,0.80)",
+    image: "/gapwefill.png",
+    accentGradient: "linear-gradient(135deg, #00D4FF 0%, #0099CC 100%)",
+    accentDot: "#00D4FF",
+    glow: "0,212,255",
   },
 ];
 
@@ -33,163 +44,155 @@ export function WhyWeExistSection() {
       <div className="scene-top-fade" />
       <div className="scene-bottom-fade" />
 
-      {/* Ambient glow */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(0,55,210,0.08) 0%, transparent 70%)",
-        }}
-      />
-
       <div className="relative max-w-6xl mx-auto">
 
-        {/* Label */}
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, ease: EASE }}
-          className="text-center mb-6"
-        >
-          <span
-            className="text-xs font-medium tracking-[0.5em] uppercase"
-            style={{ color: "rgba(0,212,255,0.72)", fontFamily: SG }}
-          >
-            Our Purpose
-          </span>
-        </motion.div>
-
-        {/* Main headline */}
-        <motion.h2
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.0, delay: 0.08, ease: EASE }}
-          className="text-center mb-8"
-          style={{
-            fontFamily: NM,
-            fontSize: "clamp(2.6rem, 7vw, 7.5rem)",
-            lineHeight: 0.92,
-            letterSpacing: "0.02em",
-            background:
-              "linear-gradient(135deg, #FFFFFF 0%, #D8EEFF 28%, #7AA4FF 58%, #00D4FF 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-          }}
-        >
-          Why We Exist
-        </motion.h2>
-
-        {/* Opening statement */}
-        <motion.p
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.9, delay: 0.18, ease: EASE }}
-          className="text-center max-w-3xl mx-auto mb-20 md:mb-28"
-          style={{
-            fontFamily: SG,
-            fontSize: "clamp(1rem, 2vw, 1.35rem)",
-            lineHeight: 1.7,
-            color: "rgba(255,255,255,0.50)",
-          }}
+          transition={{ duration: 0.8, ease: EASE }}
+          className="text-center mb-16 md:mb-24"
         >
-          We don&apos;t build technology for technology&apos;s sake. We build it to do
-          the most human thing possible —{" "}
-          <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>
-            be there for someone.
+          <span
+            className="text-xs font-medium tracking-[0.5em] uppercase block mb-4"
+            style={{ color: "rgba(0,212,255,0.72)", fontFamily: "var(--font-space-grotesk)" }}
+          >
+            Our Purpose
           </span>
-        </motion.p>
+          <h2
+            className="neue-machina"
+            style={{
+              fontSize: "clamp(2.4rem, 6vw, 6rem)",
+              lineHeight: 0.92,
+              letterSpacing: "0.02em",
+              background: "linear-gradient(135deg, #FFFFFF 0%, #D8EEFF 28%, #7AA4FF 58%, #00D4FF 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            Why We Exist
+          </h2>
+        </motion.div>
 
-        {/* Three pillars */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-px" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          {pillars.map((pillar, i) => (
-            <motion.div
-              key={pillar.number}
-              initial={{ opacity: 0, y: 36 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.85, delay: i * 0.12, ease: EASE }}
-              className="pt-10 md:pr-10"
-            >
-              {/* Number */}
+        {/* Pillars */}
+        {pillars.map((pillar, i) => (
+          <motion.div
+            key={pillar.number}
+            initial={{ opacity: 0, y: 36 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.9, delay: i * 0.08, ease: EASE }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center py-12 md:py-16"
+            style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+          >
+            {/* Left — text */}
+            <div className={i % 2 === 1 ? "md:order-2" : ""}>
+              {/* Number badge */}
               <span
-                className="block mb-5"
+                className="inline-flex items-center justify-center px-3 py-1 rounded-lg text-xs font-mono font-semibold tracking-[0.18em] mb-6 block w-fit"
                 style={{
-                  fontFamily: NM,
-                  fontSize: "0.62rem",
-                  letterSpacing: "0.44em",
-                  color: pillar.color,
+                  background: `rgba(${pillar.glow},0.10)`,
+                  border: `1px solid rgba(${pillar.glow},0.28)`,
+                  color: pillar.accentDot,
                 }}
               >
                 {pillar.number}
               </span>
 
-              {/* Title */}
+              {/* Heading */}
               <h3
-                className="mb-4"
+                className="neue-machina mb-0"
                 style={{
-                  fontFamily: NM,
-                  fontSize: "clamp(1.1rem, 2vw, 1.5rem)",
-                  lineHeight: 1.15,
+                  fontSize: "clamp(2rem, 4vw, 3.8rem)",
+                  lineHeight: 1.05,
                   letterSpacing: "0.01em",
-                  color: "rgba(255,255,255,0.92)",
                 }}
               >
-                {pillar.title}
+                <span style={{ color: "rgba(255,255,255,0.96)" }}>{pillar.title1}</span>
+                <br />
+                <span
+                  style={{
+                    background: pillar.accentGradient,
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}
+                >
+                  {pillar.title2}
+                </span>
               </h3>
 
-              {/* Accent line */}
+              {/* Accent dot */}
               <div
-                className="mb-5 h-px"
-                style={{
-                  width: "48px",
-                  background: `linear-gradient(to right, ${pillar.color}, transparent)`,
-                }}
+                className="w-2 h-2 rounded-full mt-4 mb-5"
+                style={{ background: pillar.accentDot, boxShadow: `0 0 8px ${pillar.accentDot}` }}
               />
 
               {/* Body */}
               <p
                 style={{
-                  fontFamily: "'Inter', sans-serif",
-                  fontSize: "clamp(0.875rem, 1.1vw, 1rem)",
+                  fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+                  fontSize: "clamp(0.88rem, 1.1vw, 1rem)",
                   lineHeight: 1.8,
-                  color: "rgba(255,255,255,0.90)",
+                  color: "rgba(255,255,255,0.50)",
                 }}
               >
                 {pillar.body}
               </p>
-            </motion.div>
-          ))}
-        </div>
+            </div>
+
+            {/* Right — image faded into background */}
+            <div className={`relative ${i % 2 === 1 ? "md:order-1" : ""}`}>
+              <div
+                className="relative w-full"
+                style={{
+                  aspectRatio: "3/4",
+                  maskImage: "radial-gradient(ellipse 55% 60% at 50% 50%, black 0%, rgba(0,0,0,0.88) 22%, rgba(0,0,0,0.55) 44%, rgba(0,0,0,0.15) 62%, rgba(0,0,0,0.03) 76%, transparent 88%)",
+                  WebkitMaskImage: "radial-gradient(ellipse 55% 60% at 50% 50%, black 0%, rgba(0,0,0,0.88) 22%, rgba(0,0,0,0.55) 44%, rgba(0,0,0,0.15) 62%, rgba(0,0,0,0.03) 76%, transparent 88%)",
+                }}
+              >
+                <Image
+                  src={pillar.image}
+                  alt=""
+                  fill
+                  style={{
+                    objectFit: "contain",
+                    objectPosition: "center",
+                    mixBlendMode: "screen",
+                    filter: "contrast(1.2) brightness(0.75) saturate(1.5)",
+                  }}
+                />
+              </div>
+            </div>
+          </motion.div>
+        ))}
 
         {/* Closing manifesto */}
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 1.0, delay: 0.3, ease: EASE }}
-          className="mt-20 md:mt-28 text-center"
+          transition={{ duration: 1.0, delay: 0.2, ease: EASE }}
+          className="mt-8 text-center"
           style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "3rem" }}
         >
           <p
+            className="neue-machina"
             style={{
-              fontFamily: NM,
-              fontSize: "clamp(1.4rem, 3.5vw, 3rem)",
-              lineHeight: 1.25,
+              fontSize: "clamp(1.3rem, 3vw, 2.6rem)",
+              lineHeight: 1.28,
               letterSpacing: "0.01em",
-              color: "rgba(255,255,255,0.88)",
-              maxWidth: "820px",
+              color: "rgba(255,255,255,0.82)",
+              maxWidth: "800px",
               margin: "0 auto",
             }}
           >
             &ldquo;The greatest technology is the one that{" "}
             <span
               style={{
-                background:
-                  "linear-gradient(135deg, #00D4FF 0%, #7AA4FF 50%, #a855f7 100%)",
+                background: "linear-gradient(135deg, #00D4FF 0%, #7AA4FF 50%, #a855f7 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
@@ -202,10 +205,10 @@ export function WhyWeExistSection() {
           <p
             className="mt-5"
             style={{
-              fontFamily: SG,
-              fontSize: "0.75rem",
+              fontFamily: "var(--font-space-grotesk)",
+              fontSize: "0.72rem",
               letterSpacing: "0.4em",
-              color: "rgba(255,255,255,0.22)",
+              color: "rgba(255,255,255,0.20)",
               textTransform: "uppercase",
             }}
           >

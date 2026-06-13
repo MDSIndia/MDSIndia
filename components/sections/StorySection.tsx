@@ -54,7 +54,7 @@ function PrincipleBlock({
       transition={{ duration: 1.1, ease: EASE }}
       /* scroll parallax sits on this wrapper */
       style={{ y: imageY }}
-      className="relative w-full lg:w-[58%] shrink-0 h-64 sm:h-80 lg:h-[540px]"
+      className="relative w-full lg:w-[58%] shrink-0 h-72 sm:h-96 lg:h-[620px]"
     >
       {/* continuous float — no background, no border, just the PNG */}
       <motion.div
@@ -75,7 +75,9 @@ function PrincipleBlock({
           className="object-contain"
           sizes="(max-width: 1024px) 100vw, 58vw"
           priority={priority}
-          style={{ filter: dropGlow }}
+          style={{
+            filter: `brightness(1.12) contrast(1.25) saturate(1.5) ${dropGlow}`,
+          }}
         />
       </motion.div>
     </motion.div>
@@ -279,7 +281,7 @@ export function StorySection() {
             accentColor="rgba(0,212,255,0.72)"
             headlineGradient="linear-gradient(135deg, #FFFFFF 0%, #D8EEFF 22%, #7AA4FF 52%, #00D4FF 100%)"
             numberColor="rgba(0,212,255,0.55)"
-            dropGlow="drop-shadow(0 0 38px rgba(0,212,255,0.55)) drop-shadow(0 0 80px rgba(0,150,255,0.28))"
+            dropGlow="drop-shadow(0 0 50px rgba(0,212,255,0.75)) drop-shadow(0 0 100px rgba(0,150,255,0.40))"
             floatDuration={7}
             floatDelay={0}
           />
@@ -301,7 +303,7 @@ export function StorySection() {
             accentColor="rgba(0,100,255,0.72)"
             headlineGradient="linear-gradient(135deg, #FFFFFF 0%, #C8D8FF 20%, #5588FF 50%, #7B2FBE 100%)"
             numberColor="rgba(80,140,255,0.55)"
-            dropGlow="drop-shadow(0 0 38px rgba(0,85,255,0.55)) drop-shadow(0 0 80px rgba(123,47,190,0.28))"
+            dropGlow="drop-shadow(0 0 50px rgba(0,85,255,0.80)) drop-shadow(0 0 100px rgba(123,47,190,0.50))"
             floatDuration={8.5}
             floatDelay={1.2}
           />

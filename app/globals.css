@@ -221,6 +221,24 @@ body.custom-cursor-active * { cursor: none !important; }
   100% { transform: translateY(0) scale(1); opacity: 0.4; }
 }
 
+@keyframes starDrift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(var(--star-dx), var(--star-dy), 0);
+  }
+}
+
+@keyframes starTwinkle {
+  0%, 100% {
+    filter: brightness(0.8);
+  }
+  50% {
+    filter: brightness(1.45);
+  }
+}
+
 @keyframes neuralPulse {
   0%   { transform: scale(1); opacity: 0.5; }
   60%  { transform: scale(1.8); opacity: 0; }

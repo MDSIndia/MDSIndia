@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import type { CSSProperties } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { HeroSection } from "@/components/sections/HeroSection";
@@ -11,7 +12,6 @@ import { NoorvaSection } from "@/components/sections/NoorvaSection";
 import { HowNoorvaWorksSection } from "@/components/sections/HowNoorvaWorksSection";
 import { FutureAISection } from "@/components/sections/FutureAISection";
 import { InvestorSection } from "@/components/sections/InvestorSection";
-import { CareersSection } from "@/components/sections/CareersSection";
 import { TeamSection } from "@/components/sections/TeamSection";
 import { ContactSection } from "@/components/sections/ContactSection";
 
@@ -26,50 +26,65 @@ const SceneCanvas = dynamic(
 );
 
 /* Animated dot grid — fixed behind everything */
-function GlobalDots() {
-  return (
-    <div className="fixed inset-0 pointer-events-none" style={{ zIndex: -1 }} aria-hidden>
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          inset: "-80px",
-          backgroundImage: "radial-gradient(circle, rgba(0,85,255,0.18) 1.5px, transparent 1.5px)",
-          backgroundSize: "38px 38px",
-          animation: "dotsFloat1 10s linear infinite",
-        }}
-      />
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          inset: "-80px",
-          backgroundImage: "radial-gradient(circle, rgba(123,47,190,0.13) 2px, transparent 2px)",
-          backgroundSize: "68px 68px",
-          backgroundPosition: "19px 19px",
-          animation: "dotsFloat2 14s linear infinite reverse",
-        }}
-      />
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          inset: "-80px",
-          backgroundImage: "radial-gradient(circle, rgba(0,212,255,0.10) 1px, transparent 1px)",
-          backgroundSize: "54px 54px",
-          backgroundPosition: "27px 0",
-          animation: "dotsFloat3 12s linear infinite",
-        }}
-      />
-    </div>
-  );
-}
+const seeded = (index: number, salt: number) => {
+  const value = Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453;
+  return value - Math.floor(value);
+};
+
+const starPalette = ["255,255,255", "220,235,255", "200,220,255", "255,255,255"];
+
+const GlobalStars = dynamic(
+  () => Promise.resolve(() => {
+    const stars = Array.from({ length: 90 }, (_, index) => {
+      const size = 1.6 + seeded(index, 3) * 2.8;
+      const color = starPalette[Math.floor(seeded(index, 4) * starPalette.length)];
+      return {
+        x: seeded(index, 1) * 100,
+        y: seeded(index, 2) * 100,
+        size,
+        color,
+        opacity: 0.28 + seeded(index, 5) * 0.42,
+        duration: 12 + seeded(index, 6) * 18,
+        delay: -seeded(index, 7) * 28,
+        dx: (seeded(index, 8) - 0.5) * 72,
+        dy: -18 - seeded(index, 9) * 38,
+      };
+    });
+    return (
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }} aria-hidden>
+        {stars.map((star, index) => (
+          <span
+            key={index}
+            className="absolute rounded-full"
+            style={{
+              left: `${star.x}%`,
+              top: `${star.y}%`,
+              width: `${star.size}px`,
+              height: `${star.size}px`,
+              opacity: star.opacity,
+              background: `rgba(${star.color}, 1)`,
+              boxShadow: `0 0 ${Math.max(5, star.size * 5)}px rgba(${star.color}, ${star.opacity})`,
+              animation: `starDrift ${star.duration}s linear infinite, starTwinkle ${5 + (index % 6)}s ease-in-out infinite`,
+              animationDelay: `${star.delay}s, ${-(index % 7)}s`,
+              "--star-dx": `${star.dx}px`,
+              "--star-dy": `${star.dy}px`,
+            } as CSSProperties}
+          />
+        ))}
+      </div>
+    );
+  }),
+  { ssr: false }
+);
 
 export default function Home() {
   return (
     <>
       <CustomCursor />
-      <GlobalDots />
+      <GlobalStars />
       <SceneCanvas />
 
-      <div className="relative min-h-screen">
+      <div className="relative min-h-screen" style={{ zIndex: 1 }}>
         <Navbar />
         <main>
           <HeroSection />
@@ -81,7 +96,6 @@ export default function Home() {
           <FutureAISection />
           <InvestorSection />
           <TeamSection />
-          <CareersSection />
           <ContactSection />
         </main>
         <Footer />

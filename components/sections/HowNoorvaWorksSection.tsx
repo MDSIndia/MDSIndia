@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -91,7 +91,7 @@ export function HowNoorvaWorksSection() {
       <div className="scene-top-fade" />
       <div className="scene-bottom-fade" />
 
-      <div className="relative max-w-7xl mx-auto">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
 
         {/* ── HEADER ── */}
         <motion.div
@@ -141,9 +141,12 @@ export function HowNoorvaWorksSection() {
           onMouseLeave={() => setPaused(false)}
         >
           {stages.map((stage, i) => (
-            <div key={stage.id} className="flex items-center flex-1 min-w-0">
+            <React.Fragment key={stage.id}>
               {i > 0 && (
-                <div className="flex-1 h-px mx-2 md:mx-4 relative overflow-hidden rounded-full" style={{ minWidth: "12px" }}>
+                <div
+                  className="flex-1 h-px relative overflow-hidden rounded-full mx-3 md:mx-5"
+                  style={{ minWidth: "20px" }}
+                >
                   <div className="absolute inset-0" style={{ background: "rgba(255,255,255,0.10)" }} />
                   {i <= active && (
                     <div
@@ -186,7 +189,7 @@ export function HowNoorvaWorksSection() {
                   {stage.label}
                 </span>
               </button>
-            </div>
+            </React.Fragment>
           ))}
         </motion.div>
 

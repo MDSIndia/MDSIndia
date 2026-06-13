@@ -13,8 +13,6 @@ export function SceneCanvas() {
   const visibleRef = useRef<Set<Scene>>(new Set(["hero"]));
 
   useEffect(() => {
-    if (isMobile) return;
-
     const sections: { id: string; scene: Scene }[] = [
       { id: "hero", scene: "hero" },
       { id: "noorva", scene: "noorva" },
@@ -51,13 +49,11 @@ export function SceneCanvas() {
     };
   }, [isMobile]);
 
-  if (isMobile) return null;
-
   return (
     <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
       <Canvas
-        camera={{ position: [0, 0, 8], fov: 60 }}
-        dpr={[1, 1.5]}
+        camera={{ position: [0, 0, 8], fov: isMobile ? 68 : 60 }}
+        dpr={isMobile ? 1 : [1, 1.5]}
         gl={{
           antialias: false,
           alpha: true,

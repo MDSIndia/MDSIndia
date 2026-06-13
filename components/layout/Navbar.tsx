@@ -6,21 +6,43 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useScrollProgress } from "@/hooks/useScrollProgress";
 
 const navLinks = [
-  { label: "Vision",   href: "#vision" },
-  { label: "Noorva",   href: "#noorva" },
-  { label: "Future",   href: "#future-ai" },
-  { label: "Invest",   href: "#invest" },
-  { label: "Contact",  href: "#contact" },
+  { label: "Vision",   href: "#vision",    id: "vision" },
+  { label: "Noorva",   href: "#noorva",    id: "noorva" },
+  { label: "Future",   href: "#future-ai", id: "future-ai" },
+  { label: "Invest",   href: "#invest",    id: "invest" },
+  { label: "Team",     href: "#team",      id: "team" },
+  { label: "Contact",  href: "#contact",   id: "contact" },
 ];
 
 export function Navbar() {
   const progress = useScrollProgress();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("");
 
   useEffect(() => {
     setScrolled(progress > 0.02);
   }, [progress]);
+
+  useEffect(() => {
+    const sectionIds = navLinks.map((l) => l.id);
+    const observers: IntersectionObserver[] = [];
+
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) setActiveSection(id);
+        },
+        { rootMargin: "-40% 0px -55% 0px", threshold: 0 }
+      );
+      obs.observe(el);
+      observers.push(obs);
+    });
+
+    return () => observers.forEach((o) => o.disconnect());
+  }, []);
 
   return (
     <>
@@ -32,7 +54,7 @@ export function Navbar() {
           scrolled ? "py-2.5" : "py-4"
         }`}
       >
-        {/* Dark glassmorphism backdrop */}
+        {/* Glassmorphism backdrop */}
         <div
           className={`absolute inset-0 transition-opacity duration-700 ${
             scrolled ? "opacity-100" : "opacity-0"
@@ -56,26 +78,42 @@ export function Navbar() {
               className="w-9 h-9 rounded-xl object-contain"
               priority
             />
-            <span
-              className="font-bold text-sm tracking-wide hidden sm:block transition-colors duration-300"
-              style={{ color: "rgba(255,255,255,0.75)" }}
-            >
-              
-            </span>
           </a>
 
           {/* Desktop Links */}
           <nav className="hidden md:flex items-center gap-9">
-            {navLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                className="relative text-white/45 hover:text-white text-sm font-medium tracking-wide transition-colors duration-300 group py-1"
-              >
-                {link.label}
-                <span className="absolute -bottom-0.5 left-0 h-px bg-gradient-to-r from-blue-500 to-cyan-400 w-0 group-hover:w-full transition-all duration-500 ease-out" />
-              </a>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = activeSection === link.id;
+              return (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className="relative text-sm font-medium tracking-wide transition-colors duration-300 group py-1"
+                  style={{ color: isActive ? "#fff" : "rgba(255,255,255,0.42)" }}
+                >
+                  {link.label}
+                  {/* Active indicator */}
+                  <span
+                    className="absolute -bottom-0.5 left-0 h-px transition-all duration-500 ease-out"
+                    style={{
+                      width: isActive ? "100%" : "0%",
+                      background: "linear-gradient(to right, #0055FF, #00D4FF)",
+                    }}
+                  />
+                  {/* Hover fallback underline */}
+                  {!isActive && (
+                    <span className="absolute -bottom-0.5 left-0 h-px bg-gradient-to-r from-blue-500/50 to-cyan-400/50 w-0 group-hover:w-full transition-all duration-500 ease-out" />
+                  )}
+                  {/* Active dot */}
+                  {isActive && (
+                    <span
+                      className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
+                      style={{ background: "#00D4FF", boxShadow: "0 0 6px #00D4FF" }}
+                    />
+                  )}
+                </a>
+              );
+            })}
           </nav>
 
           {/* Primary CTA */}
@@ -130,19 +168,26 @@ export function Navbar() {
             }}
           >
             <div className="flex flex-col gap-7">
-              {navLinks.map((link, i) => (
-                <motion.a
-                  key={link.label}
-                  href={link.href}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
-                  className="text-xl font-light text-white/50 hover:text-white transition-colors duration-300"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {link.label}
-                </motion.a>
-              ))}
+              {navLinks.map((link, i) => {
+                const isActive = activeSection === link.id;
+                return (
+                  <motion.a
+                    key={link.label}
+                    href={link.href}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
+                    className="text-xl font-light transition-colors duration-300 flex items-center gap-2"
+                    style={{ color: isActive ? "#fff" : "rgba(255,255,255,0.45)" }}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {isActive && (
+                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "#00D4FF" }} />
+                    )}
+                    {link.label}
+                  </motion.a>
+                );
+              })}
             </div>
             <a
               href="#noorva"
