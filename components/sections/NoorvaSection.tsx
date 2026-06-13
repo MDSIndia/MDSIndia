@@ -188,7 +188,7 @@ export function NoorvaSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.3 }}
-          className="text-center mb-14"
+          className="text-center mb-8"
         >
           <p
             className="text-xl md:text-3xl font-light max-w-2xl mx-auto leading-relaxed"
@@ -210,7 +210,7 @@ export function NoorvaSection() {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 1.2, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="mb-20"
+          className="mb-10"
         >
           <NoorvaOrb />
           {/* Label tags around orb */}

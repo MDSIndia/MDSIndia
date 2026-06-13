@@ -99,7 +99,7 @@ export function HowNoorvaWorksSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: EASE }}
-          className="text-center mb-16 md:mb-20"
+          className="text-center mb-8 md:mb-10"
         >
           <span
             className="text-xs font-medium tracking-[0.5em] uppercase block mb-4"
@@ -195,7 +195,7 @@ export function HowNoorvaWorksSection() {
 
         {/* ── PROGRESS BAR ── */}
         <div
-          className="h-px rounded-full mb-10 md:mb-14 overflow-hidden"
+          className="h-px rounded-full mb-6 md:mb-8 overflow-hidden"
           style={{ background: "rgba(255,255,255,0.06)" }}
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
@@ -246,7 +246,7 @@ export function HowNoorvaWorksSection() {
               {cur.number}
             </div>
 
-            <div className="relative p-8 md:p-12 lg:p-16 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-10 lg:gap-16 items-start">
+            <div className="relative p-6 md:p-8 lg:p-10 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 lg:gap-10 items-start">
 
               {/* Left: Heading + Description */}
               <div>

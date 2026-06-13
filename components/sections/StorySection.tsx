@@ -222,7 +222,7 @@ export function StorySection() {
         style={{ background: "linear-gradient(to bottom, #020208, transparent)" }}
       />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 md:px-12 xl:px-16 py-16 md:py-24">
+      <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 md:px-12 xl:px-16 py-10 md:py-16">
 
         {/* Section header */}
         <motion.div
@@ -230,7 +230,7 @@ export function StorySection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, ease: EASE }}
-          className="text-center mb-10 md:mb-20"
+          className="text-center mb-8 md:mb-12"
         >
           <span
             className="text-xs font-medium tracking-[0.5em] uppercase block mb-5"
@@ -261,7 +261,7 @@ export function StorySection() {
         </motion.div>
 
         {/* Blocks */}
-        <div className="space-y-12 md:space-y-24">
+        <div className="space-y-8 md:space-y-14">
 
           {/* 01 — VISION */}
           <PrincipleBlock

@@ -6,7 +6,7 @@ export function FinalSection() {
   return (
     <section
       id="finale"
-      className="relative py-32 md:py-48 overflow-hidden flex items-center justify-center"
+      className="relative py-16 md:py-24 overflow-hidden flex items-center justify-center"
     >
       {/* Deep atmospheric glow */}
       <div

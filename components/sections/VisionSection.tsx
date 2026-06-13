@@ -48,7 +48,7 @@ export function VisionSection() {
 
       <div className="relative max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-14">
+        <div className="text-center mb-8">
           <motion.span
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -121,7 +121,7 @@ export function VisionSection() {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, delay: 0.5 }}
-          className="mt-16 text-center"
+          className="mt-10 text-center"
         >
           <blockquote
             className="text-2xl md:text-4xl lg:text-5xl font-light leading-relaxed max-w-4xl mx-auto"

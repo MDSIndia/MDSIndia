@@ -69,7 +69,7 @@ export function InvestorSection() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-14"
+          className="text-center mb-8"
         >
           <span
             className="text-xs font-medium tracking-[0.5em] uppercase"
@@ -86,7 +86,7 @@ export function InvestorSection() {
         </motion.div>
 
         {/* Metrics */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-14">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {metrics.map((metric, i) => (
             <motion.div
               key={metric.label}
@@ -117,7 +117,7 @@ export function InvestorSection() {
         </div>
 
         {/* Roadmap + Why MDS */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -227,7 +227,7 @@ export function InvestorSection() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-14 text-center"
+          className="mt-8 text-center"
         >
           <a
             href="#contact"

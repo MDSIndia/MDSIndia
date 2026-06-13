@@ -55,7 +55,7 @@ export function TeamSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: EASE }}
-          className="text-center mb-20 md:mb-24"
+          className="text-center mb-10 md:mb-12"
         >
           <span
             className="text-xs font-medium tracking-[0.5em] uppercase block mb-4"

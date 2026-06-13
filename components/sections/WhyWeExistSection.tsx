@@ -52,14 +52,9 @@ export function WhyWeExistSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: EASE }}
-          className="text-center mb-16 md:mb-24"
+          className="text-center mb-8 md:mb-12"
         >
-          <span
-            className="text-xs font-medium tracking-[0.5em] uppercase block mb-4"
-            style={{ color: "rgba(0,212,255,0.72)", fontFamily: "var(--font-space-grotesk)" }}
-          >
-            Our Purpose
-          </span>
+         
           <h2
             className="neue-machina"
             style={{
@@ -76,6 +71,84 @@ export function WhyWeExistSection() {
           </h2>
         </motion.div>
 
+        {/* About body text */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, delay: 0.1, ease: EASE }}
+          className="max-w-3xl mx-auto mb-10 md:mb-14 text-center space-y-4"
+        >
+          <p
+            style={{
+              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+              fontSize: "clamp(1rem, 1.25vw, 1.15rem)",
+              lineHeight: 1.85,
+              color: "rgba(255,255,255,0.82)",
+            }}
+          >
+            MDS is not just a technology company—we are{" "}
+            <span style={{ color: "#ffffff", fontWeight: 600 }}>architects of the future.</span>{" "}
+            Driven by an uncompromising pursuit of innovation, we exist to create transformative,
+            world-class products that solve real problems, unlock human potential, and leave a
+            meaningful, lasting impact on society.
+          </p>
+
+          <p
+            style={{
+              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+              fontSize: "clamp(1rem, 1.25vw, 1.15rem)",
+              lineHeight: 1.85,
+              color: "rgba(255,255,255,0.82)",
+            }}
+          >
+            At the heart of our vision is{" "}
+            <span
+              style={{
+                background: "linear-gradient(135deg, #00D4FF, #7AA4FF)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                fontWeight: 600,
+              }}
+            >
+              Noorva Companion
+            </span>
+            , our flagship product—an intelligent AI companion designed to redefine how humans
+            interact with AI technology. Noorva is not merely an assistant; it is a trusted partner
+            for growth, productivity, learning, creativity, and decision-making.
+          </p>
+
+          <p
+            style={{
+              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+              fontSize: "clamp(1rem, 1.25vw, 1.15rem)",
+              lineHeight: 1.85,
+              color: "rgba(255,255,255,0.82)",
+            }}
+          >
+            Built with deep intelligence and human-centric design, Noorva Companion understands
+            people at a profound level, adapts intuitively to their evolving needs, and grows
+            alongside them. Its purpose is to elevate human capability—helping individuals move from
+            intention to action, and closing the gap between what they aspire to achieve and what
+            they actually accomplish.
+          </p>
+
+          <p
+            style={{
+              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+              fontSize: "clamp(1rem, 1.25vw, 1.15rem)",
+              lineHeight: 1.85,
+              color: "rgba(255,255,255,0.65)",
+              fontStyle: "italic",
+            }}
+          >
+            At MDS, we are not building for the present alone. We are creating the foundations of a
+            smarter, more empowered tomorrow—where technology amplifies human capability and
+            redefines what is possible.
+          </p>
+        </motion.div>
+
         {/* Pillars */}
         {pillars.map((pillar, i) => (
           <motion.div
@@ -84,14 +157,14 @@ export function WhyWeExistSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.9, delay: i * 0.08, ease: EASE }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center py-12 md:py-16"
+            className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8 items-center py-5 md:py-6"
             style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
           >
             {/* Left — text */}
             <div className={i % 2 === 1 ? "md:order-2" : ""}>
               {/* Number badge */}
               <span
-                className="inline-flex items-center justify-center px-3 py-1 rounded-lg text-xs font-mono font-semibold tracking-[0.18em] mb-6 block w-fit"
+                className="inline-flex items-center justify-center px-3 py-1 rounded-lg text-xs font-mono font-semibold tracking-[0.18em] mb-3 block w-fit"
                 style={{
                   background: `rgba(${pillar.glow},0.10)`,
                   border: `1px solid rgba(${pillar.glow},0.28)`,
@@ -148,7 +221,7 @@ export function WhyWeExistSection() {
               <div
                 className="relative w-full"
                 style={{
-                  aspectRatio: "3/4",
+                  aspectRatio: "4/3",
                   maskImage: "radial-gradient(ellipse 55% 60% at 50% 50%, black 0%, rgba(0,0,0,0.88) 22%, rgba(0,0,0,0.55) 44%, rgba(0,0,0,0.15) 62%, rgba(0,0,0,0.03) 76%, transparent 88%)",
                   WebkitMaskImage: "radial-gradient(ellipse 55% 60% at 50% 50%, black 0%, rgba(0,0,0,0.88) 22%, rgba(0,0,0,0.55) 44%, rgba(0,0,0,0.15) 62%, rgba(0,0,0,0.03) 76%, transparent 88%)",
                 }}
@@ -175,8 +248,8 @@ export function WhyWeExistSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 1.0, delay: 0.2, ease: EASE }}
-          className="mt-8 text-center"
-          style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "3rem" }}
+          className="mt-4 text-center"
+          style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "1.75rem" }}
         >
           <p
             className="neue-machina"
