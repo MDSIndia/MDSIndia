@@ -6,23 +6,25 @@ const seeded = (index: number, salt: number) => {
   return v - Math.floor(v);
 };
 
+const r4 = (n: number) => Math.round(n * 10000) / 10000;
+
 const imageDots = Array.from({ length: 55 }, (_, i) => ({
-  x: seeded(i, 1) * 100,
-  y: seeded(i, 2) * 100,
-  size: 1.2 + seeded(i, 3) * 2.2,
+  x: r4(seeded(i, 1) * 100),
+  y: r4(seeded(i, 2) * 100),
+  size: r4(1.2 + seeded(i, 3) * 2.2),
   color: ["255,255,255", "220,235,255", "200,220,255"][Math.floor(seeded(i, 4) * 3)],
-  opacity: 0.25 + seeded(i, 5) * 0.45,
-  duration: 12 + seeded(i, 6) * 18,
-  delay: -seeded(i, 7) * 28,
-  dx: (seeded(i, 8) - 0.5) * 60,
-  dy: -15 - seeded(i, 9) * 30,
+  opacity: r4(0.25 + seeded(i, 5) * 0.45),
+  duration: r4(12 + seeded(i, 6) * 18),
+  delay: r4(-seeded(i, 7) * 28),
+  dx: r4((seeded(i, 8) - 0.5) * 60),
+  dy: r4(-15 - seeded(i, 9) * 30),
 }));
 
 export function HeroSection() {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex flex-col md:flex-row md:items-center md:justify-center md:gap-16"
+      className="relative md:min-h-screen flex flex-col md:flex-row md:items-center md:justify-center md:gap-16"
     >
       <style>{`
         @media (min-width: 768px) {
@@ -51,7 +53,15 @@ export function HeroSection() {
             Building Tomorrow's Products for Today's World
           </h1>
 
-          <p className="font-semibold mb-8 text-sm md:text-base" style={{ color: "rgba(255,255,255,0.75)" }}>
+          <p
+            className="font-semibold mb-8"
+            style={{
+              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+              fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
+              color: "rgba(255,255,255,0.80)",
+              letterSpacing: "0.02em",
+            }}
+          >
             Empowering The Future Through Products
           </p>
 
@@ -60,6 +70,7 @@ export function HeroSection() {
               href="#about-mds"
               className="px-7 py-3.5 rounded-full text-white font-semibold text-sm transition-all duration-300 hover:scale-105 hover:brightness-110"
               style={{
+                fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
                 background: "linear-gradient(135deg, #0055FF, #00D4FF)",
                 boxShadow: "0 0 28px rgba(0,85,255,0.44), 0 0 60px rgba(0,180,255,0.12)",
               }}
@@ -68,11 +79,12 @@ export function HeroSection() {
             </a>
             <a
               href="#noorva"
-              className="px-7 py-3.5 rounded-full font-semibold text-sm transition-all duration-300"
+              className="px-7 py-3.5 rounded-full font-semibold text-sm transition-all duration-300 hover:scale-105"
               style={{
+                fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
                 background: "rgba(255,255,255,0.07)",
-                border: "1px solid rgba(255,255,255,0.16)",
-                color: "rgba(255,255,255,0.75)",
+                border: "1px solid rgba(255,255,255,0.20)",
+                color: "rgba(255,255,255,0.88)",
               }}
             >
               Discover Noorva
@@ -82,7 +94,7 @@ export function HeroSection() {
       </div>
 
       {/* Right: image */}
-      <div className="hero-image-panel order-1 md:order-2 w-full h-56 sm:h-64 flex-shrink-0">
+      <div className="hero-image-panel order-1 md:order-2 w-full h-56 sm:h-64 flex-shrink-0 pt-16 md:pt-0">
         <div className="relative w-full h-full overflow-hidden">
           <img
             src="/rightimage.jpeg"

@@ -84,7 +84,7 @@ export function WhyWeExistSection() {
               fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
               fontSize: "clamp(1rem, 1.25vw, 1.15rem)",
               lineHeight: 1.85,
-              color: "rgba(255,255,255,0.82)",
+              color: "#FFFFFF",
             }}
           >
             MDS is not just a technology company—we are{" "}
@@ -99,7 +99,7 @@ export function WhyWeExistSection() {
               fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
               fontSize: "clamp(1rem, 1.25vw, 1.15rem)",
               lineHeight: 1.85,
-              color: "rgba(255,255,255,0.82)",
+              color: "#FFFFFF",
             }}
           >
             At the heart of our vision is{" "}
@@ -124,7 +124,7 @@ export function WhyWeExistSection() {
               fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
               fontSize: "clamp(1rem, 1.25vw, 1.15rem)",
               lineHeight: 1.85,
-              color: "rgba(255,255,255,0.82)",
+              color: "#FFFFFF",
             }}
           >
             Built with deep intelligence and human-centric design, Noorva Companion understands
@@ -139,7 +139,7 @@ export function WhyWeExistSection() {
               fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
               fontSize: "clamp(1rem, 1.25vw, 1.15rem)",
               lineHeight: 1.85,
-              color: "rgba(255,255,255,0.65)",
+              color: "#FFFFFF",
               fontStyle: "italic",
             }}
           >
@@ -281,7 +281,7 @@ export function WhyWeExistSection() {
               fontFamily: "var(--font-space-grotesk)",
               fontSize: "0.72rem",
               letterSpacing: "0.4em",
-              color: "rgba(255,255,255,0.20)",
+              color: "rgba(255,255,255,0.35)",
               textTransform: "uppercase",
             }}
           >

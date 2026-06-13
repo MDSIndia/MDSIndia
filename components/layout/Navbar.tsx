@@ -91,7 +91,7 @@ export function Navbar() {
                   key={link.label}
                   href={link.href}
                   className="relative text-sm font-medium tracking-wide transition-colors duration-300 group py-1"
-                  style={{ color: isActive ? "#fff" : "rgba(255,255,255,0.42)" }}
+                  style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: isActive ? "#fff" : "rgba(255,255,255,0.55)" }}
                 >
                   {link.label}
                   {/* Active indicator */}
@@ -122,10 +122,12 @@ export function Navbar() {
           <div className="hidden md:flex items-center">
             <a
               href="#noorva"
-              className="px-5 py-2 rounded-full text-sm font-medium text-white/80 hover:text-white transition-all duration-300"
+              className="px-5 py-2 rounded-full text-sm font-medium hover:text-white transition-all duration-300"
               style={{
+                fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
                 background: "rgba(0,85,255,0.15)",
                 border: "1px solid rgba(0,85,255,0.3)",
+                color: "rgba(255,255,255,0.88)",
               }}
             >
               Discover Noorva
@@ -180,7 +182,7 @@ export function Navbar() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
                     className="text-xl font-light transition-colors duration-300 flex items-center gap-2"
-                    style={{ color: isActive ? "#fff" : "rgba(255,255,255,0.45)" }}
+                    style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: isActive ? "#fff" : "rgba(255,255,255,0.60)" }}
                     onClick={() => setMobileOpen(false)}
                   >
                     {isActive && (
@@ -194,7 +196,7 @@ export function Navbar() {
             <a
               href="#noorva"
               className="mt-10 text-center py-3.5 rounded-2xl text-sm font-medium text-white"
-              style={{ background: "linear-gradient(135deg, #0055FF, #00D4FF)" }}
+              style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", background: "linear-gradient(135deg, #0055FF, #00D4FF)" }}
               onClick={() => setMobileOpen(false)}
             >
               Discover Noorva

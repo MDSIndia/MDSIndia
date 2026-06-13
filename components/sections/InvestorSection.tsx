@@ -73,11 +73,14 @@ export function InvestorSection() {
         >
           <span
             className="text-xs font-medium tracking-[0.5em] uppercase"
-            style={{ color: "rgba(0,212,255,0.8)" }}
+            style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(0,212,255,0.8)" }}
           >
             Investment Opportunity
           </span>
-          <h2 className="text-4xl md:text-7xl font-black mt-4">
+          <h2
+            className="neue-machina mt-4"
+            style={{ fontSize: "clamp(2.8rem, 7vw, 7rem)", lineHeight: 0.92, letterSpacing: "0.01em" }}
+          >
             The{" "}
             <span className="text-gradient">Market</span>
             <br />
@@ -108,7 +111,10 @@ export function InvestorSection() {
                   {metric.prefix}
                   <AnimatedNumber target={metric.value} suffix={metric.suffix} />
                 </div>
-                <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.40)" }}>
+                <p
+                  className="text-xs leading-relaxed"
+                  style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.55)" }}
+                >
                   {metric.label}
                 </p>
               </div>
@@ -129,7 +135,10 @@ export function InvestorSection() {
               boxShadow: "0 0 30px rgba(0,85,255,0.10)",
             }}
           >
-            <h3 className="text-xl font-bold text-white mb-6">Vision Roadmap</h3>
+            <h3
+              className="neue-machina mb-6"
+              style={{ fontSize: "clamp(1.25rem, 2vw, 1.5rem)", color: "#ffffff", lineHeight: 1.2 }}
+            >Vision Roadmap</h3>
             <div className="space-y-4 relative">
               <div
                 className="absolute left-4 top-2 bottom-2 w-px"
@@ -179,7 +188,10 @@ export function InvestorSection() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-xl font-bold text-white mb-6">Why MDS Wins</h3>
+            <h3
+              className="neue-machina mb-6"
+              style={{ fontSize: "clamp(1.25rem, 2vw, 1.5rem)", color: "#ffffff", lineHeight: 1.2 }}
+            >Why MDS Wins</h3>
             <div className="space-y-3">
               {whyPoints.map((point, i) => {
                 const Icon = point.iconComponent;
@@ -212,7 +224,10 @@ export function InvestorSection() {
                     <h4 className="font-semibold mb-1 text-sm" style={{ color: "rgba(0,212,255,0.85)" }}>
                       {point.title}
                     </h4>
-                    <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
+                    <p
+                      className="text-sm leading-relaxed"
+                      style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.68)" }}
+                    >
                       {point.desc}
                     </p>
                   </div>
@@ -233,6 +248,7 @@ export function InvestorSection() {
             href="#contact"
             className="inline-flex items-center gap-3 px-10 py-5 rounded-full text-white font-semibold text-lg transition-all duration-300 hover:scale-105 hover:brightness-110"
             style={{
+              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
               background: "linear-gradient(135deg, #0055FF, #00D4FF)",
               boxShadow: "0 0 40px rgba(0,85,255,0.40), 0 0 80px rgba(0,85,255,0.18)",
             }}

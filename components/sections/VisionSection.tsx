@@ -54,7 +54,7 @@ export function VisionSection() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             className="text-xs font-medium tracking-[0.5em] uppercase"
-            style={{ color: "rgba(0,212,255,0.8)" }}
+            style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(0,212,255,0.8)" }}
           >
             Our Philosophy
           </motion.span>
@@ -63,7 +63,8 @@ export function VisionSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="text-4xl md:text-7xl font-black mt-4 leading-tight"
+            className="neue-machina mt-4"
+            style={{ fontSize: "clamp(2.8rem, 7vw, 7rem)", lineHeight: 0.92, letterSpacing: "0.01em" }}
           >
             Built On
             <br />
@@ -104,8 +105,13 @@ export function VisionSection() {
 
                 {/* Headline */}
                 <p
-                  className="text-base md:text-lg font-medium leading-relaxed"
-                  style={{ color: "rgba(255,255,255,0.80)" }}
+                  className="font-medium leading-relaxed"
+                  style={{
+                    fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+                    fontSize: "clamp(0.95rem, 1.2vw, 1.1rem)",
+                    lineHeight: 1.75,
+                    color: "rgba(255,255,255,0.88)",
+                  }}
                 >
                   {card.headline}
                 </p>
@@ -124,8 +130,13 @@ export function VisionSection() {
           className="mt-10 text-center"
         >
           <blockquote
-            className="text-2xl md:text-4xl lg:text-5xl font-light leading-relaxed max-w-4xl mx-auto"
-            style={{ color: "rgba(255,255,255,0.60)" }}
+            className="font-light leading-relaxed max-w-4xl mx-auto"
+            style={{
+              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+              fontSize: "clamp(1.4rem, 3.2vw, 3rem)",
+              lineHeight: 1.45,
+              color: "rgba(255,255,255,0.70)",
+            }}
           >
             &ldquo;The greatest technology is the one that{" "}
             <span className="text-gradient font-medium">

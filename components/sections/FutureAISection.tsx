@@ -70,7 +70,7 @@ export function FutureAISection() {
         }}
       />
 
-      <div className="relative max-w-7xl mx-auto">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -79,18 +79,26 @@ export function FutureAISection() {
         >
           <span
             className="text-xs font-medium tracking-[0.5em] uppercase"
-            style={{ color: "rgba(0,212,255,0.8)" }}
+            style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(0,212,255,0.8)" }}
           >
             Domains of Impact
           </span>
-          <h2 className="text-4xl md:text-7xl font-black mt-4">
+          <h2
+            className="neue-machina mt-4"
+            style={{ fontSize: "clamp(2.8rem, 7vw, 7rem)", lineHeight: 0.92, letterSpacing: "0.01em" }}
+          >
             The <span className="text-gradient">World</span>
             <br />
             We&apos;re Building
           </h2>
           <p
-            className="text-xl mt-6 max-w-2xl mx-auto"
-            style={{ color: "rgba(255,255,255,0.45)" }}
+            className="mt-6 max-w-2xl mx-auto"
+            style={{
+              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+              fontSize: "clamp(1rem, 1.25vw, 1.18rem)",
+              lineHeight: 1.75,
+              color: "rgba(255,255,255,0.65)",
+            }}
           >
             Every domain of human life, elevated by intelligent, empathetic AI.
           </p>
@@ -127,7 +135,10 @@ export function FutureAISection() {
                 >
                   {domain.title}
                 </span>
-                <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.90)" }}>
+                <p
+                  className="text-sm leading-relaxed"
+                  style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.88)" }}
+                >
                   {domain.description}
                 </p>
               </div>

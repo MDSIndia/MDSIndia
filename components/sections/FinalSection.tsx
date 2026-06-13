@@ -52,7 +52,7 @@ export function FinalSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
           className="text-xs tracking-[0.5em] uppercase mb-8"
-          style={{ color: "rgba(255,255,255,0.25)" }}
+          style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.42)" }}
         >
           We Don&apos;t Just Build Software — We Build The Future
         </motion.p>
@@ -63,8 +63,8 @@ export function FinalSection() {
           whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           viewport={{ once: true }}
           transition={{ duration: 1.1, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-          className="font-black leading-none tracking-[-0.04em] text-gradient mb-10"
-          style={{ fontSize: "clamp(5rem, 18vw, 14rem)" }}
+          className="neue-machina leading-none text-gradient mb-10"
+          style={{ fontSize: "clamp(5rem, 18vw, 14rem)", letterSpacing: "-0.04em" }}
         >
           THINK
           <br />
@@ -87,6 +87,7 @@ export function FinalSection() {
             href="#noorva"
             className="px-10 py-5 rounded-full text-white font-semibold text-lg transition-all duration-300 hover:scale-105 hover:brightness-110"
             style={{
+              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
               background: "linear-gradient(135deg, #0055FF, #00D4FF)",
               boxShadow: "0 0 50px rgba(0,85,255,0.40), 0 0 100px rgba(0,85,255,0.18)",
             }}

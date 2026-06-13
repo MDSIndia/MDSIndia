@@ -143,7 +143,7 @@ export function NoorvaSection() {
       <div className="scene-top-fade" />
       <div className="scene-bottom-fade" />
 
-      <div className="relative max-w-7xl mx-auto px-6">
+      <div className="relative max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -153,7 +153,7 @@ export function NoorvaSection() {
         >
           <span
             className="text-xs font-medium tracking-[0.5em] uppercase"
-            style={{ color: "rgba(139,92,246,0.85)" }}
+            style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(139,92,246,0.90)" }}
           >
             Project Noorva
           </span>
@@ -164,8 +164,8 @@ export function NoorvaSection() {
           whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           viewport={{ once: true }}
           transition={{ duration: 1.0, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center font-black mb-3 leading-tight"
-          style={{ fontSize: "clamp(3rem, 10vw, 8rem)", letterSpacing: "-0.04em" }}
+          className="neue-machina text-center mb-3"
+          style={{ fontSize: "clamp(3rem, 10vw, 8rem)", lineHeight: 0.92, letterSpacing: "-0.02em" }}
         >
           Meet{" "}
           <span className="text-gradient-warm">Noorva</span>
@@ -176,8 +176,12 @@ export function NoorvaSection() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.25 }}
-          className="text-center text-lg md:text-xl mb-4 max-w-lg mx-auto"
-          style={{ color: "rgba(255,255,255,0.45)" }}
+          className="text-center mb-4 max-w-lg mx-auto"
+          style={{
+            fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+            fontSize: "clamp(1rem, 1.5vw, 1.2rem)",
+            color: "rgba(255,255,255,0.62)",
+          }}
         >
           The Future of Human-AI Companionship
         </motion.p>
@@ -191,14 +195,22 @@ export function NoorvaSection() {
           className="text-center mb-8"
         >
           <p
-            className="text-xl md:text-3xl font-light max-w-2xl mx-auto leading-relaxed"
-            style={{ color: "rgba(255,255,255,0.55)" }}
+            className="font-light max-w-2xl mx-auto leading-relaxed"
+            style={{
+              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+              fontSize: "clamp(1.1rem, 2.2vw, 1.75rem)",
+              color: "rgba(255,255,255,0.68)",
+            }}
           >
             Not an app. Not a chatbot. Not software.
           </p>
           <p
-            className="text-xl md:text-3xl font-semibold mt-2"
-            style={{ color: "rgba(255,255,255,0.85)" }}
+            className="font-semibold mt-2"
+            style={{
+              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+              fontSize: "clamp(1.1rem, 2.2vw, 1.75rem)",
+              color: "rgba(255,255,255,0.92)",
+            }}
           >
             A digital life companion.
           </p>
@@ -260,7 +272,10 @@ export function NoorvaSection() {
                 </div>
                 <div>
                   <h4 className="text-white font-semibold mb-1.5">{scenario.title}</h4>
-                  <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.50)" }}>
+                  <p
+                    className="text-sm leading-relaxed"
+                    style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.72)" }}
+                  >
                     {scenario.description}
                   </p>
                 </div>
@@ -277,7 +292,7 @@ export function NoorvaSection() {
           viewport={{ once: true }}
           transition={{ delay: 0.4 }}
           className="text-center text-sm leading-relaxed max-w-2xl mx-auto mt-12"
-          style={{ color: "rgba(255,255,255,0.30)" }}
+          style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.52)" }}
         >
           Noorva is built on a foundation of emotional intelligence, contextual memory, and genuine
           understanding. She learns your patterns, respects your boundaries, and grows with

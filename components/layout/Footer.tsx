@@ -17,8 +17,14 @@ export function Footer() {
             <div className="flex items-center gap-3 mb-4">
               <Image src="/fevicon.png" alt="MDS" width={40} height={40} className="w-10 h-10 rounded-xl object-contain" />
               <div>
-                <span className="text-white/90 font-bold">Mahadeva Digital Solutions</span>
-                <span className="text-white/35 text-xs block">Think Beyond</span>
+                <span
+                  className="font-bold block"
+                  style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.92)" }}
+                >Mahadeva Digital Solutions</span>
+                <span
+                  className="text-xs block mt-0.5"
+                  style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.42)", letterSpacing: "0.2em" }}
+                >Think Beyond</span>
               </div>
             </div>
             <p className="text-white/40 text-sm leading-relaxed max-w-xs">
@@ -28,7 +34,10 @@ export function Footer() {
 
           {/* Links */}
           <div>
-            <h4 className="text-white/50 font-semibold text-xs mb-4 tracking-widest uppercase">
+            <h4
+              className="font-semibold text-xs mb-4 tracking-widest uppercase"
+              style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.55)" }}
+            >
               Company
             </h4>
             <ul className="space-y-3">
@@ -46,7 +55,10 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="text-white/50 font-semibold text-xs mb-4 tracking-widest uppercase">
+            <h4
+              className="font-semibold text-xs mb-4 tracking-widest uppercase"
+              style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.55)" }}
+            >
               Contact
             </h4>
             <ul className="space-y-3 text-sm text-white/35">

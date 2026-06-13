@@ -12,6 +12,7 @@ export function ContactSection() {
   });
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const subjects = [
     "General Inquiry",
@@ -24,9 +25,26 @@ export function ContactSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    setSending(false);
-    setSent(true);
+    setError(null);
+
+    try {
+      const res = await fetch("https://formspree.io/f/mdavpjog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (res.ok) {
+        setSent(true);
+      } else {
+        const data = await res.json();
+        setError(data?.errors?.[0]?.message ?? "Something went wrong. Please try again.");
+      }
+    } catch {
+      setError("Network error. Please check your connection and try again.");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -47,14 +65,25 @@ export function ContactSection() {
         >
           <span
             className="text-xs font-medium tracking-[0.5em] uppercase"
-            style={{ color: "rgba(0,212,255,0.8)" }}
+            style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(0,212,255,0.8)" }}
           >
             AI Communication Portal
           </span>
-          <h2 className="text-4xl md:text-7xl font-black mt-4">
+          <h2
+            className="neue-machina mt-4"
+            style={{ fontSize: "clamp(2.8rem, 7vw, 7rem)", lineHeight: 0.92, letterSpacing: "0.01em" }}
+          >
             Start a <span className="text-gradient">Conversation</span>
           </h2>
-          <p className="text-xl mt-6" style={{ color: "rgba(255,255,255,0.45)" }}>
+          <p
+            className="mt-6"
+            style={{
+              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+              fontSize: "clamp(1rem, 1.25vw, 1.18rem)",
+              lineHeight: 1.75,
+              color: "rgba(255,255,255,0.65)",
+            }}
+          >
             We read every message. We respond to every vision.
           </p>
         </motion.div>
@@ -89,7 +118,7 @@ export function ContactSection() {
                   <div>
                     <label
                       className="text-xs uppercase tracking-widest mb-2 block"
-                      style={{ color: "rgba(255,255,255,0.35)" }}
+                      style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.55)" }}
                     >
                       Name
                     </label>
@@ -118,7 +147,7 @@ export function ContactSection() {
                   <div>
                     <label
                       className="text-xs uppercase tracking-widest mb-2 block"
-                      style={{ color: "rgba(255,255,255,0.35)" }}
+                      style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.55)" }}
                     >
                       Email
                     </label>
@@ -206,8 +235,25 @@ export function ContactSection() {
                   />
                 </div>
 
+                {error && (
+                  <p
+                    className="text-sm px-4 py-3 rounded-xl"
+                    style={{
+                      fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+                      background: "rgba(255,60,60,0.08)",
+                      border: "1px solid rgba(255,60,60,0.20)",
+                      color: "rgba(255,120,120,0.95)",
+                    }}
+                  >
+                    {error}
+                  </p>
+                )}
+
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
+                  <div
+                    className="text-xs"
+                    style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.45)" }}
+                  >
                     services@mdsindia.in · Hyderabad, Telangana, India
                   </div>
                   <button
@@ -215,6 +261,7 @@ export function ContactSection() {
                     disabled={sending}
                     className="relative px-8 py-4 rounded-full font-semibold text-white overflow-hidden disabled:opacity-50 transition-all duration-300 hover:scale-105"
                     style={{
+                      fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
                       background: "linear-gradient(135deg, #0055FF, #00D4FF)",
                       boxShadow: "0 0 25px rgba(0,85,255,0.4)",
                     }}
@@ -239,8 +286,16 @@ export function ContactSection() {
                 className="text-center py-16"
               >
                 <span className="text-6xl mb-6 block">✦</span>
-                <h3 className="text-3xl font-bold text-white mb-3">Message Received</h3>
-                <p className="text-lg" style={{ color: "rgba(255,255,255,0.50)" }}>
+                <h3
+                  className="neue-machina text-3xl mb-3"
+                  style={{ color: "#ffffff" }}
+                >
+                  Message Received
+                </h3>
+                <p
+                  className="text-lg"
+                  style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.68)" }}
+                >
                   We&apos;ll be in touch soon. The future is being built one conversation at a time.
                 </p>
               </motion.div>

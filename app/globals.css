@@ -148,13 +148,31 @@ html, body {
 
 a { color: inherit; text-decoration: none; }
 
+button { cursor: pointer; }
+
+/* Prevent focus ring on mouse interaction, keep for keyboard nav */
+*:focus:not(:focus-visible) { outline: none; }
+*:focus-visible { outline: 2px solid rgba(0, 212, 255, 0.6); outline-offset: 2px; border-radius: 4px; }
+
+/* Prevent any element from causing horizontal overflow */
+img, video, canvas, svg { max-width: 100%; }
+
+/* Minimum touch target for standalone buttons on mobile */
+@media (max-width: 768px) {
+  button:not(.no-min-touch) {
+    min-height: 44px;
+  }
+}
+
 body.custom-cursor-active,
 body.custom-cursor-active * { cursor: none !important; }
 
-.section-padding { padding: 3.5rem 2rem; }
+.section-padding { padding: 5rem 2rem; }
 
-@media (max-width: 768px) { .section-padding { padding: 2rem 1rem; } }
-@media (max-width: 480px) { .section-padding { padding: 1.5rem 1rem; } }
+@media (min-width: 1440px) { .section-padding { padding: 6rem 2rem; } }
+@media (max-width: 1024px) { .section-padding { padding: 4rem 1.5rem; } }
+@media (max-width: 768px)  { .section-padding { padding: 3rem 1.25rem; } }
+@media (max-width: 480px)  { .section-padding { padding: 2rem 1rem; } }
 
 .scene-top-fade {
   position: absolute; inset-inline: 0; top: 0; height: 5rem;

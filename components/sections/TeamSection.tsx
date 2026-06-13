@@ -234,7 +234,7 @@ export function TeamSection() {
                 style={{
                   fontFamily: "var(--font-space-grotesk)",
                   fontSize: "0.875rem",
-                  color: "rgba(255,255,255,0.45)",
+                  color: "rgba(255,255,255,0.72)",
                   lineHeight: 1.8,
                 }}
               >

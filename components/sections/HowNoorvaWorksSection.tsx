@@ -275,7 +275,7 @@ export function HowNoorvaWorksSection() {
                     fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
                     fontSize: "clamp(1rem, 1.25vw, 1.18rem)",
                     lineHeight: 1.78,
-                    color: "rgba(255,255,255,0.56)",
+                    color: "rgba(255,255,255,0.75)",
                     maxWidth: "560px",
                   }}
                 >

@@ -185,7 +185,7 @@ function PrincipleBlock({
           <p
             key={i}
             style={{
-              fontFamily: "'Inter', sans-serif",
+              fontFamily: "var(--font-space-grotesk), 'Inter', sans-serif",
               fontSize: "clamp(1rem, 1.4vw, 1.15rem)",
               lineHeight: 1.75,
               color: "rgba(255,255,255,0.92)",
@@ -253,8 +253,13 @@ export function StorySection() {
             3 Core Principles
           </h2>
           <p
-            className="mt-5 text-lg max-w-xl mx-auto"
-            style={{ color: "rgba(255,255,255,0.38)", fontFamily: SG }}
+            className="mt-5 max-w-xl mx-auto"
+            style={{
+              fontFamily: SG,
+              fontSize: "clamp(0.95rem, 1.2vw, 1.1rem)",
+              lineHeight: 1.7,
+              color: "rgba(255,255,255,0.58)",
+            }}
           >
             The values that guide every product, every decision, every line of code.
           </p>
