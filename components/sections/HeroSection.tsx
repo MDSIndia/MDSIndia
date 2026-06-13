@@ -3,9 +3,9 @@
 export function HeroSection() {
   return (
     <section id="hero" className="relative min-h-screen">
-      <div className="relative min-h-screen flex items-center">
+      <div className="relative min-h-screen flex flex-col md:flex-row items-center justify-center md:justify-start">
         {/* Left: text */}
-        <div className="flex-1 px-6 md:px-16 lg:px-28" style={{ maxWidth: "720px", marginLeft: "6rem" }}>
+        <div className="flex-1 px-6 md:px-16 lg:px-28 text-center md:text-left md:ml-24" style={{ maxWidth: "720px" }}>
           <h1 className="neue-machina mb-6" style={{ fontSize: "clamp(2.4rem, 4.8vw, 5.5rem)", lineHeight: 1, background: "linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 40%, #0055FF 70%, #00D4FF 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
             Building Tomorrow's Technology for Today's World
           </h1>
@@ -14,7 +14,7 @@ export function HeroSection() {
             Empowering The Future Through Technology
           </p>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 justify-center md:justify-start">
             <a href="#about-mds" className="px-7 py-3.5 rounded-full text-white font-semibold text-sm transition-all duration-300 hover:scale-105 hover:brightness-110" style={{ background: "linear-gradient(135deg, #0055FF, #00D4FF)", boxShadow: "0 0 28px rgba(0,85,255,0.44), 0 0 60px rgba(0,180,255,0.12)" }}>
               Explore MDS
             </a>
@@ -25,7 +25,7 @@ export function HeroSection() {
         </div>
 
         {/* Right: image */}
-        <div className="hidden md:block" style={{ width: "clamp(220px, 35vw, 600px)", height: "clamp(70vh, 90vh, 100%)" }}>
+        <div className="hidden md:flex" style={{ width: "clamp(220px, 35vw, 600px)", height: "clamp(70vh, 90vh, 100%)", marginRight: "3rem" }}>
           <div className="relative w-full h-full overflow-hidden rounded-l-[36px]" style={{ boxShadow: "-60px 0 100px rgba(0,0,0,0.32)" }}>
             <img src="/rightimage.jpeg" alt="Hero side image" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'right center', display: 'block' }} />
           </div>
