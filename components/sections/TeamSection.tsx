@@ -8,7 +8,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 const team = [
   {
     name: "Sumanth Mahadeva",
-    role: "Chief Executive Officer",
+    role: "Founder, Chief Executive Officer",
     short: "CEO",
     tagline: "Visionary. Builder. Dreamer.",
     description:

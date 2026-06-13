@@ -8,9 +8,9 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 const pillars = [
   {
     number: "01",
-    title1: "Technology",
+    title1: "Product",
     title2: "Without Soul",
-    body: "The world's most advanced technology still fails to understand a single human soul. It processes. It responds. But it does not truly know you.",
+    body: "The world's most advanced product still fails to understand a single human soul. It processes. It responds. But it does not truly know you.",
     image: "/technlogy.png",
     accentGradient: "linear-gradient(135deg, #C084FC 0%, #9333EA 100%)",
     accentDot: "#A855F7",
@@ -40,7 +40,7 @@ const pillars = [
 
 export function WhyWeExistSection() {
   return (
-    <section className="section-padding relative overflow-hidden">
+    <section id="about-mds" className="section-padding relative overflow-hidden">
       <div className="scene-top-fade" />
       <div className="scene-bottom-fade" />
 
@@ -72,7 +72,7 @@ export function WhyWeExistSection() {
               backgroundClip: "text",
             }}
           >
-            Why We Exist
+            About MDS
           </h2>
         </motion.div>
 
@@ -136,7 +136,7 @@ export function WhyWeExistSection() {
                   fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
                   fontSize: "clamp(0.88rem, 1.1vw, 1rem)",
                   lineHeight: 1.8,
-                  color: "rgba(255,255,255,0.50)",
+                  color: "#FFFFFF",
                 }}
               >
                 {pillar.body}
@@ -161,7 +161,7 @@ export function WhyWeExistSection() {
                     objectFit: "contain",
                     objectPosition: "center",
                     mixBlendMode: "screen",
-                    filter: "contrast(1.2) brightness(0.75) saturate(1.5)",
+                    filter: "contrast(1.2) brightness(1.0) saturate(1.5)",
                   }}
                 />
               </div>
@@ -184,12 +184,12 @@ export function WhyWeExistSection() {
               fontSize: "clamp(1.3rem, 3vw, 2.6rem)",
               lineHeight: 1.28,
               letterSpacing: "0.01em",
-              color: "rgba(255,255,255,0.82)",
+              color: "#FFFFFF",
               maxWidth: "800px",
               margin: "0 auto",
             }}
           >
-            &ldquo;The greatest technology is the one that{" "}
+            &ldquo;The greatest Product is the one that{" "}
             <span
               style={{
                 background: "linear-gradient(135deg, #00D4FF 0%, #7AA4FF 50%, #a855f7 100%)",

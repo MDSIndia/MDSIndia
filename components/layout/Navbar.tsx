@@ -6,12 +6,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useScrollProgress } from "@/hooks/useScrollProgress";
 
 const navLinks = [
-  { label: "Vision",   href: "#vision",    id: "vision" },
-  { label: "Noorva",   href: "#noorva",    id: "noorva" },
-  { label: "Future",   href: "#future-ai", id: "future-ai" },
-  { label: "Invest",   href: "#invest",    id: "invest" },
-  { label: "Team",     href: "#team",      id: "team" },
-  { label: "Contact",  href: "#contact",   id: "contact" },
+  { label: "Vision",     href: "#vision",     id: "vision" },
+  { label: "About MDS",  href: "#about-mds",  id: "about-mds" },
+  { label: "Noorva",     href: "#noorva",     id: "noorva" },
+  { label: "Future",     href: "#future-ai",  id: "future-ai" },
+  { label: "Invest",     href: "#invest",     id: "invest" },
+  { label: "Team",       href: "#team",       id: "team" },
+  { label: "Contact",    href: "#contact",    id: "contact" },
 ];
 
 export function Navbar() {
@@ -76,6 +77,7 @@ export function Navbar() {
               width={40}
               height={40}
               className="w-9 h-9 rounded-xl object-contain"
+              style={{ filter: "brightness(1.4) drop-shadow(0 0 12px rgba(0,212,255,0.6))" }}
               priority
             />
           </a>
