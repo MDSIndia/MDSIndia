@@ -144,8 +144,8 @@ export function HowNoorvaWorksSection() {
             <React.Fragment key={stage.id}>
               {i > 0 && (
                 <div
-                  className="flex-1 h-px relative overflow-hidden rounded-full mx-3 md:mx-5"
-                  style={{ minWidth: "20px" }}
+                  className="flex-1 h-px relative overflow-hidden rounded-full mx-1 sm:mx-3 md:mx-5"
+                  style={{ minWidth: "6px" }}
                 >
                   <div className="absolute inset-0" style={{ background: "rgba(255,255,255,0.10)" }} />
                   {i <= active && (
@@ -158,7 +158,7 @@ export function HowNoorvaWorksSection() {
               )}
               <button
                 onClick={() => goTo(i)}
-                className="flex flex-col items-center gap-2 flex-shrink-0 focus:outline-none"
+                className="flex flex-col items-center gap-1 sm:gap-2 flex-shrink-0 focus:outline-none no-min-touch"
               >
                 <motion.div
                   animate={{
@@ -169,21 +169,21 @@ export function HowNoorvaWorksSection() {
                     scale: i === active ? 1.12 : 1,
                   }}
                   transition={{ duration: 0.4 }}
-                  className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center"
+                  className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center"
                   style={{
                     border: `2px solid ${i === active ? cur.accent : "rgba(255,255,255,0.14)"}`,
                     background: i === active ? `rgba(${cur.glow},0.12)` : "rgba(255,255,255,0.03)",
                   }}
                 >
                   <span
-                    className="font-mono text-[0.65rem] md:text-xs font-semibold"
+                    className="font-mono text-[0.55rem] sm:text-[0.65rem] md:text-xs font-semibold"
                     style={{ color: i === active ? cur.accent : "rgba(255,255,255,0.30)" }}
                   >
                     {stage.number}
                   </span>
                 </motion.div>
                 <span
-                  className="text-[0.58rem] md:text-[0.68rem] tracking-[0.16em] uppercase font-medium transition-colors duration-300"
+                  className="hidden xs:block text-[0.48rem] sm:text-[0.58rem] md:text-[0.68rem] tracking-[0.10em] sm:tracking-[0.16em] uppercase font-medium transition-colors duration-300"
                   style={{ color: i === active ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.25)" }}
                 >
                   {stage.label}
