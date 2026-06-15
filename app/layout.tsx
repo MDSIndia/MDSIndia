@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { LenisProvider } from "@/components/providers/LenisProvider";
 
@@ -80,6 +81,18 @@ export default function RootLayout({
         style={{ backgroundColor: "#020208", color: "#ffffff" }}
       >
         <LenisProvider>{children}</LenisProvider>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-DN53L6G5J7"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-DN53L6G5J7');
+          `}
+        </Script>
       </body>
     </html>
   );
