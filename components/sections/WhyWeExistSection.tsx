@@ -77,7 +77,8 @@ export function WhyWeExistSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, delay: 0.1, ease: EASE }}
-          className="max-w-3xl mx-auto mb-10 md:mb-14 text-center space-y-4"
+          className="mb-10 md:mb-14 space-y-4"
+          style={{ textAlign: "justify" }}
         >
           <p
             style={{
