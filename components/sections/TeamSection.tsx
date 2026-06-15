@@ -8,7 +8,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 const team = [
   {
     name: "Sumanth Mahadeva",
-    role: "Founder, Chief Executive Officer",
+    role: "Chief Executive Officer",
     short: "CEO",
     tagline: "Visionary. Builder. Dreamer.",
     description:
@@ -131,6 +131,32 @@ export function TeamSection() {
                   background: `linear-gradient(to right, transparent 10%, ${member.accent} 50%, transparent 90%)`,
                 }}
               />
+
+              {/* Founder badge — Sumanth only */}
+              {i === 0 && (
+                <div
+                  className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(0,212,255,0.15) 0%, rgba(0,85,255,0.15) 100%)",
+                    border: "1px solid rgba(0,212,255,0.35)",
+                    boxShadow: "0 0 12px rgba(0,212,255,0.20)",
+                  }}
+                >
+                  <span style={{ fontSize: "0.55rem", color: "#00D4FF", lineHeight: 1 }}>✦</span>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+                      fontSize: "0.58rem",
+                      fontWeight: 600,
+                      letterSpacing: "0.18em",
+                      textTransform: "uppercase",
+                      color: "rgba(0,212,255,0.92)",
+                    }}
+                  >
+                    Founder
+                  </span>
+                </div>
+              )}
 
               {/* Ambient glow behind photo */}
               <div

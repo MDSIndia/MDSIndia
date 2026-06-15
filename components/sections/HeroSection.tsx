@@ -37,12 +37,12 @@ export function HeroSection() {
       `}</style>
 
       {/* Left: text */}
-      <div className="order-2 md:order-1 flex items-center justify-center md:justify-start px-6 sm:px-10 md:px-0 md:ml-20 pt-10 pb-16 md:py-0">
+      <div className="order-2 md:order-1 flex items-center justify-center md:justify-start px-6 sm:px-10 md:px-0 pt-10 pb-16 md:pb-0 md:pt-24">
         <div className="text-center md:text-left" style={{ maxWidth: "520px" }}>
           <h1
             className="neue-machina mb-5"
             style={{
-              fontSize: "clamp(1.9rem, 3vw, 3.8rem)",
+              fontSize: "clamp(1.9rem, 3.8vw, 4.5rem)",
               lineHeight: 1.1,
               background: "linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 40%, #0055FF 70%, #00D4FF 100%)",
               WebkitBackgroundClip: "text",
@@ -50,7 +50,7 @@ export function HeroSection() {
               backgroundClip: "text",
             }}
           >
-            Building Tomorrow's Products for Today's World
+            Building Tomorrow&apos;s<br />Products for Today&apos;s World
           </h1>
 
           <p

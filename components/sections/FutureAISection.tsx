@@ -55,7 +55,7 @@ const domains = [
     title: "Human-AI Collaboration",
     description: "The future isn't humans vs. AI — it's humans and AI creating together, solving harder problems, and achieving more than either could alone.",
     accent: "from-cyan-500 to-blue-500",
-    glow: "rgba(0,212,255,0.15)",
+    glow: "rgba(255, 255, 255, 0.15)",
     labelGradient: "from-cyan-400 to-blue-400",
   },
 ];
@@ -137,7 +137,7 @@ export function FutureAISection() {
                 </span>
                 <p
                   className="text-sm leading-relaxed"
-                  style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.88)" }}
+                  style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "#FFFFFF" }}
                 >
                   {domain.description}
                 </p>
