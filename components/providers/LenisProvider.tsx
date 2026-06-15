@@ -11,6 +11,8 @@ if (typeof window !== "undefined") {
 
 export function LenisProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
+    history.scrollRestoration = "manual";
+    window.scrollTo(0, 0);
     const lenis = initLenis();
     return () => {
       destroyLenis();
