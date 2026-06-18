@@ -728,8 +728,53 @@ export function WhyWeExistSection() {
         </motion.div>
 
         {/* ══════════════════════════════════════════════════════════════
-            PILLARS — unchanged
+            PILLARS
         ══════════════════════════════════════════════════════════════ */}
+
+        {/* Pillars heading */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, ease: EASE }}
+          className="mt-10 mb-2 md:mt-14 text-center"
+        >
+          <span
+            style={{
+              fontFamily: SG,
+              fontSize: "0.62rem",
+              letterSpacing: "0.48em",
+              color: "rgba(0,212,255,0.55)",
+              textTransform: "uppercase" as const,
+              display: "block",
+              marginBottom: "0.75rem",
+            }}
+          >
+            Problems We Solve
+          </span>
+          <h2
+            style={{
+              fontFamily: NM,
+              fontSize: "clamp(2.4rem, 5.5vw, 5rem)",
+              lineHeight: 1.0,
+              letterSpacing: "0.02em",
+              fontWeight: 700,
+            }}
+          >
+            <span style={{ color: "rgba(255,255,255,0.95)" }}>Real problems, solved by </span>
+            <span
+              style={{
+                background: "linear-gradient(135deg, #a855f7 0%, #7AA4FF 50%, #00D4FF 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              MDS.
+            </span>
+          </h2>
+        </motion.div>
+
         {pillars.map((pillar, i) => (
           <motion.div
             key={pillar.number}
