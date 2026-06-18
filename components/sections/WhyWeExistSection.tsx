@@ -306,31 +306,12 @@ export function WhyWeExistSection() {
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
-              marginBottom: "1.25rem",
               position: "relative",
             }}
           >
             &ldquo;We build for what people haven&apos;t done yet.&rdquo;
           </motion.h3>
 
-          <motion.p
-            initial={{ opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.9, delay: 0.22, ease: EASE }}
-            style={{
-              fontFamily: SG,
-              fontSize: "clamp(0.95rem, 1.3vw, 1.1rem)",
-              lineHeight: 1.8,
-              color: "#FFFFFF",
-              maxWidth: 620,
-              margin: "0 auto",
-              position: "relative",
-            }}
-          >
-            Mahadeva Digital Solutions exists to close the gap between intention and action —
-            starting with Noorva, an AI companion built to think alongside you.
-          </motion.p>
         </motion.div>
 
         {/* 2 ── Why We Exist */}
@@ -374,6 +355,7 @@ export function WhyWeExistSection() {
               lineHeight: 1.18,
               letterSpacing: "0.01em",
               marginBottom: "1rem",
+              fontWeight: 700,
             }}
           >
             <span style={{ color: "rgba(255,255,255,0.93)" }}>
@@ -409,6 +391,8 @@ export function WhyWeExistSection() {
             problems, unlock human potential, and leave a lasting mark — not incremental software.
           </motion.p>
         </motion.div>
+
+        <div className="my-12 md:my-16" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
 
         {/* 3 ── The Flagship — Noorva */}
         <motion.div
@@ -454,6 +438,7 @@ export function WhyWeExistSection() {
                 lineHeight: 1.18,
                 letterSpacing: "0.01em",
                 marginBottom: "1rem",
+                fontWeight: 700,
               }}
             >
               <span style={{ color: "rgba(255,255,255,0.93)" }}>Noorva —&nbsp;</span>
@@ -491,6 +476,8 @@ export function WhyWeExistSection() {
           </div>
 
         </motion.div>
+
+        <div className="my-12 md:my-16" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
 
         {/* 4 ── How It Works */}
         <motion.div
@@ -531,6 +518,7 @@ export function WhyWeExistSection() {
                 lineHeight: 1.2,
                 letterSpacing: "0.01em",
                 marginBottom: "1.25rem",
+                fontWeight: 700,
               }}
             >
               <span style={{ color: "rgba(255,255,255,0.92)" }}>
@@ -710,46 +698,33 @@ export function WhyWeExistSection() {
           transition={{ duration: 1, ease: EASE }}
           className="mb-10 md:mb-14 text-center"
         >
-          <motion.div
-            whileHover={{ scale: 1.015, boxShadow: "0 0 60px rgba(123,47,190,0.20), 0 0 120px rgba(123,47,190,0.09), inset 0 1px 0 rgba(255,255,255,0.07)" }}
-            transition={{ duration: 0.4, ease: EASE }}
+          <p
             style={{
-              background: "rgba(255,255,255,0.03)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              border: "1px solid rgba(168,85,247,0.20)",
-              borderRadius: "1.5rem",
-              padding: "2.5rem 2rem",
-              boxShadow:
-                "0 0 40px rgba(123,47,190,0.10), 0 0 80px rgba(123,47,190,0.05), inset 0 1px 0 rgba(255,255,255,0.06)",
-              maxWidth: 680,
-              margin: "0 auto",
+              fontFamily: NM,
+              fontSize: "clamp(1.4rem, 2.8vw, 2.4rem)",
+              lineHeight: 1.5,
+              letterSpacing: "0.01em",
+              color: "rgba(255,255,255,0.88)",
+              fontWeight: 700,
+              textAlign: "center",
             }}
           >
-            <p
+            &ldquo;We are creating the foundations of a smarter,
+            <br />
+            more{" "}
+            <span
               style={{
-                fontFamily: NM,
-                fontSize: "clamp(1.05rem, 2vw, 1.65rem)",
-                lineHeight: 1.5,
-                letterSpacing: "0.01em",
-                color: "rgba(255,255,255,0.88)",
+                background:
+                  "linear-gradient(135deg, #a855f7 0%, #7AA4FF 50%, #00D4FF 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
               }}
             >
-              &ldquo;We are creating the foundations of a smarter, more{" "}
-              <span
-                style={{
-                  background:
-                    "linear-gradient(135deg, #a855f7 0%, #7AA4FF 50%, #00D4FF 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                empowered tomorrow.
-              </span>
-              &rdquo;
-            </p>
-          </motion.div>
+              empowered tomorrow.
+            </span>
+            &rdquo;
+          </p>
         </motion.div>
 
         {/* ══════════════════════════════════════════════════════════════
