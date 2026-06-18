@@ -1,9 +1,12 @@
 "use client";
 
+import { useRef } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
+const SG = "var(--font-space-grotesk), 'Inter', sans-serif";
+const NM = "'Neue Machina', 'Inter', sans-serif";
 
 const pillars = [
   {
@@ -38,6 +41,195 @@ const pillars = [
   },
 ];
 
+/* ── Orbit particle: rotates a container around center, particle sits at radius ── */
+function OrbitParticle({
+  radius,
+  duration,
+  delay = 0,
+  color,
+  size = 6,
+}: {
+  radius: number;
+  duration: number;
+  delay?: number;
+  color: string;
+  size?: number;
+}) {
+  return (
+    <motion.div
+      style={{ position: "absolute", inset: 0, transformOrigin: "center center" }}
+      animate={{ rotate: 360 }}
+      transition={{ duration, repeat: Infinity, ease: "linear", delay }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: `calc(50% - ${radius}px - ${size / 2}px)`,
+          left: `calc(50% - ${size / 2}px)`,
+          width: size,
+          height: size,
+          borderRadius: "50%",
+          background: color,
+          boxShadow: `0 0 ${size * 3}px ${color}`,
+        }}
+      />
+    </motion.div>
+  );
+}
+
+/* ── Noorva orbit visual ── */
+function NoorvaOrbit() {
+  const orbits = [
+    { radius: 46, duration: 3.2, delay: 0,    color: "#00D4FF", size: 9 },
+    { radius: 46, duration: 3.2, delay: 1.6,  color: "rgba(0,212,255,0.65)", size: 5 },
+    { radius: 80, duration: 5.5, delay: 0,    color: "#a855f7", size: 8 },
+    { radius: 80, duration: 5.5, delay: 2.75, color: "rgba(168,85,247,0.65)", size: 5 },
+    { radius: 118, duration: 9,  delay: 0,    color: "#7AA4FF", size: 7 },
+    { radius: 118, duration: 9,  delay: 4.5,  color: "rgba(122,164,255,0.55)", size: 4 },
+  ];
+
+  return (
+    <div className="relative mx-auto" style={{ width: 260, height: 260 }}>
+      {/* Orbit rings */}
+      {[46, 80, 118].map((r) => (
+        <div
+          key={r}
+          style={{
+            position: "absolute",
+            width: r * 2,
+            height: r * 2,
+            top: `calc(50% - ${r}px)`,
+            left: `calc(50% - ${r}px)`,
+            borderRadius: "50%",
+            border: "1px solid rgba(255,255,255,0.12)",
+          }}
+        />
+      ))}
+
+      {/* Outer ambient glow */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          borderRadius: "50%",
+          background:
+            "radial-gradient(circle, rgba(0,85,255,0.14) 0%, rgba(123,47,190,0.09) 55%, transparent 75%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Center glow */}
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: 22,
+          height: 22,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, #00D4FF 0%, #7B2FBE 65%, transparent 100%)",
+          boxShadow: "0 0 36px rgba(0,212,255,0.85), 0 0 72px rgba(123,47,190,0.45)",
+        }}
+      />
+
+      {/* Particles */}
+      {orbits.map((o, i) => (
+        <OrbitParticle key={i} {...o} />
+      ))}
+    </div>
+  );
+}
+
+/* ── Intention → Action SVG path ── */
+function IntentionToActionPath() {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "-80px" });
+
+  return (
+    <div ref={ref} className="relative w-full py-2">
+      <svg viewBox="0 0 520 100" className="w-full" style={{ overflow: "visible" }}>
+        <defs>
+          <linearGradient id="pathGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#0055FF" />
+            <stop offset="50%" stopColor="#7AA4FF" />
+            <stop offset="100%" stopColor="#a855f7" />
+          </linearGradient>
+        </defs>
+
+        {/* Ghost dotted track */}
+        <path
+          d="M 30,50 C 90,15 150,85 210,50 C 270,15 330,85 390,50 C 430,28 460,46 490,50"
+          stroke="rgba(255,255,255,0.07)"
+          strokeWidth="1.5"
+          fill="none"
+          strokeDasharray="5 7"
+        />
+
+        {/* Animated main path */}
+        <motion.path
+          d="M 30,50 C 90,15 150,85 210,50 C 270,15 330,85 390,50 C 430,28 460,46 490,50"
+          stroke="url(#pathGrad)"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={isInView ? { pathLength: 1, opacity: 1 } : {}}
+          transition={{ duration: 2.2, ease: "easeInOut", delay: 0.2 }}
+        />
+
+        {/* Start dot */}
+        <motion.circle
+          cx="30"
+          cy="50"
+          r="5"
+          fill="#0055FF"
+          style={{ filter: "drop-shadow(0 0 6px #0055FF)" }}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={isInView ? { opacity: 1, scale: 1 } : {}}
+          transition={{ duration: 0.4, ease: EASE, delay: 0.1 }}
+        />
+
+        {/* End dot */}
+        <motion.circle
+          cx="490"
+          cy="50"
+          r="5"
+          fill="#a855f7"
+          style={{ filter: "drop-shadow(0 0 8px #a855f7)" }}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={isInView ? { opacity: 1, scale: [0, 1.5, 1] } : {}}
+          transition={{ duration: 0.5, ease: EASE, delay: 2.2 }}
+        />
+
+        {/* Labels */}
+        <text
+          x="30"
+          y="78"
+          textAnchor="middle"
+          fill="rgba(255,255,255,0.38)"
+          fontSize="10"
+          fontFamily="var(--font-space-grotesk),sans-serif"
+        >
+          Intention
+        </text>
+        <text
+          x="490"
+          y="78"
+          textAnchor="middle"
+          fill="rgba(168,85,247,0.75)"
+          fontSize="10"
+          fontFamily="var(--font-space-grotesk),sans-serif"
+        >
+          Action
+        </text>
+      </svg>
+    </div>
+  );
+}
+
+/* ─── Section ─────────────────────────────────────────────────────────── */
+
 export function WhyWeExistSection() {
   return (
     <section id="about-mds" className="section-padding relative overflow-hidden">
@@ -46,7 +238,7 @@ export function WhyWeExistSection() {
 
       <div className="relative max-w-6xl mx-auto">
 
-        {/* Header */}
+        {/* ── Header ── */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -54,7 +246,6 @@ export function WhyWeExistSection() {
           transition={{ duration: 0.8, ease: EASE }}
           className="text-center mb-8 md:mb-12"
         >
-         
           <h2
             className="neue-machina"
             style={{
@@ -71,86 +262,499 @@ export function WhyWeExistSection() {
           </h2>
         </motion.div>
 
-        {/* About body text */}
+        {/* ══════════════════════════════════════════════════════════════
+            PREMIUM BODY — replaces original 4-paragraph block
+        ══════════════════════════════════════════════════════════════ */}
+
+        {/* 1 ── Hero quote */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 32 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.9, delay: 0.1, ease: EASE }}
-          className="mb-10 md:mb-14 space-y-4"
-          style={{ textAlign: "justify" }}
+          transition={{ duration: 1, ease: EASE }}
+          className="mb-14 md:mb-18 text-center relative"
         >
-          <p
+          {/* Floating orb */}
+          <motion.div
+            className="absolute left-1/2 pointer-events-none"
+            animate={{ y: [0, -22, 0], scale: [1, 1.1, 1] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
             style={{
-              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-              fontSize: "clamp(1rem, 1.25vw, 1.15rem)",
-              lineHeight: 1.85,
-              color: "#FFFFFF",
+              width: 320,
+              height: 320,
+              background:
+                "radial-gradient(circle, rgba(0,85,255,0.13) 0%, rgba(123,47,190,0.08) 50%, transparent 70%)",
+              borderRadius: "50%",
+              filter: "blur(50px)",
+              top: "-100px",
+              transform: "translateX(-50%)",
             }}
-          >
-            MDS is not just a technology company—we are{" "}
-            <span style={{ color: "#ffffff", fontWeight: 600 }}>architects of the future.</span>{" "}
-            Driven by an uncompromising pursuit of innovation, we exist to create transformative,
-            world-class products that solve real problems, unlock human potential, and leave a
-            meaningful, lasting impact on society.
-          </p>
+          />
 
-          <p
+          <motion.h3
+            initial={{ opacity: 0, y: 22 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.1, ease: EASE }}
             style={{
-              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-              fontSize: "clamp(1rem, 1.25vw, 1.15rem)",
-              lineHeight: 1.85,
-              color: "#FFFFFF",
+              fontFamily: NM,
+              fontSize: "clamp(1.7rem, 3.8vw, 3.2rem)",
+              lineHeight: 1.12,
+              letterSpacing: "0.01em",
+              background:
+                "linear-gradient(135deg, #FFFFFF 0%, #D8EEFF 40%, #7AA4FF 80%, #00D4FF 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              marginBottom: "1.25rem",
+              position: "relative",
             }}
           >
-            At the heart of our vision is{" "}
+            &ldquo;We build for what people haven&apos;t done yet.&rdquo;
+          </motion.h3>
+
+          <motion.p
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.9, delay: 0.22, ease: EASE }}
+            style={{
+              fontFamily: SG,
+              fontSize: "clamp(0.95rem, 1.3vw, 1.1rem)",
+              lineHeight: 1.8,
+              color: "#FFFFFF",
+              maxWidth: 620,
+              margin: "0 auto",
+              position: "relative",
+            }}
+          >
+            Mahadeva Digital Solutions exists to close the gap between intention and action —
+            starting with Noorva, an AI companion built to think alongside you.
+          </motion.p>
+        </motion.div>
+
+        {/* 2 ── Why We Exist */}
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, ease: EASE }}
+          className="mb-14 md:mb-18"
+          style={{
+            borderLeft: "2px solid rgba(0,212,255,0.22)",
+            paddingLeft: "1.5rem",
+          }}
+        >
+          <motion.span
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
+            style={{
+              fontFamily: SG,
+              fontSize: "0.62rem",
+              letterSpacing: "0.48em",
+              color: "rgba(0,212,255,0.55)",
+              textTransform: "uppercase" as const,
+              display: "block",
+              marginBottom: "0.75rem",
+            }}
+          >
+            Why We Exist
+          </motion.span>
+
+          <motion.h3
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.9, delay: 0.1, ease: EASE }}
+            style={{
+              fontFamily: NM,
+              fontSize: "clamp(1.35rem, 2.6vw, 2.3rem)",
+              lineHeight: 1.18,
+              letterSpacing: "0.01em",
+              marginBottom: "1rem",
+            }}
+          >
+            <span style={{ color: "rgba(255,255,255,0.93)" }}>
+              Architects of the future,{" "}
+            </span>
+            <br className="hidden sm:block" />
             <span
               style={{
-                background: "linear-gradient(135deg, #00D4FF, #7AA4FF)",
+                background: "linear-gradient(135deg, #00D4FF 0%, #7AA4FF 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
-                fontWeight: 600,
               }}
             >
-              Noorva Companion
+              not another tech company.
             </span>
-            , our flagship product—an intelligent AI companion designed to redefine how humans
-            interact with AI technology. Noorva is not merely an assistant; it is a trusted partner
-            for growth, productivity, learning, creativity, and decision-making.
-          </p>
+          </motion.h3>
 
-          <p
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.85, delay: 0.18, ease: EASE }}
             style={{
-              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-              fontSize: "clamp(1rem, 1.25vw, 1.15rem)",
-              lineHeight: 1.85,
+              fontFamily: SG,
+              fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
+              lineHeight: 1.8,
               color: "#FFFFFF",
+              maxWidth: 580,
             }}
           >
-            Built with deep intelligence and human-centric design, Noorva Companion understands
-            people at a profound level, adapts intuitively to their evolving needs, and grows
-            alongside them. Its purpose is to elevate human capability—helping individuals move from
-            intention to action, and closing the gap between what they aspire to achieve and what
-            they actually accomplish.
-          </p>
-
-          <p
-            style={{
-              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-              fontSize: "clamp(1rem, 1.25vw, 1.15rem)",
-              lineHeight: 1.85,
-              color: "#FFFFFF",
-              fontStyle: "italic",
-            }}
-          >
-            At MDS, we are not building for the present alone. We are creating the foundations of a
-            smarter, more empowered tomorrow—where technology amplifies human capability and
-            redefines what is possible.
-          </p>
+            We&apos;re driven by one pursuit: transformative, world-class products that solve real
+            problems, unlock human potential, and leave a lasting mark — not incremental software.
+          </motion.p>
         </motion.div>
 
-        {/* Pillars */}
+        {/* 3 ── The Flagship — Noorva */}
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, ease: EASE }}
+          className="mb-14 md:mb-18 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-14 items-center"
+        >
+          {/* Orbit visual */}
+          <div className="flex items-center justify-center order-2 md:order-1">
+            <NoorvaOrbit />
+          </div>
+
+          {/* Text */}
+          <div className="order-1 md:order-2">
+            <motion.span
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
+              style={{
+                fontFamily: SG,
+                fontSize: "0.62rem",
+                letterSpacing: "0.48em",
+                color: "rgba(168,85,247,0.65)",
+                textTransform: "uppercase" as const,
+                display: "block",
+                marginBottom: "0.75rem",
+              }}
+            >
+              The Flagship
+            </motion.span>
+
+            <motion.h3
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.9, delay: 0.1, ease: EASE }}
+              style={{
+                fontFamily: NM,
+                fontSize: "clamp(1.35rem, 2.6vw, 2.3rem)",
+                lineHeight: 1.18,
+                letterSpacing: "0.01em",
+                marginBottom: "1rem",
+              }}
+            >
+              <span style={{ color: "rgba(255,255,255,0.93)" }}>Noorva —&nbsp;</span>
+              <span
+                style={{
+                  background:
+                    "linear-gradient(135deg, #a855f7 0%, #7B2FBE 50%, #00D4FF 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                a companion,
+                <br />
+                not an assistant.
+              </span>
+            </motion.h3>
+
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.85, delay: 0.18, ease: EASE }}
+              style={{
+                fontFamily: SG,
+                fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
+                lineHeight: 1.8,
+                color: "#FFFFFF",
+              }}
+            >
+              Noorva is built to redefine how humans interact with AI: a trusted partner for
+              growth, productivity, learning, creativity, and decision-making — present in the
+              moments that matter, not just the tasks you assign it.
+            </motion.p>
+          </div>
+
+        </motion.div>
+
+        {/* 4 ── How It Works */}
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, ease: EASE }}
+          className="mb-14 md:mb-18 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-14 items-center"
+        >
+          {/* Left — text */}
+          <div>
+            <motion.span
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
+              style={{
+                fontFamily: SG,
+                fontSize: "0.62rem",
+                letterSpacing: "0.48em",
+                color: "rgba(122,164,255,0.60)",
+                textTransform: "uppercase" as const,
+                display: "block",
+                marginBottom: "0.75rem",
+              }}
+            >
+              How It Works
+            </motion.span>
+
+            <motion.h3
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.9, delay: 0.1, ease: EASE }}
+              style={{
+                fontFamily: NM,
+                fontSize: "clamp(1.3rem, 2.4vw, 2.1rem)",
+                lineHeight: 1.2,
+                letterSpacing: "0.01em",
+                marginBottom: "1.25rem",
+              }}
+            >
+              <span style={{ color: "rgba(255,255,255,0.92)" }}>
+                It grows the way you do —{" "}
+              </span>
+              <span
+                style={{
+                  background: "linear-gradient(135deg, #7AA4FF 0%, #00D4FF 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                unevenly, but forward.
+              </span>
+            </motion.h3>
+
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.85, delay: 0.2, ease: EASE }}
+              style={{
+                fontFamily: SG,
+                fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
+                lineHeight: 1.8,
+                color: "#FFFFFF",
+              }}
+            >
+              Built with deep intelligence and human-centric design, Noorva understands people at a
+              profound level and adapts to their evolving needs — helping you move from intention to
+              action, closing the gap between what you aspire to and what you actually do.
+            </motion.p>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.3, ease: EASE }}
+              style={{
+                fontFamily: SG,
+                fontSize: "clamp(0.82rem, 1vw, 0.92rem)",
+                lineHeight: 1.6,
+                color: "rgba(122,164,255,0.48)",
+                fontStyle: "italic",
+                marginTop: "0.75rem",
+              }}
+            >
+              Not a straight line. A real path, still moving up.
+            </motion.p>
+          </div>
+
+          {/* Right — animated path */}
+          <div className="flex items-center justify-center">
+            <IntentionToActionPath />
+          </div>
+        </motion.div>
+
+        {/* 5 ── Vision */}
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, ease: EASE }}
+          className="mb-10 md:mb-14 relative overflow-hidden rounded-2xl px-7 py-9 md:px-10 md:py-11"
+          style={{
+            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(255,255,255,0.07)",
+          }}
+        >
+          {/* Floating gradient sphere */}
+          <motion.div
+            className="absolute pointer-events-none"
+            animate={{ y: [0, -14, 0], x: [0, 7, 0] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+            style={{
+              width: 280,
+              height: 280,
+              background:
+                "radial-gradient(circle, rgba(123,47,190,0.20) 0%, rgba(0,85,255,0.10) 50%, transparent 70%)",
+              borderRadius: "50%",
+              filter: "blur(48px)",
+              top: "-80px",
+              right: "-60px",
+            }}
+          />
+
+          {/* Wave line */}
+          <div
+            className="absolute bottom-0 left-0 right-0 pointer-events-none"
+            style={{ height: 50, opacity: 0.18 }}
+          >
+            <svg
+              viewBox="0 0 1000 50"
+              className="w-full h-full"
+              preserveAspectRatio="none"
+            >
+              <defs>
+                <linearGradient id="visionWave" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="transparent" />
+                  <stop offset="35%" stopColor="#7B2FBE" />
+                  <stop offset="65%" stopColor="#00D4FF" />
+                  <stop offset="100%" stopColor="transparent" />
+                </linearGradient>
+              </defs>
+              <motion.path
+                d="M 0,25 C 125,8 250,42 375,25 C 500,8 625,42 750,25 C 875,8 1000,42 1000,25"
+                stroke="url(#visionWave)"
+                strokeWidth="1.5"
+                fill="none"
+                initial={{ pathLength: 0 }}
+                whileInView={{ pathLength: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 3, ease: "easeInOut" }}
+              />
+            </svg>
+          </div>
+
+          {/* Content */}
+          <div className="relative z-10">
+            <span
+              style={{
+                fontFamily: SG,
+                fontSize: "0.62rem",
+                letterSpacing: "0.48em",
+                color: "rgba(168,85,247,0.65)",
+                textTransform: "uppercase" as const,
+                display: "block",
+                marginBottom: "0.75rem",
+              }}
+            >
+              Vision
+            </span>
+
+            <h3
+              style={{
+                fontFamily: NM,
+                fontSize: "clamp(1.35rem, 2.6vw, 2.3rem)",
+                lineHeight: 1.18,
+                letterSpacing: "0.01em",
+                marginBottom: "1rem",
+              }}
+            >
+              <span style={{ color: "rgba(255,255,255,0.93)" }}>Not for the present </span>
+              <span
+                style={{
+                  background: "linear-gradient(135deg, #a855f7 0%, #7B2FBE 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                alone.
+              </span>
+            </h3>
+
+            <p
+              style={{
+                fontFamily: SG,
+                fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
+                lineHeight: 1.8,
+                color: "#FFFFFF",
+                maxWidth: 560,
+              }}
+            >
+              At MDS, we&apos;re laying the foundations of a smarter, more empowered tomorrow —
+              where technology amplifies human capability and redefines what&apos;s possible.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* 6 ── Closing quote — glassmorphism card */}
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, ease: EASE }}
+          className="mb-10 md:mb-14 text-center"
+        >
+          <motion.div
+            whileHover={{ scale: 1.015, boxShadow: "0 0 60px rgba(123,47,190,0.20), 0 0 120px rgba(123,47,190,0.09), inset 0 1px 0 rgba(255,255,255,0.07)" }}
+            transition={{ duration: 0.4, ease: EASE }}
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              border: "1px solid rgba(168,85,247,0.20)",
+              borderRadius: "1.5rem",
+              padding: "2.5rem 2rem",
+              boxShadow:
+                "0 0 40px rgba(123,47,190,0.10), 0 0 80px rgba(123,47,190,0.05), inset 0 1px 0 rgba(255,255,255,0.06)",
+              maxWidth: 680,
+              margin: "0 auto",
+            }}
+          >
+            <p
+              style={{
+                fontFamily: NM,
+                fontSize: "clamp(1.05rem, 2vw, 1.65rem)",
+                lineHeight: 1.5,
+                letterSpacing: "0.01em",
+                color: "rgba(255,255,255,0.88)",
+              }}
+            >
+              &ldquo;We are creating the foundations of a smarter, more{" "}
+              <span
+                style={{
+                  background:
+                    "linear-gradient(135deg, #a855f7 0%, #7AA4FF 50%, #00D4FF 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                empowered tomorrow.
+              </span>
+              &rdquo;
+            </p>
+          </motion.div>
+        </motion.div>
+
+        {/* ══════════════════════════════════════════════════════════════
+            PILLARS — unchanged
+        ══════════════════════════════════════════════════════════════ */}
         {pillars.map((pillar, i) => (
           <motion.div
             key={pillar.number}
@@ -163,7 +767,6 @@ export function WhyWeExistSection() {
           >
             {/* Left — text */}
             <div className={i % 2 === 1 ? "md:order-2" : ""}>
-              {/* Number badge */}
               <span
                 className="inline-flex items-center justify-center px-3 py-1 rounded-lg text-xs font-mono font-semibold tracking-[0.18em] mb-3 block w-fit"
                 style={{
@@ -175,7 +778,6 @@ export function WhyWeExistSection() {
                 {pillar.number}
               </span>
 
-              {/* Heading */}
               <h3
                 className="neue-machina mb-0"
                 style={{
@@ -198,16 +800,17 @@ export function WhyWeExistSection() {
                 </span>
               </h3>
 
-              {/* Accent dot */}
               <div
                 className="w-2 h-2 rounded-full mt-4 mb-5"
-                style={{ background: pillar.accentDot, boxShadow: `0 0 8px ${pillar.accentDot}` }}
+                style={{
+                  background: pillar.accentDot,
+                  boxShadow: `0 0 8px ${pillar.accentDot}`,
+                }}
               />
 
-              {/* Body */}
               <p
                 style={{
-                  fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+                  fontFamily: SG,
                   fontSize: "clamp(0.88rem, 1.1vw, 1rem)",
                   lineHeight: 1.8,
                   color: "#FFFFFF",
@@ -217,14 +820,16 @@ export function WhyWeExistSection() {
               </p>
             </div>
 
-            {/* Right — image faded into background */}
+            {/* Right — image */}
             <div className={`relative ${i % 2 === 1 ? "md:order-1" : ""}`}>
               <div
                 className="relative w-full"
                 style={{
                   aspectRatio: "4/3",
-                  maskImage: "radial-gradient(ellipse 55% 60% at 50% 50%, black 0%, rgba(0,0,0,0.88) 22%, rgba(0,0,0,0.55) 44%, rgba(0,0,0,0.15) 62%, rgba(0,0,0,0.03) 76%, transparent 88%)",
-                  WebkitMaskImage: "radial-gradient(ellipse 55% 60% at 50% 50%, black 0%, rgba(0,0,0,0.88) 22%, rgba(0,0,0,0.55) 44%, rgba(0,0,0,0.15) 62%, rgba(0,0,0,0.03) 76%, transparent 88%)",
+                  maskImage:
+                    "radial-gradient(ellipse 55% 60% at 50% 50%, black 0%, rgba(0,0,0,0.88) 22%, rgba(0,0,0,0.55) 44%, rgba(0,0,0,0.15) 62%, rgba(0,0,0,0.03) 76%, transparent 88%)",
+                  WebkitMaskImage:
+                    "radial-gradient(ellipse 55% 60% at 50% 50%, black 0%, rgba(0,0,0,0.88) 22%, rgba(0,0,0,0.55) 44%, rgba(0,0,0,0.15) 62%, rgba(0,0,0,0.03) 76%, transparent 88%)",
                 }}
               >
                 <Image
@@ -266,7 +871,8 @@ export function WhyWeExistSection() {
             &ldquo;The greatest Product is the one that{" "}
             <span
               style={{
-                background: "linear-gradient(135deg, #00D4FF 0%, #7AA4FF 50%, #a855f7 100%)",
+                background:
+                  "linear-gradient(135deg, #00D4FF 0%, #7AA4FF 50%, #a855f7 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
@@ -279,7 +885,7 @@ export function WhyWeExistSection() {
           <p
             className="mt-5"
             style={{
-              fontFamily: "var(--font-space-grotesk)",
+              fontFamily: SG,
               fontSize: "0.72rem",
               letterSpacing: "0.4em",
               color: "rgba(255,255,255,0.35)",
