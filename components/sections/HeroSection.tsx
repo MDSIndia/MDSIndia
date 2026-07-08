@@ -1,5 +1,6 @@
 "use client";
 import type { CSSProperties } from "react";
+import { Compass, ArrowUpRight } from "lucide-react";
 
 const seeded = (index: number, salt: number) => {
   const v = Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453;
@@ -68,33 +69,40 @@ export function HeroSection() {
           <div className="flex flex-wrap gap-3 justify-center md:justify-start">
             <a
               href="#about-mds"
-              className="px-7 py-3.5 rounded-full text-white font-semibold text-sm transition-all duration-300 hover:scale-105 hover:brightness-110"
+              className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full text-sm font-bold uppercase transition-all duration-300 hover:scale-105"
               style={{
                 fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-                background: "linear-gradient(135deg, rgba(0,85,255,0.38), rgba(0,212,255,0.30))",
-                border: "1px solid rgba(0,212,255,0.35)",
-                backdropFilter: "blur(20px) saturate(180%)",
-                WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                boxShadow: "0 0 20px rgba(0,85,255,0.20), inset 0 1px 0 rgba(255,255,255,0.16)",
+                letterSpacing: "0.08em",
+                color: "#FFFFFF",
+                background:
+                  "linear-gradient(rgba(4,6,16,0.72), rgba(4,6,16,0.72)) padding-box, linear-gradient(135deg, #0055FF, #7B2FBE) border-box",
+                border: "1.5px solid transparent",
+                backdropFilter: "blur(18px) saturate(180%)",
+                WebkitBackdropFilter: "blur(18px) saturate(180%)",
+                boxShadow: "0 0 22px rgba(0,85,255,0.32), 0 0 48px rgba(123,47,190,0.16)",
               }}
             >
+              <Compass className="size-4" strokeWidth={2.25} />
               Explore MDS
             </a>
             <a
               href="https://noorva.ai"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-7 py-3.5 rounded-full font-semibold text-sm transition-all duration-300 hover:scale-105"
+              className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full text-sm font-bold uppercase transition-all duration-300 hover:scale-105"
               style={{
                 fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-                background: "linear-gradient(135deg, rgba(0,85,255,0.10), rgba(0,212,255,0.06))",
-                border: "1px solid rgba(255,255,255,0.14)",
+                letterSpacing: "0.08em",
+                color: "rgba(0,212,255,0.92)",
+                background:
+                  "linear-gradient(rgba(4,6,16,0.72), rgba(4,6,16,0.72)) padding-box, linear-gradient(135deg, #00D4FF, #0055FF) border-box",
+                border: "1.5px solid transparent",
                 backdropFilter: "blur(18px) saturate(180%)",
                 WebkitBackdropFilter: "blur(18px) saturate(180%)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10), 0 4px 20px rgba(0,0,0,0.20)",
-                color: "rgba(255,255,255,0.80)",
+                boxShadow: "0 0 22px rgba(0,212,255,0.28), 0 0 48px rgba(0,85,255,0.16)",
               }}
             >
+              <ArrowUpRight className="size-4" strokeWidth={2.25} />
               Discover Noorva
             </a>
           </div>

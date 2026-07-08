@@ -2,7 +2,9 @@
 
 import { useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, useInView } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const SG = "var(--font-space-grotesk), 'Inter', sans-serif";
@@ -228,15 +230,115 @@ function IntentionToActionPath() {
   );
 }
 
-/* ─── Section ─────────────────────────────────────────────────────────── */
-
-export function WhyWeExistSection() {
+/* ── Decorative sphere for the teaser card ── */
+function AboutMDSSphere() {
   return (
-    <section id="about-mds" className="section-padding relative overflow-hidden">
-      <div className="scene-top-fade" />
-      <div className="scene-bottom-fade" />
+    <div className="relative mx-auto" style={{ width: 220, height: 220 }}>
+      {/* Ground halo */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          width: 260,
+          height: 90,
+          left: "50%",
+          bottom: -30,
+          transform: "translateX(-50%)",
+          background: "radial-gradient(ellipse, rgba(0,153,255,0.35) 0%, rgba(123,47,190,0.18) 55%, transparent 75%)",
+          filter: "blur(18px)",
+        }}
+      />
 
-      <div className="relative max-w-6xl mx-auto">
+      {/* Outer ambient glow */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(0,85,255,0.20) 0%, rgba(123,47,190,0.10) 55%, transparent 75%)",
+          filter: "blur(20px)",
+          transform: "scale(1.3)",
+        }}
+      />
+
+      {/* Tilted rings — continuously spinning */}
+      <div
+        className="absolute pointer-events-none"
+        style={{ top: "46%", left: "50%", width: 300, height: 300, transform: "translate(-50%, -50%) rotateX(78deg)" }}
+      >
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 16, repeat: Infinity, ease: "linear" }}
+          style={{ border: "1.5px solid rgba(0,212,255,0.45)", boxShadow: "0 0 18px rgba(0,212,255,0.30)" }}
+        />
+      </div>
+      <div
+        className="absolute pointer-events-none"
+        style={{ top: "46%", left: "50%", width: 250, height: 250, transform: "translate(-50%, -50%) rotateX(78deg)" }}
+      >
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          animate={{ rotate: -360 }}
+          transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
+          style={{ border: "1px solid rgba(168,85,247,0.35)" }}
+        />
+        {/* Orbiting particle riding the inner ring */}
+        <motion.div
+          className="absolute inset-0"
+          animate={{ rotate: -360 }}
+          transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
+        >
+          <span
+            className="absolute rounded-full"
+            style={{
+              top: -3,
+              left: "50%",
+              width: 7,
+              height: 7,
+              background: "#00D4FF",
+              boxShadow: "0 0 10px #00D4FF, 0 0 20px rgba(0,212,255,0.6)",
+            }}
+          />
+        </motion.div>
+      </div>
+
+      {/* Sphere */}
+      <motion.div
+        className="absolute rounded-full overflow-hidden"
+        animate={{ y: [0, -10, 0], rotate: 360 }}
+        transition={{
+          y: { duration: 6, repeat: Infinity, ease: "easeInOut" },
+          rotate: { duration: 14, repeat: Infinity, ease: "linear" },
+        }}
+        style={{
+          inset: 0,
+          background:
+            "radial-gradient(circle at 35% 30%, rgba(180,220,255,0.95) 0%, rgba(0,153,255,0.85) 22%, rgba(45,60,200,0.9) 48%, rgba(20,10,60,0.95) 75%, rgba(6,4,20,1) 100%)",
+          boxShadow:
+            "0 0 40px rgba(0,153,255,0.45), 0 0 90px rgba(123,47,190,0.30), inset -18px -18px 50px rgba(0,0,0,0.55)",
+        }}
+      >
+        {/* Rotating surface texture — gives the sphere a slow spin */}
+        <motion.div
+          className="absolute rounded-full pointer-events-none"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
+          style={{
+            inset: "-20%",
+            background:
+              "repeating-linear-gradient(75deg, transparent 0px, transparent 10px, rgba(255,255,255,0.05) 11px, transparent 13px)",
+            mixBlendMode: "overlay",
+          }}
+        />
+      </motion.div>
+    </div>
+  );
+}
+
+/* ─── Full expanded "About MDS" content ──────────────────────────────── */
+
+export function AboutMDSFullContent() {
+  return (
+    <div className="relative max-w-6xl mx-auto">
 
         {/* ── Header ── */}
         <motion.div
@@ -921,6 +1023,140 @@ export function WhyWeExistSection() {
           </p>
         </motion.div>
 
+      </div>
+  );
+}
+
+/* ─── Section (teaser + expandable full content) ────────────────────── */
+
+export function WhyWeExistSection() {
+  return (
+    <section id="about-mds" className="section-padding relative overflow-hidden">
+      <div className="scene-top-fade" />
+      <div className="scene-bottom-fade" />
+
+      <div className="relative max-w-5xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, ease: EASE }}
+          className="relative grid grid-cols-1 md:grid-cols-[1fr_auto] items-center gap-10 md:gap-16 py-4"
+        >
+          <div className="text-center md:text-left">
+            <h2
+              className="neue-machina mb-5"
+              style={{ fontSize: "clamp(2rem, 4.5vw, 3.2rem)", lineHeight: 1.02, letterSpacing: "0.01em" }}
+            >
+              <span style={{ color: "rgba(255,255,255,0.95)" }}>About </span>
+              <span
+                style={{
+                  background: "linear-gradient(135deg, #FFFFFF 0%, #7AA4FF 55%, #00D4FF 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                MDS
+              </span>
+            </h2>
+
+            <p
+              style={{
+                fontFamily: NM,
+                fontSize: "clamp(1.2rem, 2.2vw, 1.7rem)",
+                lineHeight: 1.4,
+                color: "rgba(255,255,255,0.92)",
+                marginBottom: "0.9rem",
+              }}
+            >
+              &ldquo;We build for what people haven&apos;t done yet.&rdquo;
+            </p>
+
+            <p
+              style={{
+                fontFamily: SG,
+                fontSize: "clamp(0.9rem, 1.1vw, 1rem)",
+                lineHeight: 1.7,
+                color: "rgba(255,255,255,0.55)",
+                marginBottom: "2rem",
+                maxWidth: 460,
+              }}
+            >
+              We&apos;re architects of the future, not another tech company.
+            </p>
+
+            <Link
+              href="/about-mds"
+              className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full text-sm font-bold uppercase transition-all duration-300 hover:scale-105"
+              style={{
+                fontFamily: SG,
+                letterSpacing: "0.08em",
+                color: "#FFFFFF",
+                background:
+                  "linear-gradient(rgba(4,6,16,0.72), rgba(4,6,16,0.72)) padding-box, linear-gradient(135deg, #0055FF, #7B2FBE) border-box",
+                border: "1.5px solid transparent",
+                backdropFilter: "blur(18px) saturate(180%)",
+                WebkitBackdropFilter: "blur(18px) saturate(180%)",
+                boxShadow: "0 0 22px rgba(0,85,255,0.28), 0 0 48px rgba(123,47,190,0.14)",
+              }}
+            >
+              Explore MDS
+              <ArrowRight className="size-4" strokeWidth={2.25} />
+            </Link>
+          </div>
+
+          <div className="flex justify-center md:justify-end">
+            <AboutMDSSphere />
+          </div>
+        </motion.div>
+
+        {/* Three principles — always visible */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+          {pillars.map((pillar, i) => (
+            <motion.div
+              key={pillar.number}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: i * 0.1, ease: EASE }}
+              className="rounded-2xl p-5"
+              style={{
+                background: `rgba(${pillar.glow},0.07)`,
+                border: `1px solid rgba(${pillar.glow},0.20)`,
+                backdropFilter: "blur(18px) saturate(150%)",
+                WebkitBackdropFilter: "blur(18px) saturate(150%)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
+              }}
+            >
+              <span
+                className="font-mono text-xs font-semibold"
+                style={{ color: pillar.accentDot }}
+              >
+                {pillar.number}
+              </span>
+              <h4
+                className="mt-2 mb-2"
+                style={{ fontFamily: NM, fontSize: "1.05rem", lineHeight: 1.28, fontWeight: 700 }}
+              >
+                <span style={{ color: "rgba(255,255,255,0.92)" }}>{pillar.title1} </span>
+                <span
+                  style={{
+                    background: pillar.accentGradient,
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}
+                >
+                  {pillar.title2}
+                </span>
+              </h4>
+              <p style={{ fontFamily: SG, fontSize: "0.82rem", lineHeight: 1.65, color: "rgba(255,255,255,0.55)" }}>
+                {pillar.body}
+              </p>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );
