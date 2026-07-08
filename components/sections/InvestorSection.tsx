@@ -99,9 +99,11 @@ export function InvestorSection() {
               transition={{ delay: i * 0.1 }}
               className="rounded-2xl overflow-hidden text-center"
               style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                boxShadow: `0 0 30px ${metric.glow}`,
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.14)",
+                backdropFilter: "blur(20px) saturate(150%)",
+                WebkitBackdropFilter: "blur(20px) saturate(150%)",
+                boxShadow: `0 0 30px ${metric.glow}, inset 0 1px 0 rgba(255,255,255,0.07)`,
               }}
             >
               <div className="p-5 md:p-6">
@@ -130,9 +132,11 @@ export function InvestorSection() {
             viewport={{ once: true }}
             className="rounded-2xl p-6 md:p-8"
             style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              boxShadow: "0 0 30px rgba(0,85,255,0.10)",
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.14)",
+              backdropFilter: "blur(20px) saturate(150%)",
+              WebkitBackdropFilter: "blur(20px) saturate(150%)",
+              boxShadow: "0 0 30px rgba(0,85,255,0.10), inset 0 1px 0 rgba(255,255,255,0.07)",
             }}
           >
             <h3
@@ -205,17 +209,19 @@ export function InvestorSection() {
                     transition={{ delay: i * 0.1 }}
                     className="flex gap-4 p-4 rounded-xl transition-all duration-300"
                     style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.08)",
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.14)",
+                      backdropFilter: "blur(16px) saturate(150%)",
+                      WebkitBackdropFilter: "blur(16px) saturate(150%)",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.07)";
+                      e.currentTarget.style.background = "rgba(255,255,255,0.09)";
                       e.currentTarget.style.borderColor = "rgba(0,85,255,0.30)";
                       e.currentTarget.style.boxShadow = "0 0 20px rgba(0,85,255,0.12)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.04)";
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                      e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
                       e.currentTarget.style.boxShadow = "none";
                     }}
                   >
@@ -249,8 +255,11 @@ export function InvestorSection() {
             className="inline-flex items-center gap-3 px-10 py-5 rounded-full text-white font-semibold text-lg transition-all duration-300 hover:scale-105 hover:brightness-110"
             style={{
               fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-              background: "linear-gradient(135deg, #0055FF, #00D4FF)",
-              boxShadow: "0 0 40px rgba(0,85,255,0.40), 0 0 80px rgba(0,85,255,0.18)",
+              background: "linear-gradient(135deg, rgba(0,85,255,0.38), rgba(0,212,255,0.30))",
+              border: "1px solid rgba(0,212,255,0.35)",
+              backdropFilter: "blur(20px) saturate(180%)",
+              WebkitBackdropFilter: "blur(20px) saturate(180%)",
+              boxShadow: "0 0 22px rgba(0,85,255,0.22), inset 0 1px 0 rgba(255,255,255,0.16)",
             }}
           >
             Discuss Investment

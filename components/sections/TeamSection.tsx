@@ -24,7 +24,7 @@ const team = [
     tagline: "Strategist. Leader. Enabler.",
     description:
       "Turning vision into reality — building the systems, teams, and culture that will take MDS from a bold idea to a global AI company. Seshagiri bridges strategy and execution with clarity and conviction.",
-    photo: "/Seshagi.jpeg",
+    photo: "/SeshuDir.jpeg",
     accent: "#818CF8",
     glow: "129,140,248",
   },
@@ -108,9 +108,10 @@ export function TeamSection() {
               whileHover={{ y: -10 }}
               className="relative group flex flex-col items-center text-center rounded-3xl overflow-hidden"
               style={{
-                background: "linear-gradient(160deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.018) 100%)",
-                border: "1px solid rgba(255,255,255,0.09)",
-                backdropFilter: "blur(12px)",
+                background: "linear-gradient(160deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)",
+                border: "1px solid rgba(255,255,255,0.14)",
+                backdropFilter: "blur(20px) saturate(150%)",
+                WebkitBackdropFilter: "blur(20px) saturate(150%)",
                 padding: "2.5rem 2rem 2.2rem",
                 boxShadow: "0 8px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.07)",
                 transition: "border-color 0.4s, box-shadow 0.4s",
@@ -137,8 +138,10 @@ export function TeamSection() {
                 <div
                   className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full"
                   style={{
-                    background: "linear-gradient(135deg, rgba(0,212,255,0.15) 0%, rgba(0,85,255,0.15) 100%)",
+                    background: "linear-gradient(135deg, rgba(0,212,255,0.18) 0%, rgba(0,85,255,0.18) 100%)",
                     border: "1px solid rgba(0,212,255,0.35)",
+                    backdropFilter: "blur(10px) saturate(160%)",
+                    WebkitBackdropFilter: "blur(10px) saturate(160%)",
                     boxShadow: "0 0 12px rgba(0,212,255,0.20)",
                   }}
                 >
@@ -211,8 +214,10 @@ export function TeamSection() {
               <span
                 className="px-3 py-1 rounded-full text-[0.6rem] font-semibold tracking-[0.22em] uppercase mb-4"
                 style={{
-                  background: `rgba(${member.glow},0.12)`,
+                  background: `rgba(${member.glow},0.15)`,
                   border: `1px solid rgba(${member.glow},0.30)`,
+                  backdropFilter: "blur(10px) saturate(160%)",
+                  WebkitBackdropFilter: "blur(10px) saturate(160%)",
                   color: member.accent,
                   fontFamily: "monospace",
                 }}

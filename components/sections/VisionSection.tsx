@@ -87,9 +87,11 @@ export function VisionSection() {
                 whileHover={{ y: -6, transition: { duration: 0.25 } }}
                 className="relative rounded-2xl overflow-hidden cursor-default"
                 style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  boxShadow: `0 0 40px ${card.glow}`,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.14)",
+                  backdropFilter: "blur(20px) saturate(150%)",
+                  WebkitBackdropFilter: "blur(20px) saturate(150%)",
+                  boxShadow: `0 0 40px ${card.glow}, inset 0 1px 0 rgba(255,255,255,0.07)`,
                 }}
               >
                 <div className="p-6 md:p-8">

@@ -6,7 +6,12 @@ export function Footer() {
   return (
     <footer
       className="relative py-12 md:py-16 px-4 sm:px-6 overflow-hidden"
-      style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
+      style={{
+        borderTop: "1px solid rgba(255,255,255,0.12)",
+        background: "rgba(255,255,255,0.025)",
+        backdropFilter: "blur(24px) saturate(150%)",
+        WebkitBackdropFilter: "blur(24px) saturate(150%)",
+      }}
     >
       <div className="ambient-glow ambient-glow-cyan w-96 h-48 bottom-0 left-1/2 -translate-x-1/2" />
 

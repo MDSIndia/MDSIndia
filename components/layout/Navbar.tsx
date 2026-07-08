@@ -61,10 +61,11 @@ export function Navbar() {
             scrolled ? "opacity-100" : "opacity-0"
           }`}
           style={{
-            background: "rgba(2, 2, 8, 0.85)",
-            backdropFilter: "blur(16px)",
-            WebkitBackdropFilter: "blur(16px)",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+            background: "rgba(8, 8, 20, 0.55)",
+            backdropFilter: "blur(20px) saturate(160%)",
+            WebkitBackdropFilter: "blur(20px) saturate(160%)",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.10)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
           }}
         />
 
@@ -121,12 +122,16 @@ export function Navbar() {
           {/* Primary CTA */}
           <div className="hidden md:flex items-center">
             <a
-              href="#noorva"
+              href="https://noorva.ai"
+              target="_blank"
+              rel="noopener noreferrer"
               className="px-5 py-2 rounded-full text-sm font-medium hover:text-white transition-all duration-300"
               style={{
                 fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-                background: "rgba(0,85,255,0.15)",
-                border: "1px solid rgba(0,85,255,0.3)",
+                background: "rgba(0,85,255,0.16)",
+                border: "1px solid rgba(0,153,255,0.35)",
+                backdropFilter: "blur(12px) saturate(160%)",
+                WebkitBackdropFilter: "blur(12px) saturate(160%)",
                 color: "rgba(255,255,255,0.88)",
               }}
             >
@@ -165,10 +170,11 @@ export function Navbar() {
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-y-0 right-0 z-[99] w-64 flex flex-col justify-center p-8"
             style={{
-              background: "rgba(4, 4, 16, 0.97)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              borderLeft: "1px solid rgba(255,255,255,0.07)",
+              background: "rgba(10, 10, 24, 0.65)",
+              backdropFilter: "blur(28px) saturate(160%)",
+              WebkitBackdropFilter: "blur(28px) saturate(160%)",
+              borderLeft: "1px solid rgba(255,255,255,0.12)",
+              boxShadow: "-8px 0 32px rgba(0,0,0,0.35)",
             }}
           >
             <div className="flex flex-col gap-7">
@@ -194,9 +200,18 @@ export function Navbar() {
               })}
             </div>
             <a
-              href="#noorva"
+              href="https://noorva.ai"
+              target="_blank"
+              rel="noopener noreferrer"
               className="mt-10 text-center py-3.5 rounded-2xl text-sm font-medium text-white"
-              style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", background: "linear-gradient(135deg, #0055FF, #00D4FF)" }}
+              style={{
+                fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+                background: "linear-gradient(135deg, rgba(0,85,255,0.38), rgba(0,212,255,0.30))",
+                border: "1px solid rgba(0,212,255,0.35)",
+                backdropFilter: "blur(16px) saturate(180%)",
+                WebkitBackdropFilter: "blur(16px) saturate(180%)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
+              }}
               onClick={() => setMobileOpen(false)}
             >
               Discover Noorva

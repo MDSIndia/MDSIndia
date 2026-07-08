@@ -89,9 +89,11 @@ export function CareersSection() {
               whileHover={{ y: -4, transition: { duration: 0.2 } }}
               className="rounded-2xl overflow-hidden cursor-default group"
               style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                boxShadow: "0 0 30px rgba(0,0,0,0.3)",
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.14)",
+                backdropFilter: "blur(20px) saturate(150%)",
+                WebkitBackdropFilter: "blur(20px) saturate(150%)",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.07)",
               }}
             >
               <div className="p-5 md:p-6">
@@ -158,8 +160,10 @@ export function CareersSection() {
             href="mailto:services@mdsindia.in"
             className="inline-flex items-center gap-3 px-8 py-4 rounded-full font-semibold text-sm transition-all duration-300"
             style={{
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(255,255,255,0.07)",
+              border: "1px solid rgba(255,255,255,0.16)",
+              backdropFilter: "blur(16px) saturate(160%)",
+              WebkitBackdropFilter: "blur(16px) saturate(160%)",
               color: "rgba(255,255,255,0.75)",
             }}
             onMouseEnter={(e) => {

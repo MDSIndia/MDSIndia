@@ -172,7 +172,9 @@ export function HowNoorvaWorksSection() {
                   className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center"
                   style={{
                     border: `2px solid ${i === active ? cur.accent : "rgba(255,255,255,0.14)"}`,
-                    background: i === active ? `rgba(${cur.glow},0.12)` : "rgba(255,255,255,0.03)",
+                    background: i === active ? `rgba(${cur.glow},0.14)` : "rgba(255,255,255,0.05)",
+                    backdropFilter: "blur(10px) saturate(150%)",
+                    WebkitBackdropFilter: "blur(10px) saturate(150%)",
                   }}
                 >
                   <span
@@ -220,9 +222,11 @@ export function HowNoorvaWorksSection() {
             transition={{ duration: 0.55, ease: EASE }}
             className="relative rounded-2xl md:rounded-3xl overflow-hidden"
             style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              boxShadow: `0 0 100px rgba(${cur.glow},0.10), inset 0 0 0 1px rgba(${cur.glow},0.07)`,
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.14)",
+              backdropFilter: "blur(24px) saturate(150%)",
+              WebkitBackdropFilter: "blur(24px) saturate(150%)",
+              boxShadow: `0 0 100px rgba(${cur.glow},0.10), 0 8px 32px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(${cur.glow},0.07)`,
             }}
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => setPaused(false)}
@@ -293,8 +297,10 @@ export function HowNoorvaWorksSection() {
                     transition={{ delay: i * 0.09, duration: 0.45, ease: EASE }}
                     className="flex items-center gap-3 px-4 py-3.5 rounded-xl"
                     style={{
-                      background: `rgba(${cur.glow},0.07)`,
-                      border: `1px solid rgba(${cur.glow},0.15)`,
+                      background: `rgba(${cur.glow},0.09)`,
+                      border: `1px solid rgba(${cur.glow},0.20)`,
+                      backdropFilter: "blur(10px) saturate(150%)",
+                      WebkitBackdropFilter: "blur(10px) saturate(150%)",
                     }}
                   >
                     <div

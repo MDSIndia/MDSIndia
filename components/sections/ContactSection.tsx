@@ -95,9 +95,11 @@ export function ContactSection() {
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="rounded-3xl p-5 sm:p-8 md:p-12 relative overflow-hidden"
           style={{
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.10)",
-            boxShadow: "0 0 60px rgba(0,85,255,0.12)",
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.14)",
+            backdropFilter: "blur(28px) saturate(160%)",
+            WebkitBackdropFilter: "blur(28px) saturate(160%)",
+            boxShadow: "0 0 60px rgba(0,85,255,0.12), 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)",
           }}
         >
           <div
@@ -130,8 +132,10 @@ export function ContactSection() {
                       placeholder="Your name"
                       className="w-full rounded-xl px-4 py-3 text-white text-sm focus:outline-none transition-all duration-300"
                       style={{
-                        background: "rgba(255,255,255,0.06)",
-                        border: "1px solid rgba(255,255,255,0.10)",
+                        background: "rgba(255,255,255,0.07)",
+                        border: "1px solid rgba(255,255,255,0.14)",
+                        backdropFilter: "blur(12px) saturate(150%)",
+                        WebkitBackdropFilter: "blur(12px) saturate(150%)",
                         colorScheme: "dark",
                       }}
                       onFocus={(e) => {
@@ -159,8 +163,10 @@ export function ContactSection() {
                       placeholder="your@email.com"
                       className="w-full rounded-xl px-4 py-3 text-white text-sm focus:outline-none transition-all duration-300"
                       style={{
-                        background: "rgba(255,255,255,0.06)",
-                        border: "1px solid rgba(255,255,255,0.10)",
+                        background: "rgba(255,255,255,0.07)",
+                        border: "1px solid rgba(255,255,255,0.14)",
+                        backdropFilter: "blur(12px) saturate(150%)",
+                        WebkitBackdropFilter: "blur(12px) saturate(150%)",
                         colorScheme: "dark",
                       }}
                       onFocus={(e) => {
@@ -191,10 +197,18 @@ export function ContactSection() {
                         className="px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs font-medium transition-all duration-200"
                         style={
                           formData.subject === s
-                            ? { background: "linear-gradient(135deg, #0055FF, #00D4FF)", color: "white" }
+                            ? {
+                                background: "linear-gradient(135deg, rgba(0,85,255,0.40), rgba(0,212,255,0.32))",
+                                border: "1px solid rgba(0,212,255,0.35)",
+                                backdropFilter: "blur(12px) saturate(180%)",
+                                WebkitBackdropFilter: "blur(12px) saturate(180%)",
+                                color: "white",
+                              }
                             : {
-                                background: "rgba(255,255,255,0.05)",
-                                border: "1px solid rgba(255,255,255,0.10)",
+                                background: "rgba(255,255,255,0.07)",
+                                border: "1px solid rgba(255,255,255,0.14)",
+                                backdropFilter: "blur(10px) saturate(150%)",
+                                WebkitBackdropFilter: "blur(10px) saturate(150%)",
                                 color: "rgba(255,255,255,0.50)",
                               }
                         }
@@ -220,8 +234,10 @@ export function ContactSection() {
                     placeholder="Share your vision, question, or idea..."
                     className="w-full rounded-xl px-4 py-3 text-white text-sm focus:outline-none transition-all duration-300 resize-none"
                     style={{
-                      background: "rgba(255,255,255,0.06)",
-                      border: "1px solid rgba(255,255,255,0.10)",
+                      background: "rgba(255,255,255,0.07)",
+                      border: "1px solid rgba(255,255,255,0.14)",
+                      backdropFilter: "blur(12px) saturate(150%)",
+                      WebkitBackdropFilter: "blur(12px) saturate(150%)",
                       colorScheme: "dark",
                     }}
                     onFocus={(e) => {
@@ -240,8 +256,10 @@ export function ContactSection() {
                     className="text-sm px-4 py-3 rounded-xl"
                     style={{
                       fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-                      background: "rgba(255,60,60,0.08)",
-                      border: "1px solid rgba(255,60,60,0.20)",
+                      background: "rgba(255,60,60,0.10)",
+                      border: "1px solid rgba(255,60,60,0.25)",
+                      backdropFilter: "blur(12px) saturate(150%)",
+                      WebkitBackdropFilter: "blur(12px) saturate(150%)",
                       color: "rgba(255,120,120,0.95)",
                     }}
                   >
@@ -262,8 +280,11 @@ export function ContactSection() {
                     className="relative px-8 py-4 rounded-full font-semibold text-white overflow-hidden disabled:opacity-50 transition-all duration-300 hover:scale-105"
                     style={{
                       fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-                      background: "linear-gradient(135deg, #0055FF, #00D4FF)",
-                      boxShadow: "0 0 25px rgba(0,85,255,0.4)",
+                      background: "linear-gradient(135deg, rgba(0,85,255,0.38), rgba(0,212,255,0.30))",
+                      border: "1px solid rgba(0,212,255,0.35)",
+                      backdropFilter: "blur(20px) saturate(180%)",
+                      WebkitBackdropFilter: "blur(20px) saturate(180%)",
+                      boxShadow: "0 0 18px rgba(0,85,255,0.20), inset 0 1px 0 rgba(255,255,255,0.16)",
                     }}
                   >
                     <span className="relative z-10">

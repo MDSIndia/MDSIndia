@@ -88,8 +88,11 @@ export function FinalSection() {
             className="px-10 py-5 rounded-full text-white font-semibold text-lg transition-all duration-300 hover:scale-105 hover:brightness-110"
             style={{
               fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-              background: "linear-gradient(135deg, #0055FF, #00D4FF)",
-              boxShadow: "0 0 50px rgba(0,85,255,0.40), 0 0 100px rgba(0,85,255,0.18)",
+              background: "linear-gradient(135deg, rgba(0,85,255,0.38), rgba(0,212,255,0.30))",
+              border: "1px solid rgba(0,212,255,0.35)",
+              backdropFilter: "blur(20px) saturate(180%)",
+              WebkitBackdropFilter: "blur(20px) saturate(180%)",
+              boxShadow: "0 0 24px rgba(0,85,255,0.22), inset 0 1px 0 rgba(255,255,255,0.16)",
             }}
           >
             Begin The Journey

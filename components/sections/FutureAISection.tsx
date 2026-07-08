@@ -118,15 +118,22 @@ export function FutureAISection() {
                 whileHover={{ y: -5, transition: { duration: 0.2 } }}
                 className="rounded-2xl overflow-hidden cursor-default"
                 style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  boxShadow: `0 0 35px ${domain.glow}`,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.14)",
+                  backdropFilter: "blur(20px) saturate(150%)",
+                  WebkitBackdropFilter: "blur(20px) saturate(150%)",
+                  boxShadow: `0 0 35px ${domain.glow}, 0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.07)`,
                 }}
               >
                 <div className="p-6">
                 <div
                   className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-                  style={{ background: "rgba(255,255,255,0.06)" }}
+                  style={{
+                    background: "rgba(255,255,255,0.09)",
+                    border: "1px solid rgba(255,255,255,0.14)",
+                    backdropFilter: "blur(10px)",
+                    WebkitBackdropFilter: "blur(10px)",
+                  }}
                 >
                   <Icon className="size-5 text-white" strokeWidth={2} />
                 </div>

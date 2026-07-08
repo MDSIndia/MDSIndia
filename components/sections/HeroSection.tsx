@@ -50,7 +50,7 @@ export function HeroSection() {
               backgroundClip: "text",
             }}
           >
-            Building Tomorrow&apos;s<br />Products for Today&apos;s World
+            Building Products<br />that Makes an Impact
           </h1>
 
           <p
@@ -71,20 +71,28 @@ export function HeroSection() {
               className="px-7 py-3.5 rounded-full text-white font-semibold text-sm transition-all duration-300 hover:scale-105 hover:brightness-110"
               style={{
                 fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-                background: "linear-gradient(135deg, #0055FF, #00D4FF)",
-                boxShadow: "0 0 28px rgba(0,85,255,0.44), 0 0 60px rgba(0,180,255,0.12)",
+                background: "linear-gradient(135deg, rgba(0,85,255,0.38), rgba(0,212,255,0.30))",
+                border: "1px solid rgba(0,212,255,0.35)",
+                backdropFilter: "blur(20px) saturate(180%)",
+                WebkitBackdropFilter: "blur(20px) saturate(180%)",
+                boxShadow: "0 0 20px rgba(0,85,255,0.20), inset 0 1px 0 rgba(255,255,255,0.16)",
               }}
             >
               Explore MDS
             </a>
             <a
-              href="#noorva"
+              href="https://noorva.ai"
+              target="_blank"
+              rel="noopener noreferrer"
               className="px-7 py-3.5 rounded-full font-semibold text-sm transition-all duration-300 hover:scale-105"
               style={{
                 fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-                background: "rgba(255,255,255,0.07)",
-                border: "1px solid rgba(255,255,255,0.20)",
-                color: "rgba(255,255,255,0.88)",
+                background: "linear-gradient(135deg, rgba(0,85,255,0.10), rgba(0,212,255,0.06))",
+                border: "1px solid rgba(255,255,255,0.14)",
+                backdropFilter: "blur(18px) saturate(180%)",
+                WebkitBackdropFilter: "blur(18px) saturate(180%)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10), 0 4px 20px rgba(0,0,0,0.20)",
+                color: "rgba(255,255,255,0.80)",
               }}
             >
               Discover Noorva

@@ -585,8 +585,11 @@ export function WhyWeExistSection() {
           transition={{ duration: 0.9, ease: EASE }}
           className="mb-10 md:mb-14 relative overflow-hidden rounded-2xl px-7 py-9 md:px-10 md:py-11"
           style={{
-            background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(255,255,255,0.07)",
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            backdropFilter: "blur(22px) saturate(150%)",
+            WebkitBackdropFilter: "blur(22px) saturate(150%)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06)",
           }}
         >
           {/* Floating gradient sphere */}
@@ -790,8 +793,10 @@ export function WhyWeExistSection() {
               <span
                 className="inline-flex items-center justify-center px-3 py-1 rounded-lg text-xs font-mono font-semibold tracking-[0.18em] mb-3 block w-fit"
                 style={{
-                  background: `rgba(${pillar.glow},0.10)`,
+                  background: `rgba(${pillar.glow},0.13)`,
                   border: `1px solid rgba(${pillar.glow},0.28)`,
+                  backdropFilter: "blur(10px) saturate(160%)",
+                  WebkitBackdropFilter: "blur(10px) saturate(160%)",
                   color: pillar.accentDot,
                 }}
               >

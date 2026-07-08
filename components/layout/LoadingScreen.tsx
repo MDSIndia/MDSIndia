@@ -72,9 +72,11 @@ export function LoadingScreen({ onComplete }: { onComplete: () => void }) {
           <div
             className="w-24 h-24 rounded-2xl flex items-center justify-center"
             style={{
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              boxShadow: "0 0 40px rgba(0,85,255,0.25), 0 0 80px rgba(0,85,255,0.10)",
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.16)",
+              backdropFilter: "blur(16px) saturate(160%)",
+              WebkitBackdropFilter: "blur(16px) saturate(160%)",
+              boxShadow: "0 0 40px rgba(0,85,255,0.25), 0 0 80px rgba(0,85,255,0.10), inset 0 1px 0 rgba(255,255,255,0.10)",
             }}
           >
             <Image
