@@ -24,7 +24,7 @@ const team = [
     tagline: "Strategist. Leader. Enabler.",
     description:
       "Turning vision into reality — building the systems, teams, and culture that will take MDS from a bold idea to a global AI company. Seshagiri bridges strategy and execution with clarity and conviction.",
-    photo: "/Seshu.jpeg",
+    photo: "/Seshagi.jpeg",
     accent: "#818CF8",
     glow: "129,140,248",
   },
