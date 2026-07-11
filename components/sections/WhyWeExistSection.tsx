@@ -231,13 +231,10 @@ function IntentionToActionPath() {
   );
 }
 
-/* ── Decorative sphere for the teaser card ──────────────────────────────
-   Real rendered artwork, animated with a gentle hover, slow sway, and a
-   pulsing ambient glow — edges masked so it blends into the page bg.
-──────────────────────────────────────────────────────────────────────── */
+/* ── Decorative sphere for the teaser card ── */
 function AboutMDSSphere() {
   return (
-    <div className="relative mx-auto" style={{ width: 300, aspectRatio: "784 / 532" }}>
+    <div className="relative mx-auto" style={{ width: 300, aspectRatio: "1201 / 1309" }}>
       {/* Pulsing ambient glow behind the artwork */}
       <motion.div
         className="absolute pointer-events-none"
@@ -265,7 +262,7 @@ function AboutMDSSphere() {
         } as CSSProperties}
       >
         <Image
-          src="/heroimage.png"
+          src="/about.jpeg"
           alt="MDS — a living planet of ideas"
           fill
           quality={100}

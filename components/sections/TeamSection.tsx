@@ -13,7 +13,7 @@ const team = [
     tagline: "Visionary. Builder. Dreamer.",
     description:
       "The architect of MDS's grand vision — a believer that AI should serve humanity's highest potential, not just its productivity. Sumanth leads MDS with purpose, pushing the boundaries of what intelligent technology can mean for human life.",
-    photo: "/Sumanth.jpeg",
+    photo: "/Sumanth-avatar.jpg",
     accent: "#00D4FF",
     glow: "0,212,255",
   },
@@ -25,7 +25,7 @@ const team = [
     tagline: "Engineer. Architect. Innovator.",
     description:
       "The technical force behind Noorva's intelligence — designing AI systems that genuinely understand the complexity of human life. Rakesh builds the future one breakthrough at a time.",
-    photo: "/Rakesh.jpeg",
+    photo: "/Rakesh-avatar.jpg",
     accent: "#A855F7",
     glow: "168,85,247",
   },
@@ -170,8 +170,8 @@ export function TeamSection() {
                     padding: "3px",
                     background: `conic-gradient(from 0deg, ${member.accent}, rgba(${member.glow},0.15), ${member.accent})`,
                     borderRadius: "50%",
-                    transform: "scale(1.08)",
-                    opacity: 0.7,
+                    transform: "scale(1.06)",
+                    opacity: 0.75,
                   }}
                 />
                 {/* Inner ring */}
@@ -185,16 +185,22 @@ export function TeamSection() {
                 {/* Photo */}
                 <div
                   className="relative rounded-full overflow-hidden"
-                  style={{ width: "160px", height: "160px" }}
+                  style={{
+                    width: "184px",
+                    height: "184px",
+                    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.12)",
+                  }}
                 >
                   <Image
                     src={member.photo}
                     alt={member.name}
                     fill
+                    quality={100}
+                    sizes="184px"
                     style={{
                       objectFit: "cover",
-                      objectPosition: "center 15%",
-                      filter: "contrast(1.15) saturate(1.1) brightness(0.95)",
+                      objectPosition: "center",
+                      filter: "contrast(1.08) saturate(1.08)",
                     }}
                   />
                 </div>
