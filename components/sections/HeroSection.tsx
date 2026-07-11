@@ -1,5 +1,6 @@
 "use client";
 import type { CSSProperties } from "react";
+import Image from "next/image";
 import { Compass, ArrowUpRight } from "lucide-react";
 
 const seeded = (index: number, salt: number) => {
@@ -28,10 +29,15 @@ export function HeroSection() {
       className="relative md:min-h-screen flex flex-col md:flex-row md:items-center md:justify-center md:gap-16"
     >
       <style>{`
+        .hero-image-panel {
+          width: clamp(220px, 58vw, 300px);
+          aspect-ratio: 1023 / 1150;
+          margin: 0 auto;
+        }
         @media (min-width: 768px) {
           .hero-image-panel {
-            width: clamp(300px, 35vw, 540px);
-            height: clamp(300px, 35vw, 540px);
+            width: clamp(280px, 28vw, 400px);
+            margin: 0;
             flex-shrink: 0;
           }
         }
@@ -69,10 +75,11 @@ export function HeroSection() {
           <div className="flex flex-wrap gap-3 justify-center md:justify-start">
             <a
               href="#about-mds"
-              className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full text-sm font-bold uppercase transition-all duration-300 hover:scale-105"
+              className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full text-sm uppercase transition-all duration-300 hover:scale-105"
               style={{
-                fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-                letterSpacing: "0.08em",
+                fontFamily: "'Neue Machina', 'Inter', sans-serif",
+                fontWeight: 700,
+                letterSpacing: "0.03em",
                 color: "#FFFFFF",
                 background:
                   "linear-gradient(rgba(4,6,16,0.72), rgba(4,6,16,0.72)) padding-box, linear-gradient(135deg, #0055FF, #7B2FBE) border-box",
@@ -89,10 +96,11 @@ export function HeroSection() {
               href="https://noorva.ai"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full text-sm font-bold uppercase transition-all duration-300 hover:scale-105"
+              className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full text-sm uppercase transition-all duration-300 hover:scale-105"
               style={{
-                fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-                letterSpacing: "0.08em",
+                fontFamily: "'Neue Machina', 'Inter', sans-serif",
+                fontWeight: 700,
+                letterSpacing: "0.03em",
                 color: "rgba(0,212,255,0.92)",
                 background:
                   "linear-gradient(rgba(4,6,16,0.72), rgba(4,6,16,0.72)) padding-box, linear-gradient(135deg, #00D4FF, #0055FF) border-box",
@@ -110,18 +118,30 @@ export function HeroSection() {
       </div>
 
       {/* Right: image */}
-      <div className="hero-image-panel order-1 md:order-2 w-full h-56 sm:h-64 flex-shrink-0 pt-16 md:pt-0">
-        <div className="relative w-full h-full overflow-hidden">
-          <img
-            src="/rightimage.jpeg"
-            alt="Hero side image"
-            className="w-full h-full object-contain"
-          />
-
-          {/* Edge fades */}
-          <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to right, #020208 0%, transparent 35%, transparent 65%, #020208 100%)" }} />
-          <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to bottom, #020208 0%, transparent 30%, transparent 70%, #020208 100%)" }} />
-          <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at center, transparent 45%, #020208 80%)" }} />
+      <div className="hero-image-panel order-1 md:order-2 flex-shrink-0 pt-16 md:pt-0">
+        <div className="relative w-full h-full overflow-visible">
+          <div
+            className="absolute inset-0"
+            style={{
+              maskImage:
+                "linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 16%, black 84%, transparent 100%)",
+              maskComposite: "intersect",
+              WebkitMaskImage:
+                "linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 16%, black 84%, transparent 100%)",
+              WebkitMaskComposite: "source-in",
+            } as CSSProperties}
+          >
+            <Image
+              src="/herosectionimage.jpg"
+              alt="Hero side image"
+              fill
+              quality={100}
+              priority
+              sizes="(min-width: 768px) 400px, 300px"
+              className="object-contain"
+              style={{ filter: "contrast(1.1) saturate(1.18) brightness(1.04)" }}
+            />
+          </div>
 
           {/* Floating dots overlay — matches GlobalStars style */}
           {imageDots.map((dot, i) => (

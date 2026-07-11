@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
+import { Menu, X } from "lucide-react";
 import { useScrollProgress } from "@/hooks/useScrollProgress";
 
 const navLinks = [
@@ -141,13 +142,23 @@ export function Navbar() {
 
           {/* Mobile toggle */}
           <button
-            className="md:hidden flex flex-col gap-[5px] p-2"
+            className="md:hidden flex items-center justify-center rounded-full transition-transform duration-300 hover:scale-105"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
+            style={{
+              width: 42,
+              height: 42,
+              background: "rgba(255,255,255,0.07)",
+              border: "1px solid rgba(255,255,255,0.18)",
+              backdropFilter: "blur(14px) saturate(160%)",
+              WebkitBackdropFilter: "blur(14px) saturate(160%)",
+            }}
           >
-            <span className={`w-5 h-px bg-white/60 transition-transform duration-300 origin-center ${mobileOpen ? "rotate-45 translate-y-[6px]" : ""}`} />
-            <span className={`w-5 h-px bg-white/60 transition-opacity duration-300 ${mobileOpen ? "opacity-0" : ""}`} />
-            <span className={`w-5 h-px bg-white/60 transition-transform duration-300 origin-center ${mobileOpen ? "-rotate-45 -translate-y-[6px]" : ""}`} />
+            {mobileOpen ? (
+              <X className="size-[18px] text-white" strokeWidth={2} />
+            ) : (
+              <Menu className="size-[18px] text-white" strokeWidth={2} />
+            )}
           </button>
         </div>
 
@@ -160,62 +171,69 @@ export function Navbar() {
         </div>
       </motion.nav>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu — glass dropdown card */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            initial={{ opacity: 0, x: "100%" }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: "100%" }}
-            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-y-0 right-0 z-[99] w-64 flex flex-col justify-center p-8"
+            initial={{ opacity: 0, y: -16, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -12, scale: 0.97 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="md:hidden fixed left-4 right-4 z-[99] rounded-[28px] overflow-hidden"
             style={{
-              background: "rgba(10, 10, 24, 0.65)",
+              top: "5.5rem",
+              background: "rgba(10, 10, 24, 0.72)",
               backdropFilter: "blur(28px) saturate(160%)",
               WebkitBackdropFilter: "blur(28px) saturate(160%)",
-              borderLeft: "1px solid rgba(255,255,255,0.12)",
-              boxShadow: "-8px 0 32px rgba(0,0,0,0.35)",
+              border: "1px solid rgba(255,255,255,0.14)",
+              boxShadow: "0 16px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)",
             }}
           >
-            <div className="flex flex-col gap-7">
+            <div className="flex flex-col px-7 py-6">
               {navLinks.map((link, i) => {
                 const isActive = activeSection === link.id;
                 return (
                   <motion.a
                     key={link.label}
                     href={link.href}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
-                    className="text-xl font-light transition-colors duration-300 flex items-center gap-2"
-                    style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: isActive ? "#fff" : "rgba(255,255,255,0.60)" }}
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04, ease: [0.22, 1, 0.36, 1] }}
+                    className="flex items-center gap-2.5 py-3 text-sm uppercase transition-colors duration-300"
+                    style={{
+                      fontFamily: "'Neue Machina', 'Inter', sans-serif",
+                      fontWeight: 700,
+                      letterSpacing: "0.1em",
+                      color: isActive ? "#fff" : "rgba(255,255,255,0.62)",
+                    }}
                     onClick={() => setMobileOpen(false)}
                   >
                     {isActive && (
-                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "#00D4FF" }} />
+                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "#00D4FF", boxShadow: "0 0 6px #00D4FF" }} />
                     )}
                     {link.label}
                   </motion.a>
                 );
               })}
+
+              <a
+                href="https://noorva.ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 text-center py-3.5 rounded-2xl text-sm font-medium text-white"
+                style={{
+                  fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+                  background: "linear-gradient(135deg, rgba(0,85,255,0.38), rgba(0,212,255,0.30))",
+                  border: "1px solid rgba(0,212,255,0.35)",
+                  backdropFilter: "blur(16px) saturate(180%)",
+                  WebkitBackdropFilter: "blur(16px) saturate(180%)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
+                }}
+                onClick={() => setMobileOpen(false)}
+              >
+                Discover Noorva
+              </a>
             </div>
-            <a
-              href="https://noorva.ai"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-10 text-center py-3.5 rounded-2xl text-sm font-medium text-white"
-              style={{
-                fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-                background: "linear-gradient(135deg, rgba(0,85,255,0.38), rgba(0,212,255,0.30))",
-                border: "1px solid rgba(0,212,255,0.35)",
-                backdropFilter: "blur(16px) saturate(180%)",
-                WebkitBackdropFilter: "blur(16px) saturate(180%)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
-              }}
-              onClick={() => setMobileOpen(false)}
-            >
-              Discover Noorva
-            </a>
           </motion.div>
         )}
       </AnimatePresence>

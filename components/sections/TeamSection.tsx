@@ -17,17 +17,7 @@ const team = [
     accent: "#00D4FF",
     glow: "0,212,255",
   },
-  {
-    name: "Seshagiri Rao",
-    role: "Director",
-    short: "DIR",
-    tagline: "Strategist. Leader. Enabler.",
-    description:
-      "Turning vision into reality — building the systems, teams, and culture that will take MDS from a bold idea to a global AI company. Seshagiri bridges strategy and execution with clarity and conviction.",
-    photo: "/SeshuDir.jpeg",
-    accent: "#818CF8",
-    glow: "129,140,248",
-  },
+  
   {
     name: "Rakesh Nerella",
     role: "Chief Technology Officer",
@@ -97,7 +87,7 @@ export function TeamSection() {
         </motion.div>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-3xl mx-auto">
           {team.map((member, i) => (
             <motion.div
               key={member.name}

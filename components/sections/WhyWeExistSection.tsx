@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
@@ -230,104 +231,46 @@ function IntentionToActionPath() {
   );
 }
 
-/* ── Decorative sphere for the teaser card ── */
+/* ── Decorative sphere for the teaser card ──────────────────────────────
+   Real rendered artwork, animated with a gentle hover, slow sway, and a
+   pulsing ambient glow — edges masked so it blends into the page bg.
+──────────────────────────────────────────────────────────────────────── */
 function AboutMDSSphere() {
   return (
-    <div className="relative mx-auto" style={{ width: 220, height: 220 }}>
-      {/* Ground halo */}
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          width: 260,
-          height: 90,
-          left: "50%",
-          bottom: -30,
-          transform: "translateX(-50%)",
-          background: "radial-gradient(ellipse, rgba(0,153,255,0.35) 0%, rgba(123,47,190,0.18) 55%, transparent 75%)",
-          filter: "blur(18px)",
-        }}
-      />
-
-      {/* Outer ambient glow */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(0,85,255,0.20) 0%, rgba(123,47,190,0.10) 55%, transparent 75%)",
-          filter: "blur(20px)",
-          transform: "scale(1.3)",
-        }}
-      />
-
-      {/* Tilted rings — continuously spinning */}
-      <div
-        className="absolute pointer-events-none"
-        style={{ top: "46%", left: "50%", width: 300, height: 300, transform: "translate(-50%, -50%) rotateX(78deg)" }}
-      >
-        <motion.div
-          className="absolute inset-0 rounded-full"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 16, repeat: Infinity, ease: "linear" }}
-          style={{ border: "1.5px solid rgba(0,212,255,0.45)", boxShadow: "0 0 18px rgba(0,212,255,0.30)" }}
-        />
-      </div>
-      <div
-        className="absolute pointer-events-none"
-        style={{ top: "46%", left: "50%", width: 250, height: 250, transform: "translate(-50%, -50%) rotateX(78deg)" }}
-      >
-        <motion.div
-          className="absolute inset-0 rounded-full"
-          animate={{ rotate: -360 }}
-          transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
-          style={{ border: "1px solid rgba(168,85,247,0.35)" }}
-        />
-        {/* Orbiting particle riding the inner ring */}
-        <motion.div
-          className="absolute inset-0"
-          animate={{ rotate: -360 }}
-          transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
-        >
-          <span
-            className="absolute rounded-full"
-            style={{
-              top: -3,
-              left: "50%",
-              width: 7,
-              height: 7,
-              background: "#00D4FF",
-              boxShadow: "0 0 10px #00D4FF, 0 0 20px rgba(0,212,255,0.6)",
-            }}
-          />
-        </motion.div>
-      </div>
-
-      {/* Sphere */}
+    <div className="relative mx-auto" style={{ width: 300, aspectRatio: "1201 / 1309" }}>
+      {/* Pulsing ambient glow behind the artwork */}
       <motion.div
-        className="absolute rounded-full overflow-hidden"
-        animate={{ y: [0, -10, 0], rotate: 360 }}
-        transition={{
-          y: { duration: 6, repeat: Infinity, ease: "easeInOut" },
-          rotate: { duration: 14, repeat: Infinity, ease: "linear" },
-        }}
+        className="absolute pointer-events-none"
         style={{
-          inset: 0,
-          background:
-            "radial-gradient(circle at 35% 30%, rgba(180,220,255,0.95) 0%, rgba(0,153,255,0.85) 22%, rgba(45,60,200,0.9) 48%, rgba(20,10,60,0.95) 75%, rgba(6,4,20,1) 100%)",
-          boxShadow:
-            "0 0 40px rgba(0,153,255,0.45), 0 0 90px rgba(123,47,190,0.30), inset -18px -18px 50px rgba(0,0,0,0.55)",
+          inset: "8%",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(0,120,255,0.30) 0%, rgba(123,47,190,0.16) 55%, transparent 75%)",
+          filter: "blur(34px)",
         }}
+        animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.08, 1] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      <motion.div
+        className="relative w-full h-full"
+        animate={{ y: [0, -14, 0], rotate: [-1.5, 1.5, -1.5] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        style={{
+          maskImage:
+            "linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)",
+          maskComposite: "intersect",
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)",
+          WebkitMaskComposite: "source-in",
+        } as CSSProperties}
       >
-        {/* Rotating surface texture — gives the sphere a slow spin */}
-        <motion.div
-          className="absolute rounded-full pointer-events-none"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
-          style={{
-            inset: "-20%",
-            background:
-              "repeating-linear-gradient(75deg, transparent 0px, transparent 10px, rgba(255,255,255,0.05) 11px, transparent 13px)",
-            mixBlendMode: "overlay",
-          }}
+        <Image
+          src="/about.jpeg"
+          alt="MDS — a living planet of ideas"
+          fill
+          quality={100}
+          sizes="300px"
+          className="object-contain"
         />
       </motion.div>
     </div>
@@ -1085,6 +1028,10 @@ export function WhyWeExistSection() {
             >
               We&apos;re architects of the future, not another tech company.
             </p>
+          </div>
+
+          <div className="flex flex-col items-center gap-6">
+            <AboutMDSSphere />
 
             <Link
               href="/about-mds"
@@ -1104,10 +1051,6 @@ export function WhyWeExistSection() {
               Explore MDS
               <ArrowRight className="size-4" strokeWidth={2.25} />
             </Link>
-          </div>
-
-          <div className="flex justify-center md:justify-end">
-            <AboutMDSSphere />
           </div>
         </motion.div>
 
