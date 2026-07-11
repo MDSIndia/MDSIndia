@@ -30,13 +30,13 @@ export function HeroSection() {
     >
       <style>{`
         .hero-image-panel {
-          width: clamp(220px, 58vw, 300px);
-          aspect-ratio: 1023 / 1150;
+          width: clamp(280px, 74vw, 380px);
+          aspect-ratio: 989 / 702;
           margin: 0 auto;
         }
         @media (min-width: 768px) {
           .hero-image-panel {
-            width: clamp(280px, 28vw, 400px);
+            width: clamp(360px, 38vw, 520px);
             margin: 0;
             flex-shrink: 0;
           }
@@ -132,7 +132,7 @@ export function HeroSection() {
             } as CSSProperties}
           >
             <Image
-              src="/herosectionimage.jpg"
+              src="/rightimage.jpeg"
               alt="Hero side image"
               fill
               quality={100}

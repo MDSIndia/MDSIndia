@@ -237,7 +237,7 @@ function IntentionToActionPath() {
 ──────────────────────────────────────────────────────────────────────── */
 function AboutMDSSphere() {
   return (
-    <div className="relative mx-auto" style={{ width: 300, aspectRatio: "1201 / 1309" }}>
+    <div className="relative mx-auto" style={{ width: 300, aspectRatio: "784 / 532" }}>
       {/* Pulsing ambient glow behind the artwork */}
       <motion.div
         className="absolute pointer-events-none"
@@ -265,7 +265,7 @@ function AboutMDSSphere() {
         } as CSSProperties}
       >
         <Image
-          src="/about.jpeg"
+          src="/heroimage.png"
           alt="MDS — a living planet of ideas"
           fill
           quality={100}
