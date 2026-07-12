@@ -37,10 +37,10 @@ const metrics = [
 ];
 
 const roadmap = [
-  { quarter: "Q1 2026", milestone: "Noorva Alpha Launch", status: "upcoming" },
-  { quarter: "Q2 2026", milestone: "Beta User Onboarding — 10,000 Users", status: "upcoming" },
-  { quarter: "Q3 2026", milestone: "Seed Funding Close", status: "upcoming" },
-  { quarter: "Q4 2026", milestone: "Noorva 1.0 Public Release", status: "upcoming" },
+  { quarter: "Q3 2026", milestone: "Noorva MLP Launch", status: "upcoming" },
+  { quarter: "Q4 2026", milestone: "Noorva MVP — 10M Users", status: "upcoming" },
+  { quarter: "Q1 2027", milestone: "Seed Funding Close", status: "upcoming" },
+  { quarter: "Q2 2027", milestone: "Noorva 1.0 Public Release", status: "upcoming" },
   { quarter: "2027", milestone: "Series A — Regional Expansion", status: "future" },
   { quarter: "2028+", milestone: "Global AI Leadership", status: "future" },
 ];

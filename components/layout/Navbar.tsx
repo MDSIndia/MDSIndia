@@ -126,9 +126,11 @@ export function Navbar() {
               href="https://noorva.ai"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-5 py-2 rounded-full text-sm font-medium hover:text-white transition-all duration-300"
+              className="px-5 py-2 rounded-full text-sm uppercase hover:text-white transition-all duration-300"
               style={{
-                fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+                fontFamily: "'Neue Machina', 'Inter', sans-serif",
+                fontWeight: 700,
+                letterSpacing: "0.03em",
                 background: "rgba(0,85,255,0.16)",
                 border: "1px solid rgba(0,153,255,0.35)",
                 backdropFilter: "blur(12px) saturate(160%)",
@@ -220,9 +222,11 @@ export function Navbar() {
                 href="https://noorva.ai"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 text-center py-3.5 rounded-2xl text-sm font-medium text-white"
+                className="mt-4 text-center py-3.5 rounded-2xl text-sm uppercase text-white"
                 style={{
-                  fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+                  fontFamily: "'Neue Machina', 'Inter', sans-serif",
+                  fontWeight: 700,
+                  letterSpacing: "0.03em",
                   background: "linear-gradient(135deg, rgba(0,85,255,0.38), rgba(0,212,255,0.30))",
                   border: "1px solid rgba(0,212,255,0.35)",
                   backdropFilter: "blur(16px) saturate(180%)",
