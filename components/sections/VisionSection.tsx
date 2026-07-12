@@ -1,8 +1,9 @@
 "use client";
 
+import { useRef } from "react";
 import type { CSSProperties } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 
 const SG = "var(--font-space-grotesk), Inter, sans-serif";
 const NM = "'Neue Machina', 'Inter', sans-serif";
@@ -50,10 +51,160 @@ const pillars = [
   },
 ];
 
-export function VisionSection() {
+function TimelineRail({ progress }: { progress: MotionValue<number> }) {
+  const total = pillars.length;
+  const dotTop = useTransform(progress, [0, 1], ["0%", "100%"]);
+
   return (
-    <section id="vision" className="section-padding relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
+    <div className="hidden md:flex flex-col items-center h-full flex-shrink-0" style={{ width: 24 }}>
+      <span
+        className="mb-3 text-[0.6rem] tracking-[0.3em] uppercase whitespace-nowrap"
+        style={{ fontFamily: SG, color: "rgba(255,255,255,0.5)" }}
+      >
+        Start
+      </span>
+      <div className="relative flex-1 w-px" style={{ background: "rgba(255,255,255,0.16)" }}>
+        {pillars.map((item, i) => (
+          <span
+            key={item.label}
+            className="absolute rounded-full"
+            style={{
+              left: "50%",
+              top: `${(i / (total - 1)) * 100}%`,
+              width: 11,
+              height: 11,
+              background: item.dot,
+              boxShadow: `0 0 14px ${item.glow}`,
+              transform: "translate(-50%, -50%)",
+            }}
+          />
+        ))}
+        <motion.span
+          className="absolute rounded-full"
+          style={{
+            left: "50%",
+            top: dotTop,
+            width: 15,
+            height: 15,
+            background: "#FFFFFF",
+            boxShadow: "0 0 16px rgba(255,255,255,0.85)",
+            transform: "translate(-50%, -50%)",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function MobileProgress({ progress }: { progress: MotionValue<number> }) {
+  const width = useTransform(progress, [0, 1], ["0%", "100%"]);
+  return (
+    <div
+      className="md:hidden relative w-full rounded-full overflow-hidden mb-6"
+      style={{ height: 4, background: "rgba(255,255,255,0.12)" }}
+    >
+      <motion.div
+        className="absolute inset-y-0 left-0 rounded-full"
+        style={{ width, background: "linear-gradient(to right, #3B82F6, #A855F7, #F5B942)" }}
+      />
+    </div>
+  );
+}
+
+function ScrollPanel({
+  pillar,
+  index,
+  total,
+  progress,
+}: {
+  pillar: (typeof pillars)[number];
+  index: number;
+  total: number;
+  progress: MotionValue<number>;
+}) {
+  const step = 1 / total;
+  const start = index * step;
+  const end = (index + 1) * step;
+  const pad = step * 0.25;
+  const isFirst = index === 0;
+  const isLast = index === total - 1;
+
+  const opacity = useTransform(
+    progress,
+    isFirst
+      ? [start, start + pad, end - pad, end]
+      : isLast
+        ? [start, start + pad, end]
+        : [start, start + pad, end - pad, end],
+    isFirst ? [1, 1, 1, 0] : isLast ? [0, 1, 1] : [0, 1, 1, 0]
+  );
+  const scale = useTransform(
+    progress,
+    isFirst
+      ? [end - pad, end]
+      : isLast
+        ? [start, start + pad]
+        : [start, start + pad, end - pad, end],
+    isFirst ? [1, 1.05] : isLast ? [0.95, 1] : [0.95, 1, 1, 1.05]
+  );
+
+  return (
+    <motion.div
+      className="absolute inset-0 flex flex-col md:flex-row items-center gap-8 md:gap-14"
+      style={{ opacity, scale }}
+    >
+      {/* Text */}
+      <div className="w-full md:w-[300px] flex-shrink-0 text-center md:text-left">
+        <span
+          className="block text-sm font-semibold mb-1"
+          style={{ fontFamily: SG, color: "rgba(255,255,255,0.45)", letterSpacing: "0.1em" }}
+        >
+          {pillar.index}
+        </span>
+        <span
+          className={`block text-2xl md:text-3xl tracking-widest uppercase mb-4 bg-gradient-to-r ${pillar.accent} bg-clip-text text-transparent`}
+          style={{ fontFamily: NM, fontWeight: 800 }}
+        >
+          {pillar.label}
+        </span>
+        <p
+          className="font-medium leading-relaxed"
+          style={{
+            fontFamily: SG,
+            fontSize: "clamp(0.95rem, 1.2vw, 1.1rem)",
+            lineHeight: 1.75,
+            color: "rgba(255,255,255,0.88)",
+          }}
+        >
+          {pillar.headline}
+        </p>
+      </div>
+
+      {/* Image */}
+      <div
+        className="relative w-full flex-1 rounded-2xl overflow-hidden"
+        style={{ aspectRatio: pillar.aspect, ...edgeFadeMask }}
+      >
+        <Image
+          src={pillar.image}
+          alt={pillar.label}
+          fill
+          quality={100}
+          sizes="(min-width: 768px) 640px, 92vw"
+          className="object-contain"
+        />
+      </div>
+    </motion.div>
+  );
+}
+
+export function VisionSection() {
+  const stageRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: stageRef, offset: ["start start", "end end"] });
+
+  return (
+    <section id="vision" className="section-padding relative">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div
           className="absolute w-[700px] h-[600px] -top-20 right-0 translate-x-1/4"
           style={{ background: "radial-gradient(ellipse, rgba(0,212,255,0.10) 0%, transparent 70%)" }}
@@ -68,19 +219,12 @@ export function VisionSection() {
 
       <div className="relative max-w-6xl mx-auto">
         {/* Header */}
-        <div className="relative text-center mb-16 md:mb-24">
-          <div
-            className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
-            style={{ top: "-2rem", width: "min(1000px, 130%)", height: "220px", ...edgeFadeMask }}
-          >
-            <Image src="/vision-title-bg.png" alt="" fill className="object-cover opacity-80" />
-          </div>
-
+        <div className="text-center mb-10 md:mb-14">
           <motion.span
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="relative text-xs font-medium tracking-[0.5em] uppercase"
+            className="text-xs font-medium tracking-[0.5em] uppercase block"
             style={{ fontFamily: SG, color: "rgba(0,212,255,0.8)" }}
           >
             Our Philosophy
@@ -90,132 +234,58 @@ export function VisionSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="relative neue-machina mt-4"
-            style={{ fontSize: "clamp(2.8rem, 7vw, 7rem)", lineHeight: 0.92, letterSpacing: "0.01em" }}
+            className="neue-machina mt-4"
+            style={{ fontSize: "clamp(2.2rem, 5.5vw, 5rem)", lineHeight: 0.95, letterSpacing: "0.01em" }}
           >
             Built On
             <br />
             <span className="text-gradient">Conviction</span>
           </motion.h2>
         </div>
+      </div>
 
-        {/* Timeline */}
-        <div className="flex flex-col">
-          {/* START marker */}
-          <div className="hidden md:flex items-center gap-3 mb-3" style={{ width: 24 }}>
-            <div className="flex flex-col items-center w-6 flex-shrink-0">
-              <span
-                className="mb-2 text-[0.6rem] tracking-[0.3em] uppercase whitespace-nowrap"
-                style={{ fontFamily: SG, color: "rgba(255,255,255,0.5)" }}
-              >
-                Start
-              </span>
-              <span
-                className="block rounded-full"
-                style={{
-                  width: 9,
-                  height: 9,
-                  background: "#FFFFFF",
-                  boxShadow: "0 0 10px rgba(255,255,255,0.7)",
-                }}
-              />
+      {/* Scroll-driven stage — pinned for a full screen while pillars cross-dissolve, no card framing */}
+      <div ref={stageRef} className="relative" style={{ height: `${pillars.length * 100}dvh` }}>
+        <div className="sticky top-0 flex items-center justify-center overflow-hidden" style={{ height: "100dvh" }}>
+          <div className="relative max-w-6xl mx-auto w-full px-6 md:px-10">
+            <MobileProgress progress={scrollYProgress} />
+
+            <div
+              className="relative flex items-stretch gap-6 md:gap-10"
+              style={{ height: "min(58vh, 480px)" }}
+            >
+              <TimelineRail progress={scrollYProgress} />
+
+              <div className="relative flex-1">
+                {pillars.map((pillar, i) => (
+                  <ScrollPanel
+                    key={pillar.label}
+                    pillar={pillar}
+                    index={i}
+                    total={pillars.length}
+                    progress={scrollYProgress}
+                  />
+                ))}
+              </div>
             </div>
           </div>
-
-          {pillars.map((pillar, i) => (
-            <motion.div
-              key={pillar.label}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.9, ease: EASE }}
-              className="flex gap-6 md:gap-12"
-            >
-              {/* Timeline gutter */}
-              <div className="hidden md:flex flex-col items-center w-6 flex-shrink-0">
-                <div className="w-px flex-1" style={{ background: "rgba(255,255,255,0.16)" }} />
-                <motion.span
-                  className="block rounded-full flex-shrink-0"
-                  style={{ width: 11, height: 11, background: pillar.dot, boxShadow: `0 0 14px ${pillar.glow}` }}
-                  animate={{ scale: [1, 1.25, 1] }}
-                  transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: i * 0.3 }}
-                />
-                <div
-                  className="w-px flex-1"
-                  style={{ background: i === pillars.length - 1 ? "transparent" : "rgba(255,255,255,0.16)" }}
-                />
-              </div>
-
-              {/* Content row */}
-              <div className="flex-1 flex flex-col md:flex-row items-center gap-8 md:gap-14 pb-16 md:pb-24">
-                {/* Text */}
-                <div className="w-full md:w-[280px] flex-shrink-0 text-center md:text-left">
-                  <span
-                    className="block text-sm font-semibold mb-1"
-                    style={{ fontFamily: SG, color: "rgba(255,255,255,0.45)", letterSpacing: "0.1em" }}
-                  >
-                    {pillar.index}
-                  </span>
-                  <span
-                    className={`block text-2xl tracking-widest uppercase mb-4 bg-gradient-to-r ${pillar.accent} bg-clip-text text-transparent`}
-                    style={{ fontFamily: NM, fontWeight: 800 }}
-                  >
-                    {pillar.label}
-                  </span>
-                  <p
-                    className="font-medium leading-relaxed"
-                    style={{
-                      fontFamily: SG,
-                      fontSize: "clamp(0.95rem, 1.2vw, 1.1rem)",
-                      lineHeight: 1.75,
-                      color: "rgba(255,255,255,0.88)",
-                    }}
-                  >
-                    {pillar.headline}
-                  </p>
-                </div>
-
-                {/* Image */}
-                <motion.div
-                  className="relative w-full flex-1 rounded-2xl overflow-hidden"
-                  style={{ aspectRatio: pillar.aspect, ...edgeFadeMask }}
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{ duration: 7 + i, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <Image
-                    src={pillar.image}
-                    alt={pillar.label}
-                    fill
-                    quality={100}
-                    sizes="(min-width: 768px) 640px, 92vw"
-                    className="object-contain"
-                  />
-                </motion.div>
-              </div>
-            </motion.div>
-          ))}
         </div>
+      </div>
 
+      <div className="relative max-w-6xl mx-auto">
         {/* Quote */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, delay: 0.2 }}
-          className="relative mt-4 text-center"
+          className="mt-10 md:mt-14 text-center"
         >
-          <div
-            className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
-            style={{ top: "-40px", width: "min(1100px, 140%)", height: "260px", ...edgeFadeMask }}
-          >
-            <Image src="/vision-closing-bg.png" alt="" fill className="object-cover opacity-60" />
-          </div>
-
           <blockquote
-            className="relative font-light leading-relaxed max-w-4xl mx-auto"
+            className="font-light leading-relaxed max-w-4xl mx-auto"
             style={{
               fontFamily: SG,
-              fontSize: "clamp(1.4rem, 3.2vw, 3rem)",
+              fontSize: "clamp(1.3rem, 2.8vw, 2.4rem)",
               lineHeight: 1.45,
               color: "rgba(255,255,255,0.70)",
             }}

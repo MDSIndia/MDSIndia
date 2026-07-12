@@ -975,36 +975,34 @@ export function WhyWeExistSection() {
       <div className="scene-top-fade" />
       <div className="scene-bottom-fade" />
 
-      <div className="relative max-w-5xl mx-auto">
+      <div className="relative max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, ease: EASE }}
-          className="relative grid grid-cols-1 md:grid-cols-[1fr_auto] items-center gap-10 md:gap-16 py-4"
+          className="relative flex flex-col md:flex-row md:items-center md:justify-center md:gap-16"
         >
-          <div className="text-center md:text-left">
+          {/* Left: text */}
+          <div className="order-2 md:order-1 text-center md:text-left">
             <h2
               className="neue-machina mb-5"
-              style={{ fontSize: "clamp(2rem, 4.5vw, 3.2rem)", lineHeight: 1.02, letterSpacing: "0.01em" }}
+              style={{
+                fontSize: "clamp(1.9rem, 3.8vw, 4.5rem)",
+                lineHeight: 1.1,
+                background: "linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 40%, #0055FF 70%, #00D4FF 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
             >
-              <span style={{ color: "rgba(255,255,255,0.95)" }}>About </span>
-              <span
-                style={{
-                  background: "linear-gradient(135deg, #FFFFFF 0%, #7AA4FF 55%, #00D4FF 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                MDS
-              </span>
+              About MDS
             </h2>
 
             <p
               style={{
                 fontFamily: NM,
-                fontSize: "clamp(1.2rem, 2.2vw, 1.7rem)",
+                fontSize: "clamp(1.1rem, 2vw, 1.5rem)",
                 lineHeight: 1.4,
                 color: "rgba(255,255,255,0.92)",
                 marginBottom: "0.9rem",
@@ -1014,89 +1012,47 @@ export function WhyWeExistSection() {
             </p>
 
             <p
+              className="font-semibold mb-8"
               style={{
                 fontFamily: SG,
-                fontSize: "clamp(0.9rem, 1.1vw, 1rem)",
+                fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
                 lineHeight: 1.7,
-                color: "rgba(255,255,255,0.55)",
-                marginBottom: "2rem",
+                color: "rgba(255,255,255,0.80)",
+                letterSpacing: "0.02em",
                 maxWidth: 460,
               }}
             >
               We&apos;re architects of the future, not another tech company.
             </p>
+
+            <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+              <Link
+                href="/about-mds"
+                className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full text-sm uppercase transition-all duration-300 hover:scale-105"
+                style={{
+                  fontFamily: "'Neue Machina', 'Inter', sans-serif",
+                  fontWeight: 700,
+                  letterSpacing: "0.03em",
+                  color: "#FFFFFF",
+                  background:
+                    "linear-gradient(rgba(4,6,16,0.72), rgba(4,6,16,0.72)) padding-box, linear-gradient(135deg, #0055FF, #7B2FBE) border-box",
+                  border: "1.5px solid transparent",
+                  backdropFilter: "blur(18px) saturate(180%)",
+                  WebkitBackdropFilter: "blur(18px) saturate(180%)",
+                  boxShadow: "0 0 22px rgba(0,85,255,0.32), 0 0 48px rgba(123,47,190,0.16)",
+                }}
+              >
+                <ArrowRight className="size-4" strokeWidth={2.25} />
+                Explore MDS
+              </Link>
+            </div>
           </div>
 
-          <div className="flex flex-col items-center gap-6">
+          {/* Right: sphere */}
+          <div className="order-1 md:order-2 flex-shrink-0 pt-16 md:pt-0">
             <AboutMDSSphere />
-
-            <Link
-              href="/about-mds"
-              className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full text-sm font-bold uppercase transition-all duration-300 hover:scale-105"
-              style={{
-                fontFamily: SG,
-                letterSpacing: "0.08em",
-                color: "#FFFFFF",
-                background:
-                  "linear-gradient(rgba(4,6,16,0.72), rgba(4,6,16,0.72)) padding-box, linear-gradient(135deg, #0055FF, #7B2FBE) border-box",
-                border: "1.5px solid transparent",
-                backdropFilter: "blur(18px) saturate(180%)",
-                WebkitBackdropFilter: "blur(18px) saturate(180%)",
-                boxShadow: "0 0 22px rgba(0,85,255,0.28), 0 0 48px rgba(123,47,190,0.14)",
-              }}
-            >
-              Explore MDS
-              <ArrowRight className="size-4" strokeWidth={2.25} />
-            </Link>
           </div>
         </motion.div>
-
-        {/* Three principles — always visible */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
-          {pillars.map((pillar, i) => (
-            <motion.div
-              key={pillar.number}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: i * 0.1, ease: EASE }}
-              className="rounded-2xl p-5"
-              style={{
-                background: `rgba(${pillar.glow},0.07)`,
-                border: `1px solid rgba(${pillar.glow},0.20)`,
-                backdropFilter: "blur(18px) saturate(150%)",
-                WebkitBackdropFilter: "blur(18px) saturate(150%)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
-              }}
-            >
-              <span
-                className="font-mono text-xs font-semibold"
-                style={{ color: pillar.accentDot }}
-              >
-                {pillar.number}
-              </span>
-              <h4
-                className="mt-2 mb-2"
-                style={{ fontFamily: NM, fontSize: "1.05rem", lineHeight: 1.28, fontWeight: 700 }}
-              >
-                <span style={{ color: "rgba(255,255,255,0.92)" }}>{pillar.title1} </span>
-                <span
-                  style={{
-                    background: pillar.accentGradient,
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
-                  }}
-                >
-                  {pillar.title2}
-                </span>
-              </h4>
-              <p style={{ fontFamily: SG, fontSize: "0.82rem", lineHeight: 1.65, color: "rgba(255,255,255,0.55)" }}>
-                {pillar.body}
-              </p>
-            </motion.div>
-          ))}
-        </div>
       </div>
     </section>
   );

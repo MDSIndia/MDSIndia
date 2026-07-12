@@ -15,8 +15,8 @@ export default function Home() {
   return (
     <PageChrome>
       <HeroSection />
-      <WhyWeExistSection />
       <VisionSection />
+      <WhyWeExistSection />
       <NoorvaSection />
       <HowNoorvaWorksSection />
       <FutureAISection />
