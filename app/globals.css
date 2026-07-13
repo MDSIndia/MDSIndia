@@ -212,22 +212,6 @@ body.custom-cursor-active * { cursor: none !important; }
 
 .gradient-border:hover::before { opacity: 1; }
 
-.loading-bar {
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #0055FF, #00D4FF, transparent);
-  animation: loadingBar 2s ease-in-out infinite;
-}
-
-@keyframes loadingBar {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-@keyframes heroBreath {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50%       { opacity: 0.9; transform: scale(1.08); }
-}
-
 @keyframes dotsFloat1 {
   0%   { background-position: 0 0; }
   100% { background-position: 38px 38px; }
@@ -325,4 +309,46 @@ body.custom-cursor-active * { cursor: none !important; }
 @keyframes outerRingPulse {
   0%   { transform: scale(1); opacity: 0.3; }
   100% { transform: scale(1.4); opacity: 0; }
+}
+
+/* ===== Cinematic intro ===== */
+
+@keyframes introFadeIn {
+  from { opacity: 0; filter: blur(6px); }
+  to   { opacity: 1; filter: blur(0px); }
+}
+
+@keyframes introPulse {
+  0%, 100% {
+    text-shadow: 0 0 14px rgba(0, 212, 255, 0.65), 0 0 40px rgba(0, 85, 255, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 22px rgba(0, 212, 255, 0.85), 0 0 56px rgba(0, 85, 255, 0.45);
+  }
+}
+
+@keyframes introHelperFade {
+  0%, 100% { opacity: 0.28; }
+  50%      { opacity: 0.5; }
+}
+
+.intro-start-btn {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.intro-start-btn .intro-click-text {
+  animation: introPulse 2.6s ease-in-out infinite;
+}
+
+.intro-start-btn:hover .intro-click-text,
+.intro-start-btn:focus-visible .intro-click-text {
+  animation-play-state: paused;
+}
+
+.intro-helper-text {
+  animation: introHelperFade 3.2s ease-in-out infinite;
+}
+
+.intro-root {
+  animation: introFadeIn 0.6s ease-out;
 }
