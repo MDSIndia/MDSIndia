@@ -17,9 +17,15 @@ const COAST_SECONDS = 1.6;
  * path itself ends, the camera doesn't freeze: it keeps drifting
  * forward along the same heading at a steadily decaying speed, so the
  * shot is still gently moving throughout the light-dissolve hand-off
- * rather than holding on a static frame. */
-export function CameraRig() {
+ * rather than holding on a static frame.
+ *
+ * Base FOV is wider on mobile: a portrait viewport's aspect ratio is
+ * much narrower than desktop, so the same vertical FOV yields a far
+ * narrower *horizontal* FOV — narrow enough that the skyline flanking
+ * the road fell entirely outside the frustum on phones. */
+export function CameraRig({ isMobile }: { isMobile: boolean }) {
   const { camera, scene } = useThree();
+  const baseFov = isMobile ? 64 : 46;
   const curve = useMemo(() => createFlightCurve(), []);
   const fog = useMemo(() => new THREE.FogExp2("#020208", 0.05), []);
   const baseColor = useMemo(() => new THREE.Color("#020208"), []);
@@ -54,7 +60,7 @@ export function CameraRig() {
       const speedPush = windowProgress(t, 1.6, 4.6) * 16;
       const finalPush = windowProgress(t, 4.6, 5.7) * 10;
       const engulfPunch = windowProgress(t, 5.7, 6.2) * 14;
-      camera.fov = 46 + speedPush + finalPush - engulfPunch;
+      camera.fov = baseFov + speedPush + finalPush - engulfPunch;
       camera.updateProjectionMatrix();
     }
 

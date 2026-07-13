@@ -45,16 +45,16 @@ function buildPlacements(count: number, imageCount: number): AdPlacement[] {
     if (tier === "street") {
       // Close to the road, roughly billboard-height — the ones that
       // flash past quickly as the rider passes them.
-      const x = side * (14 + seeded(i, 12) * 5);
+      const x = side * (9 + seeded(i, 12) * 4);
       const y = 3 + seeded(i, 13) * 5;
       position = [x, y, z];
       width = 3.2 + seeded(i, 14) * 1.6;
       height = width * (0.55 + seeded(i, 15) * 0.3);
       rotFactor = 0.56;
     } else {
-      // Mounted high on the towers, read from further away as part of
-      // the skyline.
-      const x = side * (20 + seeded(i, 16) * 20);
+      // Mounted high on the towers (which now sit at x ~11-31), read
+      // from further away as part of the skyline.
+      const x = side * (12 + seeded(i, 16) * 16);
       const y = 14 + seeded(i, 17) * 26;
       position = [x, y, z];
       width = 5 + seeded(i, 18) * 4;

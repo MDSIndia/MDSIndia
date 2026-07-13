@@ -91,7 +91,12 @@ export function IntroCinematic({
       }}
     >
       <Canvas
-        camera={{ position: [0, 16, 46], fov: 46, near: 0.1, far: 400 }}
+        camera={{
+          position: [0, 16, 46],
+          fov: isMobile ? 64 : 46,
+          near: 0.1,
+          far: 400,
+        }}
         dpr={isMobile ? 1 : [1, 1.5]}
         gl={{
           antialias: !isMobile,
@@ -102,7 +107,7 @@ export function IntroCinematic({
         onCreated={({ gl }) => gl.setClearColor("#020208", 1)}
       >
         <Suspense fallback={null}>
-          <CameraRig />
+          <CameraRig isMobile={isMobile} />
           <HighwayRoad />
           <CityScape isMobile={isMobile} />
           <SkyBridges isMobile={isMobile} />

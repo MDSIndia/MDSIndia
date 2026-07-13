@@ -46,10 +46,12 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
 
     for (let i = 0; i < count; i++) {
       const side = i % 2 === 0 ? -1 : 1;
-      // Kept well clear of the camera's lateral travel (max ~6.5 units
-      // off-center during the banked turn) so tall/wide towers never
-      // clip into frame as a flat black wall.
-      const x = side * (20 + seeded(i, 1) * 26);
+      // The camera's own lateral travel tops out around ~1.6 units
+      // off-center (it converges back to center for the star ending),
+      // so this offset only needs enough clearance to avoid a tower
+      // clipping into frame as a flat black wall — kept close enough
+      // to still read as a flanking skyline on narrow mobile FOVs.
+      const x = side * (11 + seeded(i, 1) * 20);
       const z = 45 - seeded(i, 2) * 130;
       // A slightly wider height range reads as more architecturally
       // varied — squat mid-rises next to towering corporate spires.
