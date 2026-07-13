@@ -148,37 +148,59 @@ function ScrollPanel({
     isFirst ? [1, 1.05] : isLast ? [0.95, 1] : [0.95, 1, 1, 1.05]
   );
 
+  const revealStart = isFirst ? -pad : start;
+  const indexY = useTransform(progress, [revealStart, revealStart + pad * 0.4], [18, 0]);
+  const indexOpacity = useTransform(progress, [revealStart, revealStart + pad * 0.4], [0, 1]);
+  const labelY = useTransform(progress, [revealStart + pad * 0.15, revealStart + pad * 0.6], [22, 0]);
+  const labelOpacity = useTransform(progress, [revealStart + pad * 0.15, revealStart + pad * 0.6], [0, 1]);
+  const bodyY = useTransform(progress, [revealStart + pad * 0.35, revealStart + pad], [26, 0]);
+  const bodyOpacity = useTransform(progress, [revealStart + pad * 0.35, revealStart + pad], [0, 1]);
+
   return (
     <motion.div
       className="absolute inset-0 flex flex-col md:flex-row items-center gap-8 md:gap-14"
       style={{ opacity, scale }}
     >
       {/* Text */}
-      <div className="w-full md:w-[300px] flex-shrink-0 text-center md:text-left">
-        <span
+      <motion.div
+        className="w-full md:w-[300px] flex-shrink-0 text-center md:text-left"
+        animate={{ y: [0, -6, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <motion.span
           className="block text-sm font-semibold mb-1"
-          style={{ fontFamily: SG, color: "rgba(255,255,255,0.45)", letterSpacing: "0.1em" }}
+          style={{ fontFamily: SG, color: "rgba(255,255,255,0.45)", letterSpacing: "0.1em", y: indexY, opacity: indexOpacity }}
         >
           {pillar.index}
-        </span>
-        <span
+        </motion.span>
+        <motion.span
           className={`block text-2xl md:text-3xl tracking-widest uppercase mb-4 bg-gradient-to-r ${pillar.accent} bg-clip-text text-transparent`}
-          style={{ fontFamily: NM, fontWeight: 800 }}
+          style={{ fontFamily: NM, fontWeight: 800, y: labelY, opacity: labelOpacity }}
+          animate={{
+            filter: [
+              "drop-shadow(0 0 0px rgba(255,255,255,0))",
+              "drop-shadow(0 0 14px rgba(255,255,255,0.4))",
+              "drop-shadow(0 0 0px rgba(255,255,255,0))",
+            ],
+          }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         >
           {pillar.label}
-        </span>
-        <p
+        </motion.span>
+        <motion.p
           className="font-medium leading-relaxed"
           style={{
             fontFamily: SG,
             fontSize: "clamp(0.95rem, 1.2vw, 1.1rem)",
             lineHeight: 1.75,
             color: "rgba(255,255,255,0.88)",
+            y: bodyY,
+            opacity: bodyOpacity,
           }}
         >
           {pillar.headline}
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
 
       {/* Image */}
       <div

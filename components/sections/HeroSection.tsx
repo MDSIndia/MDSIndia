@@ -1,6 +1,7 @@
 "use client";
 import type { CSSProperties } from "react";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { Compass, ArrowUpRight } from "lucide-react";
 
 const seeded = (index: number, salt: number) => {
@@ -22,6 +23,21 @@ const imageDots = Array.from({ length: 55 }, (_, i) => ({
   dy: r4(-15 - seeded(i, 9) * 30),
 }));
 
+/* Sparks radiating outward from the energy ball in the hero artwork */
+const BALL_X = 50.9;
+const BALL_Y = 48;
+const ballSparks = Array.from({ length: 22 }, (_, i) => {
+  const angle = seeded(i, 21) * Math.PI * 2;
+  const dist = 60 + seeded(i, 22) * 110;
+  return {
+    dx: r4(Math.cos(angle) * dist),
+    dy: r4(Math.sin(angle) * dist),
+    size: r4(2 + seeded(i, 23) * 2.5),
+    duration: r4(1.8 + seeded(i, 24) * 2),
+    delay: r4(-seeded(i, 25) * 4),
+  };
+});
+
 export function HeroSection() {
   return (
     <section
@@ -40,6 +56,11 @@ export function HeroSection() {
             margin: 0;
             flex-shrink: 0;
           }
+        }
+        @keyframes ballSpark {
+          0% { transform: translate(-50%, -50%) translate(0, 0) scale(0.4); opacity: 0; }
+          18% { opacity: 1; }
+          100% { transform: translate(-50%, -50%) translate(var(--spark-dx), var(--spark-dy)) scale(1); opacity: 0; }
         }
       `}</style>
 
@@ -120,7 +141,8 @@ export function HeroSection() {
       {/* Right: image */}
       <div className="hero-image-panel order-1 md:order-2 flex-shrink-0 pt-16 md:pt-0">
         <div className="relative w-full h-full overflow-visible">
-          <div
+
+          <motion.div
             className="absolute inset-0"
             style={{
               maskImage:
@@ -130,6 +152,9 @@ export function HeroSection() {
                 "linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 16%, black 84%, transparent 100%)",
               WebkitMaskComposite: "source-in",
             } as CSSProperties}
+            initial={{ opacity: 0, scale: 0.88, filter: "blur(16px)" }}
+            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+            transition={{ duration: 1.3, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
           >
             <Image
               src="/rightimage.jpeg"
@@ -141,7 +166,75 @@ export function HeroSection() {
               className="object-contain"
               style={{ filter: "contrast(1.1) saturate(1.18) brightness(1.04)" }}
             />
+          </motion.div>
+
+          {/* Rotating energy ring over the ball — outer wrapper is a plain, never-animated
+              div that only handles centering; framer-motion only ever touches the inner
+              child, so the spin can never drift off that fixed anchor point. */}
+          <div
+            className="absolute pointer-events-none rounded-full overflow-hidden"
+            style={{
+              left: `${BALL_X}%`,
+              top: `${BALL_Y}%`,
+              width: "34%",
+              aspectRatio: "1 / 1",
+              transform: "translate(-50%, -50%)",
+              maskImage: "radial-gradient(circle, transparent 58%, black 64%, black 90%, transparent 96%)",
+              WebkitMaskImage: "radial-gradient(circle, transparent 58%, black 64%, black 90%, transparent 96%)",
+            }}
+          >
+            <motion.div
+              className="w-full h-full rounded-full"
+              style={{
+                background:
+                  "conic-gradient(from 0deg, rgba(90,180,255,0.16) 0%, rgba(150,220,255,0.9) 8%, rgba(90,180,255,0.16) 20%, rgba(90,180,255,0.16) 50%, rgba(150,220,255,0.75) 58%, rgba(90,180,255,0.16) 70%, rgba(90,180,255,0.16) 100%)",
+                mixBlendMode: "screen",
+                filter: "blur(1px)",
+              }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 9, repeat: Infinity, ease: "linear" }}
+            />
           </div>
+          <div
+            className="absolute pointer-events-none rounded-full"
+            style={{
+              left: `${BALL_X}%`,
+              top: `${BALL_Y}%`,
+              width: "22%",
+              aspectRatio: "1 / 1",
+              transform: "translate(-50%, -50%)",
+            }}
+          >
+            <motion.div
+              className="w-full h-full rounded-full"
+              style={{ border: "1px solid rgba(0,212,255,0.35)" }}
+              animate={{ rotate: -360, scale: [1, 1.06, 1] }}
+              transition={{
+                rotate: { duration: 14, repeat: Infinity, ease: "linear" },
+                scale: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+              }}
+            />
+          </div>
+
+          {/* Sparks radiating outward from the ball */}
+          {ballSparks.map((spark, i) => (
+            <span
+              key={i}
+              className="absolute rounded-full pointer-events-none"
+              style={{
+                left: `${BALL_X}%`,
+                top: `${BALL_Y}%`,
+                width: `${spark.size}px`,
+                height: `${spark.size}px`,
+                background: "#BFEFFF",
+                boxShadow: `0 0 ${spark.size * 5}px rgba(140,220,255,0.9)`,
+                animation: `ballSpark ${spark.duration}s ease-out infinite`,
+                animationDelay: `${spark.delay}s`,
+                "--spark-dx": `${spark.dx}px`,
+                "--spark-dy": `${spark.dy}px`,
+              } as CSSProperties}
+            />
+          ))}
 
           {/* Floating dots overlay — matches GlobalStars style */}
           {imageDots.map((dot, i) => (

@@ -20,6 +20,7 @@ const BLAST_IMAGES = [
   "/gapwefill.png",
   "/heroimage.png",
   "/technlogy.png",
+  ...Array.from({ length: 15 }, (_, i) => `/intro-slide-${String(i + 1).padStart(2, "0")}.png`),
 ];
 
 const SG = "var(--font-space-grotesk), Inter, sans-serif";
@@ -27,7 +28,12 @@ const NM = "'Neue Machina', 'Inter', sans-serif";
 const MONO = "'JetBrains Mono', ui-monospace, 'Fira Code', Menlo, monospace";
 const TYPE_MS = 32;
 const TYPE_START_DELAY_MS = 900;
-const BLAST_MS = 1300;
+const LANE_STAGGER_MS = 72;
+const LANE_DURATION_MS = 760;
+const PORTAL_MS = 672;
+const LANE_ITEM_COUNT = 28;
+const LANE_POSITIONS = [-2.3, -1.5, -0.75, 0.75, 1.5, 2.3];
+const BLAST_MS = LANE_ITEM_COUNT * LANE_STAGGER_MS + LANE_DURATION_MS + PORTAL_MS;
 
 const seeded = (i: number, salt: number) => {
   const v = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453;
@@ -76,21 +82,22 @@ export function IntroGate({ onComplete }: { onComplete: () => void }) {
     []
   );
 
-  const shards = useMemo(
+  const lanes = useMemo(
     () =>
-      BLAST_IMAGES.map((src, i) => {
-        const angle = (i / BLAST_IMAGES.length) * Math.PI * 2 + (Math.random() - 0.5) * 0.7;
-        const burstDist = 160 + Math.random() * 200;
-        const size = 420 + Math.random() * 380;
+      Array.from({ length: LANE_ITEM_COUNT }, (_, i) => {
+        const dir = LANE_POSITIONS[i % LANE_POSITIONS.length];
+        const side = Math.sign(dir);
         return {
-          src,
-          size,
-          burstX: Math.cos(angle) * burstDist,
-          burstY: Math.sin(angle) * burstDist * 0.55 - 90,
-          fallX: Math.cos(angle) * burstDist * 1.3,
-          fallY: 900 + Math.random() * 500,
-          rotate: (Math.random() - 0.5) * 520,
-          delay: Math.random() * 0.15,
+          src: BLAST_IMAGES[i % BLAST_IMAGES.length],
+          startX: dir * 3,
+          midX: dir * 14,
+          endX: dir * (32 + Math.random() * 10),
+          startY: -6 - Math.random() * 3,
+          midY: 5 + Math.random() * 3,
+          endY: 22 + Math.random() * 8,
+          rotate: side * (4 + Math.random() * 6),
+          rotateY: side * -(55 + Math.random() * 12),
+          delay: (i * LANE_STAGGER_MS) / 1000,
         };
       }),
     []
@@ -111,8 +118,12 @@ export function IntroGate({ onComplete }: { onComplete: () => void }) {
       className="fixed inset-0 z-[100000] flex items-center justify-center cursor-pointer overflow-hidden"
       style={{ background: "#020208" }}
     >
-      {/* Starfield */}
-      <div className="absolute inset-0 pointer-events-none">
+      {/* Starfield — warps outward when entering, like flying forward through space */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        animate={blasting ? { scale: 3.2, opacity: 0 } : { scale: 1, opacity: 1 }}
+        transition={{ duration: BLAST_MS / 1000, ease: "easeIn" }}
+      >
         {stars.map((star, i) => (
           <motion.span
             key={i}
@@ -141,54 +152,91 @@ export function IntroGate({ onComplete }: { onComplete: () => void }) {
             animation: "heroBreath 6s ease-in-out infinite",
           }}
         />
-      </div>
+      </motion.div>
 
-      {/* Blast shards */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        {shards.map((shard) => (
-          <motion.div
-            key={shard.src}
-            className="absolute rounded-2xl overflow-hidden"
-            style={{
-              width: shard.size,
-              height: shard.size,
-              border: "1px solid rgba(0,212,255,0.30)",
-              boxShadow: "0 0 40px rgba(0,150,255,0.20), inset 0 0 24px rgba(0,0,0,0.35)",
-            }}
-            initial={{ x: 0, y: 0, opacity: 0, scale: 0.4, rotate: 0 }}
-            animate={
-              blasting
-                ? {
-                    x: [0, shard.burstX, shard.burstX, shard.fallX],
-                    y: [0, shard.burstY, shard.burstY, shard.fallY],
-                    rotate: [0, shard.rotate * 0.35, shard.rotate * 0.4, shard.rotate],
-                    opacity: [0, 1, 1, 0],
-                    scale: [0.4, 1.08, 1.02, 0.8],
-                  }
-                : { x: 0, y: 0, opacity: 0, scale: 0.4, rotate: 0 }
-            }
-            transition={{
-              duration: 1.3,
-              times: [0, 0.2, 0.32, 1],
-              ease: ["easeOut", "easeInOut", "easeIn"],
-              delay: shard.delay,
-            }}
+      {/* Road markers — each image rushes toward the viewer one after another, like lane lines on a road */}
+      <div className="absolute inset-0 pointer-events-none" style={{ perspective: 600, transformStyle: "preserve-3d" }}>
+        {lanes.map((lane, i) => (
+          <div
+            key={i}
+            className="absolute"
+            style={{ left: "50%", top: "38%", width: 0, height: 0, transformStyle: "preserve-3d" }}
           >
-            <Image
-              src={shard.src}
-              alt=""
-              fill
-              className="object-cover"
-              style={{ filter: "contrast(1.12) saturate(1.15) brightness(1.02)" }}
-            />
-            <div
-              className="absolute inset-0 pointer-events-none"
+            <motion.div
+              className="absolute overflow-hidden rounded-2xl"
               style={{
-                background:
-                  "repeating-linear-gradient(180deg, transparent 0px, transparent 3px, rgba(0,212,255,0.05) 4px)",
+                width: 145,
+                height: 245,
+                marginLeft: -72.5,
+                marginTop: -122.5,
+                border: "1px solid rgba(0,212,255,0.35)",
+                boxShadow: "0 0 50px rgba(0,150,255,0.25), inset 0 0 24px rgba(0,0,0,0.35)",
+                transformStyle: "preserve-3d",
               }}
-            />
-          </motion.div>
+              initial={{
+                x: `${lane.startX}vw`,
+                y: `${lane.startY}vh`,
+                scale: 0.15,
+                scaleX: 1,
+                opacity: 0,
+                rotate: 0,
+                rotateY: lane.rotateY,
+                filter: "blur(0px)",
+              }}
+              animate={
+                blasting
+                  ? {
+                      x: [`${lane.startX}vw`, `${lane.midX}vw`, `${lane.endX}vw`],
+                      y: [`${lane.startY}vh`, `${lane.midY}vh`, `${lane.endY}vh`],
+                      scale: [0.15, 1.3, 2.9],
+                      scaleX: [1, 1.05, 1.22],
+                      opacity: [0, 1, 1, 0],
+                      rotate: [0, lane.rotate * 0.6, lane.rotate],
+                      rotateY: lane.rotateY,
+                      filter: ["blur(0px)", "blur(1.5px)", "blur(5px)"],
+                    }
+                  : {
+                      x: `${lane.startX}vw`,
+                      y: `${lane.startY}vh`,
+                      scale: 0.15,
+                      scaleX: 1,
+                      opacity: 0,
+                      rotate: 0,
+                      rotateY: lane.rotateY,
+                      filter: "blur(0px)",
+                    }
+              }
+              transition={{
+                default: {
+                  duration: LANE_DURATION_MS / 1000,
+                  times: [0, 0.45, 1],
+                  ease: [0.55, 0, 0.85, 0.35],
+                  delay: lane.delay,
+                },
+                opacity: {
+                  duration: LANE_DURATION_MS / 1000,
+                  times: [0, 0.1, 0.82, 1],
+                  ease: "easeIn",
+                  delay: lane.delay,
+                },
+              }}
+            >
+              <Image
+                src={lane.src}
+                alt=""
+                fill
+                className="object-cover"
+                style={{ filter: "contrast(1.12) saturate(1.15) brightness(1.02)" }}
+              />
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    "repeating-linear-gradient(180deg, transparent 0px, transparent 3px, rgba(0,212,255,0.05) 4px)",
+                }}
+              />
+            </motion.div>
+          </div>
         ))}
       </div>
 
@@ -204,6 +252,22 @@ export function IntroGate({ onComplete }: { onComplete: () => void }) {
         transition={{ duration: 0.6, ease: "easeOut" }}
       />
 
+      {/* Portal flash — culminates right as the reveal happens, like stepping through into the world */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle, #EAF8FF 0%, #7FD8FF 30%, #0055FF 60%, #020208 100%)",
+        }}
+        initial={{ opacity: 0, scale: 0.1 }}
+        animate={blasting ? { opacity: [0, 1], scale: [0.1, 6] } : { opacity: 0, scale: 0.1 }}
+        transition={{
+          duration: PORTAL_MS / 1000,
+          ease: "easeIn",
+          delay: (BLAST_MS - PORTAL_MS - 150) / 1000,
+        }}
+      />
+
       {/* Content */}
       <motion.div
         className="relative flex flex-col items-center px-6 text-center max-w-3xl"
@@ -217,43 +281,24 @@ export function IntroGate({ onComplete }: { onComplete: () => void }) {
           animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
           transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
         >
-          {/* Spinning glow arc */}
           <motion.div
-            className="absolute -inset-4 rounded-full"
-            style={{
-              background:
-                "conic-gradient(from 0deg, transparent 0%, rgba(0,212,255,0.55) 12%, transparent 26%, transparent 100%)",
-              filter: "blur(2px)",
-            }}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-          />
-          {/* Static thin ring */}
-          <motion.div
-            className="absolute -inset-3 rounded-3xl"
-            style={{ border: "1px solid rgba(0,212,255,0.25)" }}
-            animate={{ rotate: -360 }}
-            transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
-          />
-          <div
-            className="relative w-20 h-20 rounded-2xl flex items-center justify-center flex-shrink-0"
-            style={{
-              background: "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(255,255,255,0.16)",
-              backdropFilter: "blur(16px) saturate(160%)",
-              WebkitBackdropFilter: "blur(16px) saturate(160%)",
-              boxShadow: "0 0 40px rgba(0,85,255,0.25), 0 0 80px rgba(0,85,255,0.10), inset 0 1px 0 rgba(255,255,255,0.10)",
-            }}
+            className="relative w-20 h-20 flex items-center justify-center flex-shrink-0"
+            animate={{ y: [0, -7, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           >
             <Image
               src="/fevicon.png"
               alt="Mahadeva Digital Solutions"
-              width={64}
-              height={64}
-              className="w-14 h-14 object-contain"
+              width={80}
+              height={80}
+              className="w-[72px] h-[72px] object-contain"
               priority
+              style={{
+                filter:
+                  "drop-shadow(0 0 16px rgba(0,180,255,0.6)) drop-shadow(0 0 34px rgba(0,85,255,0.35))",
+              }}
             />
-          </div>
+          </motion.div>
         </motion.div>
 
         {/* Quote */}
