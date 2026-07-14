@@ -2,27 +2,30 @@
 
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Trail, Sparkles } from "@react-three/drei";
 import * as THREE from "three";
 import { windowProgress } from "./timeline";
 import { createFlightCurve, flightU } from "./path";
-import { getRadialGlowTexture } from "./glowTexture";
+import { Character, type RiderMotionState } from "./Character";
 
-/** Stylized rider silhouette — a glowing figure hovering just above the
- * road on plasma-trailed shoes, tracking slightly ahead of the camera
- * along the same flight curve. Abstracted rather than photorealistic:
- * the energy trail and spark burst carry the "flying shoes" read.
+/** The rider — a real rigged human character (see Character.tsx)
+ * hovering just above the road on plasma-trailed shoes, tracking
+ * slightly ahead of the camera along the same flight curve.
  *
- * Deliberately never touches the road (a clear hover gap plus a bob),
- * leans forward with speed, and picks up a subtle side-to-side roll —
- * an aerodynamic, gliding read rather than a stiff, upright statue. */
+ * This component owns only the rider's *placement in the world*: the
+ * flight-curve position, hover bob, lateral weave, speed-driven lean
+ * and roll, and the fade-in/scale-in on first appearance — exactly as
+ * before. What's actually inside that transform (character mesh, pose,
+ * shoe VFX) is Character.tsx's concern. Timing/placement values are
+ * handed off via a plain ref (not React props/state) since they update
+ * every animation frame and must never trigger a React re-render. */
 export function RiderTrail() {
   const groupRef = useRef<THREE.Group>(null);
-  const rimGlowRef = useRef<THREE.Mesh>(null);
-  const sparkGroupRef = useRef<THREE.Group>(null);
-  const heatRef = useRef<THREE.Sprite>(null);
   const curve = useMemo(() => createFlightCurve(), []);
-  const heatTexture = useMemo(() => getRadialGlowTexture(), []);
+  const motionRef = useRef<RiderMotionState>({
+    appear: 0,
+    speedFactor: 0,
+    finalPush: 0,
+  });
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
@@ -62,80 +65,15 @@ export function RiderTrail() {
 
     // Shoes emit maximum power on the final run into the star.
     const finalPush = windowProgress(t, 6.3, 8.0);
-    const rimMat = rimGlowRef.current?.material as
-      | THREE.MeshBasicMaterial
-      | undefined;
-    if (rimMat) rimMat.opacity = 0.2 + finalPush * 0.55;
-    if (sparkGroupRef.current)
-      sparkGroupRef.current.scale.setScalar(1 + finalPush * 0.85);
 
-    // A soft additive shimmer trailing beneath the shoes — a cheap
-    // stand-in for heat-distortion, since real refraction needs a
-    // post-process pass this scene doesn't use.
-    if (heatRef.current) {
-      const mat = heatRef.current.material as THREE.SpriteMaterial;
-      mat.opacity = (0.12 + finalPush * 0.22) * (0.8 + Math.sin(t * 10) * 0.2);
-    }
+    motionRef.current.appear = appear;
+    motionRef.current.speedFactor = speedFactor;
+    motionRef.current.finalPush = finalPush;
   });
 
   return (
     <group ref={groupRef} visible={false}>
-      <mesh position={[0, 0.62, 0]}>
-        <sphereGeometry args={[0.09, 12, 12]} />
-        <meshBasicMaterial color="#0a1a2e" fog={false} />
-      </mesh>
-      <mesh position={[0, 0.32, 0]}>
-        <capsuleGeometry args={[0.11, 0.34, 4, 8]} />
-        <meshBasicMaterial color="#0a1a2e" fog={false} />
-      </mesh>
-      <mesh ref={rimGlowRef} position={[0, 0.32, 0]} scale={1.15}>
-        <capsuleGeometry args={[0.11, 0.34, 4, 8]} />
-        <meshBasicMaterial
-          color="#00d4ff"
-          transparent
-          opacity={0.2}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-          fog={false}
-        />
-      </mesh>
-
-      <Trail width={2.4} length={9} color="#00d4ff" attenuation={(w) => w * w}>
-        <mesh position={[-0.09, 0.02, 0.02]}>
-          <sphereGeometry args={[0.055, 10, 10]} />
-          <meshBasicMaterial color="#00e5ff" fog={false} />
-        </mesh>
-      </Trail>
-      <Trail width={2.4} length={9} color="#00d4ff" attenuation={(w) => w * w}>
-        <mesh position={[0.09, 0.02, -0.02]}>
-          <sphereGeometry args={[0.055, 10, 10]} />
-          <meshBasicMaterial color="#00e5ff" fog={false} />
-        </mesh>
-      </Trail>
-
-      <sprite ref={heatRef} position={[0, 0.06, 0.35]} scale={[0.32, 0.7, 1]}>
-        <spriteMaterial
-          map={heatTexture}
-          color="#7fd8ff"
-          transparent
-          opacity={0}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-          fog={false}
-          toneMapped={false}
-        />
-      </sprite>
-
-      <group ref={sparkGroupRef}>
-        <Sparkles
-          count={44}
-          scale={[0.55, 0.3, 0.6]}
-          size={2.6}
-          speed={1.3}
-          color="#5fe8ff"
-          position={[0, 0.04, 0.1]}
-        />
-      </group>
+      <Character wrapperRef={groupRef} motionRef={motionRef} />
     </group>
   );
 }
