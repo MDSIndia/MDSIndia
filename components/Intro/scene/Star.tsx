@@ -34,13 +34,13 @@ export function Star() {
 
     // A tiny, distant point of light that accelerates into a
     // horizon-filling beacon as the camera closes in.
-    const growth = windowProgress(t, 3.4, 6.2, easeInQuad);
+    const growth = windowProgress(t, 6.2, INTRO_DURATION, easeInQuad);
     const scale = 0.1 + growth * growth * 30;
     group.visible = growth > 0.002;
     group.scale.setScalar(scale);
     group.position.set(...STAR_POSITION);
 
-    const engulf = windowProgress(t, 5.6, 6.2);
+    const engulf = windowProgress(t, 8.4, INTRO_DURATION);
     // A gentle, irregular flicker rather than a smooth mechanical pulse.
     const flicker = 0.92 + Math.sin(t * 9.2) * 0.04 + Math.sin(t * 3.1) * 0.04;
     // Once fully engulfed, the star doesn't hold forever — it recedes

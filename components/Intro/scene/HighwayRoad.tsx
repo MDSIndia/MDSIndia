@@ -66,7 +66,12 @@ export function HighwayRoad() {
 
   useFrame((state, delta) => {
     const t = state.clock.getElapsedTime();
-    const speed = 0.4 + windowProgress(t, 1.6, 6.0) * 3.4;
+    // Peak scroll speed is deliberately higher than the raw camera
+    // velocity would justify — road light streaks moving fast is one
+    // of the strongest "we are going fast" cues cinema uses, and it's
+    // free to tune independently of how fast the camera actually
+    // translates through the world.
+    const speed = 0.4 + windowProgress(t, 2.6, 8.0) * 4.8;
     texture.offset.y -= speed * delta;
   });
 

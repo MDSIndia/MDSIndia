@@ -66,7 +66,7 @@ export function useIntro() {
       if (ctx.state === "suspended") ctx.resume().catch(() => {});
 
       const now = ctx.currentTime;
-      const duration = 6.4;
+      const duration = 9.2;
 
       const master = ctx.createGain();
       master.gain.setValueAtTime(0, now);

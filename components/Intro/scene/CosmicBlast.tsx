@@ -13,7 +13,7 @@ function seeded(i: number, salt: number) {
 }
 
 /** The moment the rider (and camera) are engulfed by the star. */
-const BLAST_START = 5.75;
+const BLAST_START = 8.55;
 const PALETTE = ["#ffffff", "#00d4ff", "#7fb2ff", "#0055FF", "#bfe9ff"];
 
 /** The star doesn't explode — it blooms: a graceful "digital big bang"

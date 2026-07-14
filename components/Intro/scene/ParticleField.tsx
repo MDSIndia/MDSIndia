@@ -104,17 +104,20 @@ export function ParticleField({ isMobile }: { isMobile: boolean }) {
   useFrame((state, delta) => {
     const t = state.clock.getElapsedTime();
 
-    ambientMaterial.opacity = windowProgress(t, 0, 1.4) * 0.55;
+    ambientMaterial.opacity = windowProgress(t, 0, 2.0) * 0.55;
     if (ambientRef.current) ambientRef.current.rotation.y += delta * 0.01;
 
-    const speed = windowProgress(t, 1.6, 6.0) * (isMobile ? 32 : 46);
-    streakMaterial.opacity = windowProgress(t, 1.8, 3.0) * 0.85;
+    // Peak streak speed and stretch are both raised beyond the old
+    // values — longer, faster-flying particles are one of the clearest
+    // "warp speed" cues, independent of the camera's own translation.
+    const speed = windowProgress(t, 2.6, 8.0) * (isMobile ? 42 : 62);
+    streakMaterial.opacity = windowProgress(t, 2.8, 4.4) * 0.85;
 
     const mesh = streaksRef.current;
     if (mesh && speed > 0) {
       const dummy = new THREE.Object3D();
       const camZ = state.camera.position.z;
-      const stretch = 1 + windowProgress(t, 3.0, 6.0) * 2.2;
+      const stretch = 1 + windowProgress(t, 4.4, 8.0) * 3.0;
       streakState.current.forEach((s, i) => {
         s.z += speed * delta;
         if (s.z > camZ + 6) {

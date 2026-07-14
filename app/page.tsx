@@ -1,5 +1,6 @@
 "use client";
 
+import { startTransition, useEffect, useState } from "react";
 import { PageChrome } from "@/components/layout/PageChrome";
 import { IntroOverlay } from "@/components/Intro/IntroOverlay";
 import { useIntro } from "@/hooks/useIntro";
@@ -15,13 +16,25 @@ import { ContactSection } from "@/components/sections/ContactSection";
 
 export default function Home() {
   const { phase, start, finishCinematic, transitionMs } = useIntro();
+  const [showChrome, setShowChrome] = useState(false);
 
-  // The homepage chrome mounts partway through the transition (under the
-  // still-opaque bloom overlay) so it has time to paint before it's
-  // revealed, and so Hero's own entrance animations play in sync with
-  // the reveal rather than having already finished off-screen.
+  // The homepage — Navbar, Footer, nine sections, its own Three.js
+  // scene — mounts right as the light-veil starts clearing, so Hero's
+  // entrance animation plays in sync with the reveal instead of having
+  // already finished off-screen. That's a large synchronous commit
+  // though, and doing it as a normal urgent update caused a visible
+  // stutter right when the reveal became visible. Wrapping it in
+  // startTransition marks it as interruptible: React can yield to the
+  // browser mid-mount instead of blocking a frame for the whole tree,
+  // which is the actual fix — moving *when* it mounts (tried first)
+  // just relocated the same blocking cost onto the cinematic instead.
+  useEffect(() => {
+    if (phase === "transitioning" || phase === "done") {
+      startTransition(() => setShowChrome(true));
+    }
+  }, [phase]);
+
   const showOverlay = phase !== "done";
-  const showChrome = phase === "transitioning" || phase === "done";
 
   return (
     <>

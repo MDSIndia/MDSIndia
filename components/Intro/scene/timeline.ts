@@ -1,5 +1,5 @@
 /** Total length of the cinematic sequence, in seconds. */
-export const INTRO_DURATION = 6.2;
+export const INTRO_DURATION = 9.0;
 
 export function clamp01(x: number): number {
   return Math.min(1, Math.max(0, x));
@@ -19,6 +19,13 @@ export function easeOutCubic(x: number): number {
 
 export function easeInQuad(x: number): number {
   return x * x;
+}
+
+/** Slow start, continuously accelerating, reaching maximum instantaneous
+ * rate right at x=1 — used for the flight path so the camera never
+ * decelerates approaching the star (unlike a symmetric ease-in-out). */
+export function easeInCubic(x: number): number {
+  return x * x * x;
 }
 
 /** Remaps t from [0,1] against a [start,end] window of the overall timeline, eased. */
