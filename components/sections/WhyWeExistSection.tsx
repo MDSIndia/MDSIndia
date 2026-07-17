@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { usePortalTransition } from "@/components/PortalTransition/PortalTransitionProvider";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const SG = "var(--font-space-grotesk), 'Inter', sans-serif";
@@ -970,6 +971,8 @@ export function AboutMDSFullContent() {
 /* ─── Section (teaser + expandable full content) ────────────────────── */
 
 export function WhyWeExistSection() {
+  const { trigger } = usePortalTransition();
+
   return (
     <section id="about-mds" className="section-padding relative overflow-hidden">
       <div className="scene-top-fade" />
@@ -1028,6 +1031,13 @@ export function WhyWeExistSection() {
             <div className="flex flex-wrap gap-3 justify-center md:justify-start">
               <Link
                 href="/about-mds"
+                onClick={(e) => {
+                  // Let modified clicks (new tab, ctrl/cmd/middle-click)
+                  // through untouched — only intercept a plain nav click.
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+                  e.preventDefault();
+                  trigger("/about-mds");
+                }}
                 className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full text-sm uppercase transition-all duration-300 hover:scale-105"
                 style={{
                   fontFamily: "'Neue Machina', 'Inter', sans-serif",

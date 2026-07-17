@@ -4,6 +4,7 @@ import { startTransition, useEffect, useState } from "react";
 import { PageChrome } from "@/components/layout/PageChrome";
 import { IntroOverlay } from "@/components/Intro/IntroOverlay";
 import { useIntro } from "@/hooks/useIntro";
+import { getLenis } from "@/lib/lenis";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { WhyWeExistSection } from "@/components/sections/WhyWeExistSection";
 import { VisionSection } from "@/components/sections/VisionSection";
@@ -33,6 +34,29 @@ export default function Home() {
       startTransition(() => setShowChrome(true));
     }
   }, [phase]);
+
+  // Landing here with a URL hash (e.g. "Back to Home" from /about-mds
+  // linking to "/#about-mds") needs an explicit scroll: the browser's
+  // own automatic hash-scroll fires on navigation, well before
+  // PageChrome (and the section it's targeting) has actually mounted
+  // — deliberately deferred above via startTransition — so it finds
+  // nothing and silently gives up. Once the real content exists, hand
+  // off to Lenis so this scroll matches the smoothing/easing of every
+  // other scroll on the site instead of a native instant jump.
+  useEffect(() => {
+    if (!showChrome) return;
+    const hash = window.location.hash;
+    if (!hash) return;
+    const id = hash.slice(1);
+    const timer = window.setTimeout(() => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const lenis = getLenis();
+      if (lenis) lenis.scrollTo(el);
+      else el.scrollIntoView({ behavior: "smooth" });
+    }, 120);
+    return () => window.clearTimeout(timer);
+  }, [showChrome]);
 
   const showOverlay = phase !== "done";
 

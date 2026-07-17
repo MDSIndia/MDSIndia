@@ -15,7 +15,7 @@ export default function AboutMDSPage() {
 
         <div className="relative max-w-6xl mx-auto mb-10">
           <Link
-            href="/"
+            href="/#about-mds"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold uppercase transition-all duration-300 hover:scale-105"
             style={{
               fontFamily: "var(--font-space-grotesk), Inter, sans-serif",

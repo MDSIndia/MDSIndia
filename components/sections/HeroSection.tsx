@@ -1,73 +1,93 @@
 "use client";
-import type { CSSProperties } from "react";
-import Image from "next/image";
-import { motion } from "framer-motion";
-import { Compass, ArrowUpRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { Compass, ArrowUpRight, ChevronDown } from "lucide-react";
 
-const seeded = (index: number, salt: number) => {
-  const v = Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453;
-  return v - Math.floor(v);
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 22 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.9, ease: EASE } },
 };
 
-const r4 = (n: number) => Math.round(n * 10000) / 10000;
-
-const imageDots = Array.from({ length: 55 }, (_, i) => ({
-  x: r4(seeded(i, 1) * 100),
-  y: r4(seeded(i, 2) * 100),
-  size: r4(1.2 + seeded(i, 3) * 2.2),
-  color: ["255,255,255", "220,235,255", "200,220,255"][Math.floor(seeded(i, 4) * 3)],
-  opacity: r4(0.25 + seeded(i, 5) * 0.45),
-  duration: r4(12 + seeded(i, 6) * 18),
-  delay: r4(-seeded(i, 7) * 28),
-  dx: r4((seeded(i, 8) - 0.5) * 60),
-  dy: r4(-15 - seeded(i, 9) * 30),
-}));
-
-/* Sparks radiating outward from the energy ball in the hero artwork */
-const BALL_X = 50.9;
-const BALL_Y = 48;
-const ballSparks = Array.from({ length: 22 }, (_, i) => {
-  const angle = seeded(i, 21) * Math.PI * 2;
-  const dist = 60 + seeded(i, 22) * 110;
-  return {
-    dx: r4(Math.cos(angle) * dist),
-    dy: r4(Math.sin(angle) * dist),
-    size: r4(2 + seeded(i, 23) * 2.5),
-    duration: r4(1.8 + seeded(i, 24) * 2),
-    delay: r4(-seeded(i, 25) * 4),
-  };
-});
-
 export function HeroSection() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoReady, setVideoReady] = useState(false);
+  const reducedMotion = useReducedMotion();
+
+  // Respect reduced-motion for the video itself too, not just the CSS
+  // animations below — pause on the first frame rather than looping a
+  // moving background for users who've asked for less motion.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (reducedMotion) video.pause();
+    else if (videoReady) video.play().catch(() => {});
+  }, [reducedMotion, videoReady]);
+
   return (
     <section
       id="hero"
-      className="relative md:min-h-screen flex flex-col md:flex-row md:items-center md:justify-center md:gap-16"
+      className="relative w-full min-h-screen flex items-center overflow-hidden bg-[#020208]"
     >
-      <style>{`
-        .hero-image-panel {
-          width: clamp(280px, 74vw, 380px);
-          aspect-ratio: 989 / 702;
-          margin: 0 auto;
-        }
-        @media (min-width: 768px) {
-          .hero-image-panel {
-            width: clamp(360px, 38vw, 520px);
-            margin: 0;
-            flex-shrink: 0;
-          }
-        }
-        @keyframes ballSpark {
-          0% { transform: translate(-50%, -50%) translate(0, 0) scale(0.4); opacity: 0; }
-          18% { opacity: 1; }
-          100% { transform: translate(-50%, -50%) translate(var(--spark-dx), var(--spark-dy)) scale(1); opacity: 0; }
-        }
-      `}</style>
+      {/* Fullscreen video background — fades in once it actually has a
+          frame to show (avoids a flash of black before it buffers),
+          and holds a very slow Ken Burns drift for the rest of its
+          loop so a fullscreen video doesn't sit dead-static. */}
+      <motion.video
+        ref={videoRef}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        onLoadedData={() => setVideoReady(true)}
+        className="absolute inset-0 w-full h-full object-cover"
+        initial={{ opacity: 0 }}
+        animate={{
+          opacity: videoReady ? 1 : 0,
+          scale: reducedMotion ? 1 : [1, 1.07, 1],
+        }}
+        transition={{
+          opacity: { duration: 1.1, ease: EASE },
+          scale: { duration: 26, repeat: Infinity, ease: "easeInOut" },
+        }}
+      >
+        <source src="/videos/hero.mp4" type="video/mp4" />
+      </motion.video>
 
-      {/* Left: text */}
-      <div className="order-2 md:order-1 flex items-center justify-center md:justify-start px-6 sm:px-10 md:px-0 pt-10 pb-16 md:pb-0 md:pt-24">
-        <div className="text-center md:text-left" style={{ maxWidth: "520px" }}>
-          <h1
+      {/* Dark gradient over the video so the overlaid text stays
+          legible regardless of what's playing underneath — heavier at
+          the bottom/left where the text sits, lighter toward the
+          top-right so the footage still reads through. */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(115deg, rgba(2,2,8,0.88) 0%, rgba(2,2,8,0.62) 32%, rgba(2,2,8,0.28) 55%, rgba(2,2,8,0.15) 100%), linear-gradient(to top, rgba(2,2,8,0.85) 0%, rgba(2,2,8,0.2) 40%, rgba(2,2,8,0.35) 100%)",
+        }}
+      />
+
+      {/* Soft vignette — pulls focus toward center/text instead of the
+          flat corners, same technique used on the intro cinematic. */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(2,2,8,0.22) 72%, rgba(2,2,8,0.5) 100%)",
+        }}
+      />
+
+      {/* Text overlay */}
+      <motion.div
+        className="relative z-10 w-full px-6 sm:px-10 md:px-20"
+        initial="hidden"
+        animate="show"
+        variants={{ hidden: {}, show: { transition: { staggerChildren: 0.14, delayChildren: 0.15 } } }}
+      >
+        <div className="text-center md:text-left mx-auto md:mx-0" style={{ maxWidth: "620px" }}>
+          <motion.h1
+            variants={fadeUp}
             className="neue-machina mb-5"
             style={{
               fontSize: "clamp(1.9rem, 3.8vw, 4.5rem)",
@@ -79,9 +99,10 @@ export function HeroSection() {
             }}
           >
             Building Products<br />that Makes an Impact
-          </h1>
+          </motion.h1>
 
-          <p
+          <motion.p
+            variants={fadeUp}
             className="font-semibold mb-8"
             style={{
               fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
@@ -91,9 +112,9 @@ export function HeroSection() {
             }}
           >
             Empowering The Future Through Products
-          </p>
+          </motion.p>
 
-          <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+          <motion.div variants={fadeUp} className="flex flex-wrap gap-3 justify-center md:justify-start">
             <a
               href="#about-mds"
               className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full text-sm uppercase transition-all duration-300 hover:scale-105"
@@ -134,130 +155,39 @@ export function HeroSection() {
               <ArrowUpRight className="size-4" strokeWidth={2.25} />
               Discover Noorva
             </a>
-          </div>
-        </div>
-      </div>
-
-      {/* Right: image */}
-      <div className="hero-image-panel order-1 md:order-2 flex-shrink-0 pt-16 md:pt-0">
-        <div className="relative w-full h-full overflow-visible">
-
-          <motion.div
-            className="absolute inset-0"
-            style={{
-              maskImage:
-                "linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 16%, black 84%, transparent 100%)",
-              maskComposite: "intersect",
-              WebkitMaskImage:
-                "linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 16%, black 84%, transparent 100%)",
-              WebkitMaskComposite: "source-in",
-            } as CSSProperties}
-            initial={{ opacity: 0, scale: 0.88, filter: "blur(16px)" }}
-            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-            transition={{ duration: 1.3, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
-          >
-            <Image
-              src="/rightimage.jpeg"
-              alt="Hero side image"
-              fill
-              quality={100}
-              priority
-              sizes="(min-width: 768px) 400px, 300px"
-              className="object-contain"
-              style={{ filter: "contrast(1.1) saturate(1.18) brightness(1.04)" }}
-            />
           </motion.div>
-
-          {/* Rotating energy ring over the ball — outer wrapper is a plain, never-animated
-              div that only handles centering; framer-motion only ever touches the inner
-              child, so the spin can never drift off that fixed anchor point. */}
-          <div
-            className="absolute pointer-events-none rounded-full overflow-hidden"
-            style={{
-              left: `${BALL_X}%`,
-              top: `${BALL_Y}%`,
-              width: "34%",
-              aspectRatio: "1 / 1",
-              transform: "translate(-50%, -50%)",
-              maskImage: "radial-gradient(circle, transparent 58%, black 64%, black 90%, transparent 96%)",
-              WebkitMaskImage: "radial-gradient(circle, transparent 58%, black 64%, black 90%, transparent 96%)",
-            }}
-          >
-            <motion.div
-              className="w-full h-full rounded-full"
-              style={{
-                background:
-                  "conic-gradient(from 0deg, rgba(90,180,255,0.16) 0%, rgba(150,220,255,0.9) 8%, rgba(90,180,255,0.16) 20%, rgba(90,180,255,0.16) 50%, rgba(150,220,255,0.75) 58%, rgba(90,180,255,0.16) 70%, rgba(90,180,255,0.16) 100%)",
-                mixBlendMode: "screen",
-                filter: "blur(1px)",
-              }}
-              animate={{ rotate: 360 }}
-              transition={{ duration: 9, repeat: Infinity, ease: "linear" }}
-            />
-          </div>
-          <div
-            className="absolute pointer-events-none rounded-full"
-            style={{
-              left: `${BALL_X}%`,
-              top: `${BALL_Y}%`,
-              width: "22%",
-              aspectRatio: "1 / 1",
-              transform: "translate(-50%, -50%)",
-            }}
-          >
-            <motion.div
-              className="w-full h-full rounded-full"
-              style={{ border: "1px solid rgba(0,212,255,0.35)" }}
-              animate={{ rotate: -360, scale: [1, 1.06, 1] }}
-              transition={{
-                rotate: { duration: 14, repeat: Infinity, ease: "linear" },
-                scale: { duration: 3, repeat: Infinity, ease: "easeInOut" },
-              }}
-            />
-          </div>
-
-          {/* Sparks radiating outward from the ball */}
-          {ballSparks.map((spark, i) => (
-            <span
-              key={i}
-              className="absolute rounded-full pointer-events-none"
-              style={{
-                left: `${BALL_X}%`,
-                top: `${BALL_Y}%`,
-                width: `${spark.size}px`,
-                height: `${spark.size}px`,
-                background: "#BFEFFF",
-                boxShadow: `0 0 ${spark.size * 5}px rgba(140,220,255,0.9)`,
-                animation: `ballSpark ${spark.duration}s ease-out infinite`,
-                animationDelay: `${spark.delay}s`,
-                "--spark-dx": `${spark.dx}px`,
-                "--spark-dy": `${spark.dy}px`,
-              } as CSSProperties}
-            />
-          ))}
-
-          {/* Floating dots overlay — matches GlobalStars style */}
-          {imageDots.map((dot, i) => (
-            <span
-              key={i}
-              className="absolute rounded-full pointer-events-none"
-              style={{
-                left: `${dot.x}%`,
-                top: `${dot.y}%`,
-                width: `${dot.size}px`,
-                height: `${dot.size}px`,
-                opacity: dot.opacity,
-                background: `rgba(${dot.color}, 1)`,
-                boxShadow: `0 0 ${Math.max(4, dot.size * 4)}px rgba(${dot.color}, ${dot.opacity})`,
-                animation: `starDrift ${dot.duration}s linear infinite, starTwinkle ${5 + (i % 6)}s ease-in-out infinite`,
-                animationDelay: `${dot.delay}s, ${-(i % 7)}s`,
-                "--star-dx": `${dot.dx}px`,
-                "--star-dy": `${dot.dy}px`,
-              } as CSSProperties}
-            />
-          ))}
         </div>
-      </div>
+      </motion.div>
+
+      {/* Scroll cue — a small, quiet nudge that there's more below,
+          not shown for reduced-motion (it's a bounce animation and
+          nothing but decoration). */}
+      {!reducedMotion && (
+        <motion.div
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 hidden sm:flex flex-col items-center gap-1.5 pointer-events-none"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.7 }}
+          transition={{ duration: 1, delay: 1.1, ease: EASE }}
+        >
+          <span
+            style={{
+              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+              fontSize: "0.65rem",
+              letterSpacing: "0.18em",
+              color: "rgba(255,255,255,0.6)",
+              textTransform: "uppercase",
+            }}
+          >
+            Scroll
+          </span>
+          <motion.div
+            animate={{ y: [0, 6, 0] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <ChevronDown className="size-4" style={{ color: "rgba(255,255,255,0.55)" }} />
+          </motion.div>
+        </motion.div>
+      )}
     </section>
   );
 }

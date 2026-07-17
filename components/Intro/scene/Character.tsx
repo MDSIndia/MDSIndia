@@ -7,15 +7,18 @@ import * as THREE from "three";
 import { SkeletonUtils } from "three-stdlib";
 import { getRadialGlowTexture } from "./glowTexture";
 
-const MODEL_URL = "/models/character.glb";
+// Exported for reuse by other features that need the same rigged
+// human asset (e.g. the About-MDS portal-transition character) without
+// re-declaring the URL/target height or risking them drifting apart.
+export const MODEL_URL = "/models/character.glb";
 // Real-world adult male height in meters (~5'11") — the source rig's
 // own units aren't trustworthy, so the model is measured and rescaled
 // to this on load rather than assumed.
-const TARGET_HEIGHT = 1.8;
+export const TARGET_HEIGHT = 1.8;
 
 useGLTF.preload(MODEL_URL);
 
-type Bones = Record<string, THREE.Bone>;
+export type Bones = Record<string, THREE.Bone>;
 
 /** Per-frame placement/intensity signals handed off from RiderTrail via
  * a plain ref — these change every animation frame and must never flow
@@ -37,10 +40,10 @@ const FLY_POSE: Record<string, [number, number, number]> = {
   Skeleton_torso_joint_1: [-0.15, 0, 0],
   torso_joint_3: [-0.26, 0, 0],
   Skeleton_neck_joint_1: [0.22, 0, 0],
-  Skeleton_arm_joint_R: [0.9, 0, -1.3],
-  Skeleton_arm_joint_R__2_: [0.4, 0, 0],
-  "Skeleton_arm_joint_L__4_": [0.9, 0, 1.3],
-  "Skeleton_arm_joint_L__3_": [0.4, 0, 0],
+  Skeleton_arm_joint_R: [0.08, 0, -0.15],
+  Skeleton_arm_joint_R__2_: [0.15, 0, 0],
+  "Skeleton_arm_joint_L__4_": [0.08, 0, 0.15],
+  "Skeleton_arm_joint_L__3_": [0.15, 0, 0],
   leg_joint_R_1: [0.55, 0, 0],
   leg_joint_R_2: [0.4, 0, 0],
   leg_joint_L_1: [0.55, 0, 0],
@@ -106,7 +109,7 @@ const OVERSIZE_INFLATE: Partial<Record<string, number>> = {
  * normals (skin and shoes are left untouched) — this is what gives
  * the clothing an oversized, baggy silhouette rather than reading as
  * a second layer of skin-tight paint on the same fitted body. */
-function splitBodyMaterials(mesh: THREE.SkinnedMesh) {
+export function splitBodyMaterials(mesh: THREE.SkinnedMesh) {
   const bones = mesh.skeleton.bones;
   const boneCategories = bones.map((b) => categorizeBone(b.name));
   const boneInflate = bones.map((b) => OVERSIZE_INFLATE[b.name] ?? 0);
@@ -177,6 +180,130 @@ function splitBodyMaterials(mesh: THREE.SkinnedMesh) {
   geometry.setIndex(new THREE.BufferAttribute(new IndexType(newIndices), 1));
 }
 
+/** The four region materials (skin/jacket/pants/shoes), factored out
+ * so other consumers of this rig (e.g. the portal-transition's own
+ * walking character) get the identical suit styling without
+ * re-declaring — and risking drifting from — the same color/roughness
+ * values. Each call returns fresh material instances (safe to dispose
+ * independently per consumer). */
+export function createSuitMaterials() {
+  const bodyMaterials = [
+    new THREE.MeshStandardMaterial({
+      // skin — warm natural tone for the head/hands.
+      color: "#c98a5e",
+      roughness: 0.55,
+      metalness: 0,
+      transparent: true,
+      opacity: 1,
+    }),
+    new THREE.MeshStandardMaterial({
+      // jacket — charcoal suit fabric: dark, matte, barely-there sheen.
+      color: "#23262e",
+      roughness: 0.42,
+      metalness: 0.06,
+      transparent: true,
+      opacity: 1,
+    }),
+    new THREE.MeshStandardMaterial({
+      // trousers — matching charcoal, very slightly darker than the
+      // jacket so the two pieces still read as distinct garments.
+      color: "#1a1c22",
+      roughness: 0.48,
+      metalness: 0.04,
+      transparent: true,
+      opacity: 1,
+    }),
+    new THREE.MeshStandardMaterial({
+      // dress shoes — polished black leather, with a low glow tying
+      // into the thruster VFX so they read as tech before they ignite.
+      color: "#0c0d10",
+      roughness: 0.22,
+      metalness: 0.35,
+      emissive: "#00d4ff",
+      emissiveIntensity: 0.08,
+      transparent: true,
+      opacity: 1,
+    }),
+  ];
+  const tieMaterial = new THREE.MeshStandardMaterial({
+    color: "#7a1f2b",
+    roughness: 0.4,
+    metalness: 0.15,
+    transparent: true,
+    opacity: 1,
+  });
+  const shirtMaterial = new THREE.MeshStandardMaterial({
+    color: "#eef0f2",
+    roughness: 0.55,
+    metalness: 0,
+    transparent: true,
+    opacity: 1,
+  });
+  return { bodyMaterials, tieMaterial, shirtMaterial };
+}
+
+export interface RigSetup {
+  bones: Bones;
+  bindWorldQuats: Record<string, THREE.Quaternion>;
+  bindParentWorldQuats: Record<string, THREE.Quaternion>;
+  scale: number;
+  offsetX: number;
+  offsetY: number;
+  offsetZ: number;
+}
+
+/** Discovers bones, region-paints the suit materials onto the skinned
+ * mesh, and measures the rig for a real-human-height rescale — the
+ * one-time setup shared by every consumer of this asset. Returns data
+ * rather than writing into refs directly so callers stay in control of
+ * their own ref shapes/effect timing. */
+export function setupCharacterRig(
+  cloned: THREE.Object3D,
+  bodyMaterials: THREE.Material[]
+): RigSetup {
+  const bones: Bones = {};
+  let skinnedMesh: THREE.SkinnedMesh | null = null;
+  cloned.traverse((obj) => {
+    if ((obj as THREE.Bone).isBone) bones[obj.name] = obj as THREE.Bone;
+    if ((obj as THREE.SkinnedMesh).isSkinnedMesh) {
+      const mesh = obj as THREE.SkinnedMesh;
+      splitBodyMaterials(mesh);
+      mesh.material = bodyMaterials;
+      mesh.castShadow = false;
+      mesh.receiveShadow = false;
+      mesh.frustumCulled = false;
+      skinnedMesh = mesh;
+    }
+  });
+
+  cloned.updateWorldMatrix(true, true);
+  const bindWorldQuats: Record<string, THREE.Quaternion> = {};
+  const bindParentWorldQuats: Record<string, THREE.Quaternion> = {};
+  Object.entries(bones).forEach(([name, bone]) => {
+    bindWorldQuats[name] = bone.getWorldQuaternion(new THREE.Quaternion());
+    bindParentWorldQuats[name] = bone.parent
+      ? bone.parent.getWorldQuaternion(new THREE.Quaternion())
+      : new THREE.Quaternion();
+  });
+
+  let scale = 1;
+  let offsetX = 0;
+  let offsetY = 0;
+  let offsetZ = 0;
+  const mesh = skinnedMesh as THREE.SkinnedMesh | null;
+  if (mesh) {
+    mesh.geometry.computeBoundingBox();
+    const box = mesh.geometry.boundingBox!;
+    const height = box.max.y - box.min.y || 1;
+    scale = TARGET_HEIGHT / height;
+    offsetX = -((box.min.x + box.max.x) / 2) * scale;
+    offsetY = -box.min.y * scale;
+    offsetZ = -((box.min.z + box.max.z) / 2) * scale;
+  }
+
+  return { bones, bindWorldQuats, bindParentWorldQuats, scale, offsetX, offsetY, offsetZ };
+}
+
 /** The natural-looking replacement for the old capsule rider: a real
  * rigged/skinned human mesh (geometry + skeleton reused from a CC-BY
  * sample asset; its flat placeholder texture is discarded and instead
@@ -210,136 +337,21 @@ export function Character({
 
   const cloned = useMemo(() => SkeletonUtils.clone(sourceScene), [sourceScene]);
 
-  // Four region materials, indexed to match BODY_MATERIAL_INDEX /
-  // splitBodyMaterials' geometry groups.
-  const bodyMaterials = useMemo(
-    () => [
-      new THREE.MeshStandardMaterial({
-        // skin — warm natural tone for the head/hands.
-        color: "#c98a5e",
-        roughness: 0.55,
-        metalness: 0,
-        transparent: true,
-        opacity: 1,
-      }),
-      new THREE.MeshStandardMaterial({
-        // jacket — charcoal suit fabric: dark, matte, barely-there sheen.
-        color: "#23262e",
-        roughness: 0.42,
-        metalness: 0.06,
-        transparent: true,
-        opacity: 1,
-      }),
-      new THREE.MeshStandardMaterial({
-        // trousers — matching charcoal, very slightly darker than the
-        // jacket so the two pieces still read as distinct garments.
-        color: "#1a1c22",
-        roughness: 0.48,
-        metalness: 0.04,
-        transparent: true,
-        opacity: 1,
-      }),
-      new THREE.MeshStandardMaterial({
-        // dress shoes — polished black leather, with a low glow tying
-        // into the thruster VFX so they read as tech before they ignite.
-        color: "#0c0d10",
-        roughness: 0.22,
-        metalness: 0.35,
-        emissive: "#00d4ff",
-        emissiveIntensity: 0.08,
-        transparent: true,
-        opacity: 1,
-      }),
-    ],
-    []
-  );
-
-  const tieMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: "#7a1f2b",
-        roughness: 0.4,
-        metalness: 0.15,
-        transparent: true,
-        opacity: 1,
-      }),
-    []
-  );
-
-  const shirtMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: "#eef0f2",
-        roughness: 0.55,
-        metalness: 0,
-        transparent: true,
-        opacity: 1,
-      }),
+  const { bodyMaterials, tieMaterial, shirtMaterial } = useMemo(
+    () => createSuitMaterials(),
     []
   );
 
   // Discover bones, region-paint the suit materials, and rescale the
   // whole rig to a real human height — all once, right after clone.
   useEffect(() => {
-    const bones: Bones = {};
-    let skinnedMesh: THREE.SkinnedMesh | null = null;
-    cloned.traverse((obj) => {
-      if ((obj as THREE.Bone).isBone) bones[obj.name] = obj as THREE.Bone;
-      if ((obj as THREE.SkinnedMesh).isSkinnedMesh) {
-        const mesh = obj as THREE.SkinnedMesh;
-        splitBodyMaterials(mesh);
-        mesh.material = bodyMaterials;
-        mesh.castShadow = false;
-        mesh.receiveShadow = false;
-        mesh.frustumCulled = false;
-        skinnedMesh = mesh;
-      }
-    });
-    bonesRef.current = bones;
-
-    // World-space (not local) bind orientations, captured once before
-    // any posing is applied. Posing below composes a desired rotation
-    // in WORLD space on top of these, rather than treating the offset
-    // Euler as being in each bone's own bind-twisted local frame —
-    // this rig's bind rotations are arbitrary per-joint twists, so a
-    // naive local-space offset bends every joint around a different,
-    // unpredictable effective axis. Forcing a matrix-world update
-    // first (rather than waiting for the next render) means these
-    // are correct even before this object has ever been rendered.
-    cloned.updateWorldMatrix(true, true);
-    const worldQuats: Record<string, THREE.Quaternion> = {};
-    const parentWorldQuats: Record<string, THREE.Quaternion> = {};
-    Object.entries(bones).forEach(([name, bone]) => {
-      worldQuats[name] = bone.getWorldQuaternion(new THREE.Quaternion());
-      parentWorldQuats[name] = bone.parent
-        ? bone.parent.getWorldQuaternion(new THREE.Quaternion())
-        : new THREE.Quaternion();
-    });
-    bindWorldQuats.current = worldQuats;
-    bindParentWorldQuats.current = parentWorldQuats;
-
-    if (modelRef.current && skinnedMesh) {
-      // Measured from the mesh's own raw (bind-pose) geometry rather
-      // than THREE.Box3.setFromObject(cloned) — the latter walks the
-      // *world* matrix chain, and by the time this effect runs the
-      // wrapper group (RiderTrail's groupRef) has already been moved
-      // along the flight path by its own first useFrame tick, which
-      // would otherwise get baked into this "measurement" and then
-      // double-counted when it's subtracted out below.
-      const mesh = skinnedMesh as THREE.SkinnedMesh;
-      mesh.geometry.computeBoundingBox();
-      const box = mesh.geometry.boundingBox!;
-      const height = box.max.y - box.min.y || 1;
-      const scale = TARGET_HEIGHT / height;
-      const centerX = (box.min.x + box.max.x) / 2;
-      const centerZ = (box.min.z + box.max.z) / 2;
-
-      modelRef.current.scale.setScalar(scale);
-      modelRef.current.position.set(
-        -centerX * scale,
-        -box.min.y * scale,
-        -centerZ * scale
-      );
+    const rig = setupCharacterRig(cloned, bodyMaterials);
+    bonesRef.current = rig.bones;
+    bindWorldQuats.current = rig.bindWorldQuats;
+    bindParentWorldQuats.current = rig.bindParentWorldQuats;
+    if (modelRef.current) {
+      modelRef.current.scale.setScalar(rig.scale);
+      modelRef.current.position.set(rig.offsetX, rig.offsetY, rig.offsetZ);
     }
   }, [cloned, bodyMaterials]);
 

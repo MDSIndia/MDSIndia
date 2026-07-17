@@ -15,18 +15,49 @@ function prefersReducedMotion() {
   );
 }
 
+// Once the user has sat through the cinematic in this browser tab, any
+// later remount of the homepage (e.g. clicking "Back to Home" from
+// /about-mds, or any other client-side nav back to "/") should land
+// them straight on the page instead of replaying an 11s intro they've
+// already seen. sessionStorage (not localStorage) is deliberate: a
+// genuinely fresh visit — new tab, new session — should still get the
+// full first-load experience.
+const SEEN_KEY = "mds-intro-seen";
+
+function hasSeenIntro() {
+  try {
+    return sessionStorage.getItem(SEEN_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markIntroSeen() {
+  try {
+    sessionStorage.setItem(SEEN_KEY, "1");
+  } catch {
+    // Storage can throw in private-browsing/embedded contexts — the
+    // intro just replays on the next mount instead, harmless.
+  }
+}
+
 /**
  * Drives the cinematic intro's state machine and its side effects
- * (scroll lock, synthesized cinematic audio). Plays on every page
- * load/refresh; skipped entirely when the user has requested reduced
- * motion.
+ * (scroll lock, synthesized cinematic audio). Plays in full on the
+ * first homepage mount of a session; later remounts (nav back to "/")
+ * skip straight to "done". Skipped entirely when the user has
+ * requested reduced motion.
  */
 export function useIntro() {
   const [phase, setPhase] = useState<IntroPhase>("checking");
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
-    setPhase(prefersReducedMotion() ? "done" : "gate");
+    if (prefersReducedMotion() || hasSeenIntro()) {
+      setPhase("done");
+    } else {
+      setPhase("gate");
+    }
   }, []);
 
   useEffect(() => {
@@ -118,7 +149,10 @@ export function useIntro() {
 
   const finishCinematic = useCallback(() => {
     setPhase("transitioning");
-    window.setTimeout(() => setPhase("done"), TRANSITION_MS);
+    window.setTimeout(() => {
+      markIntroSeen();
+      setPhase("done");
+    }, TRANSITION_MS);
   }, []);
 
   return { phase, start, finishCinematic, transitionMs: TRANSITION_MS };

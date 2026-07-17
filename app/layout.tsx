@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { LenisProvider } from "@/components/providers/LenisProvider";
+import { PortalTransitionProvider } from "@/components/PortalTransition/PortalTransitionProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -80,7 +81,9 @@ export default function RootLayout({
         className={`${inter.className} noise`}
         style={{ backgroundColor: "#020208", color: "#ffffff" }}
       >
-        <LenisProvider>{children}</LenisProvider>
+        <PortalTransitionProvider>
+          <LenisProvider>{children}</LenisProvider>
+        </PortalTransitionProvider>
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-DN53L6G5J7"
           strategy="afterInteractive"
