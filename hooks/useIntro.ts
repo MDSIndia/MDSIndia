@@ -15,30 +15,25 @@ function prefersReducedMotion() {
   );
 }
 
-// Once the user has sat through the cinematic in this browser tab, any
-// later remount of the homepage (e.g. clicking "Back to Home" from
-// /about-mds, or any other client-side nav back to "/") should land
-// them straight on the page instead of replaying an 11s intro they've
-// already seen. sessionStorage (not localStorage) is deliberate: a
-// genuinely fresh visit — new tab, new session — should still get the
-// full first-load experience.
-const SEEN_KEY = "mds-intro-seen";
+// Once the user has sat through the cinematic, a later remount of the
+// homepage via client-side routing (e.g. clicking "Back to Home" from
+// /about-mds, which the App Router swaps without a real page load)
+// should land them straight on the page instead of replaying an 11s
+// intro they've already seen in this same JS runtime.
+//
+// This is deliberately an in-memory flag, not sessionStorage: it needs
+// to survive a client-side route change (same JS runtime, module state
+// untouched) but reset on an actual browser reload — sessionStorage
+// survives reloads too, which meant refreshing the page never showed
+// the intro again after the first time, which isn't what's wanted here.
+let hasPlayedThisRuntime = false;
 
 function hasSeenIntro() {
-  try {
-    return sessionStorage.getItem(SEEN_KEY) === "1";
-  } catch {
-    return false;
-  }
+  return hasPlayedThisRuntime;
 }
 
 function markIntroSeen() {
-  try {
-    sessionStorage.setItem(SEEN_KEY, "1");
-  } catch {
-    // Storage can throw in private-browsing/embedded contexts — the
-    // intro just replays on the next mount instead, harmless.
-  }
+  hasPlayedThisRuntime = true;
 }
 
 /**

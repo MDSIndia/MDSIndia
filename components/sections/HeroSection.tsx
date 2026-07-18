@@ -25,6 +25,24 @@ export function HeroSection() {
     else if (videoReady) video.play().catch(() => {});
   }, [reducedMotion, videoReady]);
 
+  // Safety net: `onLoadedData` can be slow or silently miss firing right
+  // after the intro's heavy WebGL/GPU teardown (observed directly — the
+  // video is decoded and playing but the event never lands in time),
+  // which left the fade-in permanently stuck at opacity 0. A video
+  // that's already playing should never stay invisible, so force the
+  // reveal once it's unmistakably ready even if the event never comes.
+  useEffect(() => {
+    if (videoReady) return;
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.readyState >= 2) {
+      setVideoReady(true);
+      return;
+    }
+    const id = window.setTimeout(() => setVideoReady(true), 1200);
+    return () => window.clearTimeout(id);
+  }, [videoReady]);
+
   return (
     <section
       id="hero"
