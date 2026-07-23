@@ -273,10 +273,25 @@ export function IntroStart({
           font-size: clamp(1.15rem, 3vw, 2.1rem);
           line-height: 1.5;
           letter-spacing: 0.01em;
-          color: rgba(255, 255, 255, 0.94);
           text-shadow: 0 0 24px rgba(0, 217, 255, 0.18);
           opacity: 0;
-          animation: introFadeInOnly 0.8s ease-out 0.5s forwards;
+          background-image: linear-gradient(
+            100deg,
+            #6b7280 0%,
+            #6b7280 44%,
+            #ffffff 50%,
+            #6b7280 56%,
+            #6b7280 100%
+          );
+          background-size: 500% 100%;
+          background-position: 100% 0;
+          background-repeat: no-repeat;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          color: transparent;
+          animation: introFadeInOnly 0.8s ease-out 0.5s forwards,
+            introQuoteShine 6s linear 1.4s infinite;
         }
         .intro-gate-caret {
           display: inline-block;
@@ -416,6 +431,14 @@ export function IntroStart({
           50%,
           100% {
             opacity: 0;
+          }
+        }
+        @keyframes introQuoteShine {
+          0% {
+            background-position: 100% 0;
+          }
+          100% {
+            background-position: 0% 0;
           }
         }
         @keyframes introPromptPulse {

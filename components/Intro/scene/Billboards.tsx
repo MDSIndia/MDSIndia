@@ -44,7 +44,7 @@ function buildPlacements(count: number, imageCount: number): AdPlacement[] {
 
     if (tier === "street") {
       // Close to the road, roughly billboard-height — the ones that
-      // flash past quickly as the rider passes them.
+      // flash past quickly as the camera passes them.
       const x = side * (9 + seeded(i, 12) * 4);
       const y = 3 + seeded(i, 13) * 5;
       position = [x, y, z];

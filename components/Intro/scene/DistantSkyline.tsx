@@ -3,7 +3,6 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { windowProgress } from "./timeline";
 
 function seeded(i: number, salt: number) {
   const v = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453;
@@ -101,11 +100,10 @@ export function DistantSkyline({ isMobile }: { isMobile: boolean }) {
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
-    const reveal = windowProgress(t, 0.85, 3.3);
     const mat = lightsRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
-    if (mat) mat.opacity = (0.5 + Math.sin(t * 0.7) * 0.2) * reveal;
+    if (mat) mat.opacity = 0.5 + Math.sin(t * 0.7) * 0.2;
   });
 
   return (

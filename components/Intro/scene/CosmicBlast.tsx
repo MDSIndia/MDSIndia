@@ -12,7 +12,7 @@ function seeded(i: number, salt: number) {
   return v - Math.floor(v);
 }
 
-/** The moment the rider (and camera) are engulfed by the star. */
+/** The moment the camera is engulfed by the star. */
 const BLAST_START = 8.55;
 const PALETTE = ["#ffffff", "#00d4ff", "#7fb2ff", "#0055FF", "#bfe9ff"];
 

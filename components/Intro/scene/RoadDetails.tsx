@@ -3,7 +3,6 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { windowProgress } from "./timeline";
 
 /** Makes the highway itself feel engineered rather than a bare plane:
  * low glass-like energy guard rails running both edges, plus small
@@ -78,22 +77,21 @@ export function RoadDetails({ isMobile }: { isMobile: boolean }) {
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
-    const reveal = windowProgress(t, 1.9, 3.5);
 
     const glowMat = railGlowRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
-    if (glowMat) glowMat.opacity = (0.55 + Math.sin(t * 1.4) * 0.2) * reveal;
+    if (glowMat) glowMat.opacity = 0.55 + Math.sin(t * 1.4) * 0.2;
 
     const railMat = railRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
-    if (railMat) railMat.opacity = 0.3 * reveal;
+    if (railMat) railMat.opacity = 0.3;
 
     const chevronMat = chevronRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
-    if (chevronMat) chevronMat.opacity = (0.4 + Math.sin(t * 3) * 0.2) * reveal;
+    if (chevronMat) chevronMat.opacity = 0.4 + Math.sin(t * 3) * 0.2;
   });
 
   return (

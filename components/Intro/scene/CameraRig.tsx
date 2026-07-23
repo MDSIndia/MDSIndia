@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { INTRO_DURATION, clamp01, windowProgress } from "./timeline";
@@ -53,6 +53,37 @@ export function CameraRig({ isMobile }: { isMobile: boolean }) {
   const smoothedLook = useRef<THREE.Vector3 | null>(null);
   const smoothedBank = useRef(0);
 
+  // A real backdrop instead of flat black: a soft vertical gradient with
+  // a band of horizon glow (city light pollution reflecting off low
+  // haze) — gives the skyline something to actually silhouette against,
+  // and reads as atmosphere rather than empty void the instant the
+  // cinematic starts, no per-frame cost beyond one small texture.
+  const skyTexture = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 8;
+    canvas.height = 256;
+    const ctx = canvas.getContext("2d")!;
+    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    grad.addColorStop(0, "#01020a");
+    grad.addColorStop(0.42, "#050a1a");
+    grad.addColorStop(0.58, "#0d1c38");
+    grad.addColorStop(0.66, "#122544");
+    grad.addColorStop(0.76, "#081428");
+    grad.addColorStop(1, "#020208");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+  }, []);
+
+  useEffect(() => {
+    scene.background = skyTexture;
+    return () => {
+      scene.background = null;
+    };
+  }, [scene, skyTexture]);
+
   useFrame((state, delta) => {
     const t = state.clock.getElapsedTime();
     const u = flightU(t);
@@ -60,6 +91,19 @@ export function CameraRig({ isMobile }: { isMobile: boolean }) {
 
     targetPos.copy(curve.getPointAt(u));
     const lookPos = curve.getPointAt(uLook);
+
+    // While up in the high aerial-establishing stretch, the path's own
+    // look-ahead point sits at nearly the same altitude as the rig
+    // itself (the descent is gradual), so the gaze stays close to
+    // level and the skyline — which sits down at street level — falls
+    // entirely below the frustum until the rig itself finishes
+    // descending. Tilting the target down in proportion to how high
+    // above street level the rig currently is fixes that: it reads as
+    // the drone looking down at the city it's descending toward,
+    // fading to zero (no bias) once the rig reaches its low cruising
+    // altitude, so the established low chase pass is untouched.
+    const altitudeAboveStreet = Math.max(0, targetPos.y - 2);
+    lookPos.y -= Math.min(altitudeAboveStreet, 14) * 0.45;
 
     // Gentle decelerating coast past the end of the path, so the
     // camera is still softly moving forward through the whole
@@ -130,19 +174,27 @@ export function CameraRig({ isMobile }: { isMobile: boolean }) {
     camera.lookAt(smoothedLook.current);
 
     if (camera instanceof THREE.PerspectiveCamera) {
+      // A wider establishing lens for the opening beat, easing back to
+      // baseFov exactly as speedPush takes over (both hinge on the same
+      // t=2.6 mark) — a wide-angle establishing shot is the standard
+      // cinematic move for a vista like this, and it also widens the
+      // horizontal frustum enough to reliably catch the flanking
+      // skyline at the short range the camera starts at, rather than
+      // leaving that to how many buildings happen to fall near center.
+      const establishWide = (1 - windowProgress(t, 0, 2.6)) * (isMobile ? 8 : 16);
       const speedPush = windowProgress(t, 2.6, 6.6) * 20;
       const finalPush = windowProgress(t, 7.1, 8.5) * 13;
       const engulfPunch = windowProgress(t, 8.5, INTRO_DURATION) * 14;
-      camera.fov = baseFov + speedPush + finalPush - engulfPunch;
+      camera.fov = baseFov + establishWide + speedPush + finalPush - engulfPunch;
       camera.updateProjectionMatrix();
     }
 
-    const establishFog = 1 - windowProgress(t, 0, 2.4);
+    const establishFog = 1 - windowProgress(t, 0, 0.5);
     const portalApproach = windowProgress(t, 7.2, 8.6);
     const engulf = windowProgress(t, 8.5, INTRO_DURATION);
 
     fog.density =
-      0.16 * establishFog + 0.012 + portalApproach * 0.05 + engulf * 0.22;
+      0.02 * establishFog + 0.012 + portalApproach * 0.05 + engulf * 0.22;
     fog.color.copy(baseColor).lerp(portalColor, portalApproach).lerp(engulfColor, engulf);
     scene.fog = fog;
   });

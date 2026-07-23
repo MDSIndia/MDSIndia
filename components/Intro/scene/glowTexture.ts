@@ -2,6 +2,12 @@ import * as THREE from "three";
 
 let cached: THREE.Texture | null = null;
 let cachedRay: THREE.Texture | null = null;
+let cachedWindowGrid: THREE.Texture | null = null;
+
+function seeded(i: number, salt: number) {
+  const v = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453;
+  return v - Math.floor(v);
+}
 
 /** A soft white radial-gradient sprite (opaque center fading to fully
  * transparent edge), shared and tinted per-use via material `color` —
@@ -66,6 +72,84 @@ export function getRayTexture(): THREE.Texture {
 
   cachedRay = new THREE.CanvasTexture(canvas);
   return cachedRay;
+}
+
+/** A tileable grid of lit/unlit window panes on a facade base, applied
+ * as a `map` on the structural building materials — without this, a
+ * lit box's whole face is one flat color regardless of shading, which
+ * reads as an abstract block rather than a building. Beyond the raw
+ * window grid, this also lays down the cues that make a facade read
+ * as *constructed* rather than a printed pattern: a darker mullion
+ * frame inset around each pane, alternating pilaster bays (the
+ * structural columns real curtain-wall panels hang off), and a
+ * spandrel band every few floors where the grid breaks for a
+ * mechanical/structural level instead of more glass. Wrapped with
+ * RepeatWrapping so cloning the texture and setting a different
+ * `.repeat` per consumer (box towers vs. round towers vs. podiums)
+ * reuses the same canvas without redrawing it. Multiplies against each
+ * building's own per-instance tint/albedo, so windows still end up
+ * colored per-building rather than one fixed hue. */
+export function getWindowGridTexture(): THREE.Texture {
+  if (cachedWindowGrid) return cachedWindowGrid;
+  const cols = 4;
+  const rows = 10;
+  const cell = 40;
+  const canvas = document.createElement("canvas");
+  canvas.width = cols * cell;
+  canvas.height = rows * cell;
+  const ctx = canvas.getContext("2d")!;
+
+  ctx.fillStyle = "#4d4d57";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Alternating pilaster bays — a slightly different tone every other
+  // column, reading as the structural columns a facade hangs off
+  // rather than one continuous, materially-uniform sheet.
+  for (let c = 0; c < cols; c += 2) {
+    ctx.fillStyle = "rgba(0,0,0,0.1)";
+    ctx.fillRect(c * cell, 0, cell, canvas.height);
+  }
+
+  // A spandrel/mechanical band every fourth row — real towers break
+  // their glass into distinct floors, not one uninterrupted lattice.
+  for (let r = 0; r < rows; r++) {
+    if (r % 4 !== 3) continue;
+    ctx.fillStyle = "rgba(0,0,0,0.28)";
+    ctx.fillRect(0, r * cell, canvas.width, cell * 0.42);
+  }
+
+  for (let r = 0; r < rows; r++) {
+    if (r % 4 === 3) continue; // spandrel band — no window on this floor
+    for (let c = 0; c < cols; c++) {
+      const idx = r * cols + c;
+      const x = c * cell;
+      const y = r * cell;
+      const pad = cell * 0.2;
+      const w = cell - pad * 2;
+      const h = cell - pad * 2;
+
+      // Mullion frame: a darker inset border so each pane reads as
+      // glass set into a frame rather than a flat rectangle floating
+      // on the facade.
+      ctx.fillStyle = "#242429";
+      ctx.fillRect(x + pad - 2, y + pad - 2, w + 4, h + 4);
+
+      const lit = seeded(idx, 41) > 0.3;
+      if (lit) {
+        const warm = seeded(idx, 42) > 0.5;
+        ctx.fillStyle = warm ? "#f4e6c4" : "#dcefff";
+      } else {
+        ctx.fillStyle = "#17171c";
+      }
+      ctx.fillRect(x + pad, y + pad, w, h);
+    }
+  }
+
+  cachedWindowGrid = new THREE.CanvasTexture(canvas);
+  cachedWindowGrid.wrapS = THREE.RepeatWrapping;
+  cachedWindowGrid.wrapT = THREE.RepeatWrapping;
+  cachedWindowGrid.colorSpace = THREE.SRGBColorSpace;
+  return cachedWindowGrid;
 }
 
 /** A small solid circular sprite (hard-edged), used as the alpha mask

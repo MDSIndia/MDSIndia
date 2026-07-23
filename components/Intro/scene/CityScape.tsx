@@ -4,6 +4,8 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { INTRO_DURATION, clamp01, windowProgress } from "./timeline";
+import { getWindowGridTexture } from "./glowTexture";
+import { STAR_POSITION } from "./path";
 
 function seeded(i: number, salt: number) {
   const v = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453;
@@ -32,8 +34,31 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
   const roofGlowRef = useRef<THREE.InstancedMesh>(null);
   const landingPadsRef = useRef<THREE.InstancedMesh>(null);
   const gardensRef = useRef<THREE.InstancedMesh>(null);
+  const signatureBandRef = useRef<THREE.InstancedMesh>(null);
   const antennaRef = useRef<THREE.InstancedMesh>(null);
   const antennaLightRef = useRef<THREE.InstancedMesh>(null);
+  const parapetRef = useRef<THREE.InstancedMesh>(null);
+
+  // One shared canvas gets cloned per structural mesh so each can tile
+  // the window grid at its own density (a squat podium needs far fewer
+  // repeats than a tower) without redrawing the pattern three times.
+  // The instance's own vertexColor-less tint (bodyColor, set via
+  // setColorAt) multiplies against this in the shader, so the grid
+  // still reads as a distinct, colored building rather than one fixed
+  // texture pasted across the whole skyline.
+  const windowMaps = useMemo(() => {
+    const base = getWindowGridTexture();
+    const tower = base.clone();
+    tower.repeat.set(3, 9);
+    tower.needsUpdate = true;
+    const round = base.clone();
+    round.repeat.set(5, 9);
+    round.needsUpdate = true;
+    const podium = base.clone();
+    podium.repeat.set(4, 2.5);
+    podium.needsUpdate = true;
+    return { tower, round, podium };
+  }, []);
 
   const data = useMemo(() => {
     const dummy = new THREE.Object3D();
@@ -58,6 +83,9 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
     const antennaMatrices: THREE.Matrix4[] = [];
     const antennaLightMatrices: THREE.Matrix4[] = [];
     const antennaLightColors: THREE.Color[] = [];
+    const parapetMatrices: THREE.Matrix4[] = [];
+    const parapetColors: THREE.Color[] = [];
+    const signatureBandMatrices: THREE.Matrix4[] = [];
 
     for (let i = 0; i < count; i++) {
       const side = i % 2 === 0 ? -1 : 1;
@@ -66,8 +94,28 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       // so this offset only needs enough clearance to avoid a tower
       // clipping into frame as a flat black wall — kept close enough
       // to still read as a flanking skyline on narrow mobile FOVs.
-      const x = side * (11 + seeded(i, 1) * 24);
       const z = 55 - seeded(i, 2) * 165;
+      // Buildings this close to the camera's own starting point sit at
+      // a very short forward distance from frame 0 — at that range even
+      // the normal 11-35 flanking offset falls outside the horizontal
+      // FOV entirely (a nearby building has to be much closer to center
+      // to still land in frame than a distant one does), which is why
+      // the skyline used to only "arrive" several seconds in once the
+      // camera had flown far enough for its own offset to look small
+      // by comparison. Pulling the near end of the range inward tapers
+      // buildings closer to the road the nearer they are to the start,
+      // so a chunk of skyline is reliably inside the frustum from the
+      // very first frame instead of leaving it to chance.
+      const startBias = clamp01((z - 15) / 40);
+      const x = side * (11 - startBias * 6 + seeded(i, 1) * (24 - startBias * 8));
+      // How close this building sits to the star waiting at the end of
+      // the highway — buildings in that final stretch are the ones the
+      // star's own light actually washes over as the camera arrives, so
+      // they're the ones worth dressing up with extra detail (more
+      // antennas, landing pads, rooftop gardens, a denser secondary
+      // window band); buildings earlier in the flight fall back to the
+      // base probabilities untouched.
+      const starProximity = clamp01(1 - Math.abs(z - STAR_POSITION[2]) / 55);
       // A wide height range, biased toward variety: squat mid-rises
       // next to towering corporate spires and mega-arcologies.
       const height = 4 + seeded(i, 3) * 50;
@@ -89,13 +137,27 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       // Wider variance than a single flat dark tone, plus a subtle
       // per-building colour temperature (some coolER blue-grey glass,
       // some warmER concrete-grey) — real facades aren't one material.
-      const dark = 0.02 + seeded(i, 6) * 0.045;
+      // This is a real reflectance value now that the body is lit (see
+      // the rig lights in IntroCinematic) rather than a raw output
+      // color — a genuinely near-zero albedo like the old 0.02-0.065
+      // stays black no matter how much light hits it, which is what
+      // made every face read as the same flat cutout regardless of
+      // which way it faced. A realistic dark-facade reflectance leaves
+      // the directional light room to actually carve out a lit side vs.
+      // a shadow side.
+      const dark = 0.1 + seeded(i, 6) * 0.2;
       const warmth = seeded(i, 64);
       const bodyColor = new THREE.Color(
         dark + warmth * 0.012,
         dark + warmth * 0.008,
         dark + (1 - warmth) * 0.02
       );
+      // Nudged toward the same neon accent as this building's own
+      // windows — reads as ambient city-light bouncing off the facade,
+      // so even a distant silhouette (before the window strips are
+      // legible) still carries a futuristic color cast instead of
+      // sitting as a neutral grey cutout.
+      bodyColor.lerp(new THREE.Color(accent), 0.16);
 
       if (isRound) {
         dummy.position.set(x, height / 2, z);
@@ -181,7 +243,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         dummy.rotation.set(0, 0, 0);
         dummy.updateMatrix();
         spireMatrices.push(dummy.matrix.clone());
-        spireColors.push(new THREE.Color(0.08, 0.09, 0.12));
+        spireColors.push(new THREE.Color(0.22, 0.24, 0.3));
       } else {
         spireMatrices.push(ZERO_SCALE.clone());
         spireColors.push(ZERO_COLOR.clone());
@@ -189,16 +251,66 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
 
       // Rooftop lighting cap — every building gets a soft glow at its
       // crown so the skyline reads as lit from above, not just the side.
+      // Buildings near the finale star get a bigger, hotter (whiter)
+      // version — the star's own approaching light is the brightest
+      // thing in the whole shot, so the rooftops nearest it should
+      // read as catching some of that intensity rather than glowing
+      // exactly like every other building's crown.
       dummy.position.set(x, height + 0.05, z);
-      dummy.scale.set(width * 0.9, 0.06, width * 0.9);
+      dummy.scale.set(
+        width * (0.9 + starProximity * 0.5),
+        0.06,
+        width * (0.9 + starProximity * 0.5)
+      );
       dummy.rotation.set(0, 0, 0);
       dummy.updateMatrix();
       roofGlowMatrices.push(dummy.matrix.clone());
-      roofGlowColors.push(new THREE.Color(accent));
+      roofGlowColors.push(
+        new THREE.Color(accent).lerp(new THREE.Color("#ffffff"), starProximity * 0.55)
+      );
+
+      // Parapet ledge — a slight overhang where a box tower's walls
+      // meet the roof, the same real-building cue as a cornice: the
+      // wall doesn't just stop, it caps. Round towers already get a
+      // clean cylindrical roofline (plus a landing-pad ring on some),
+      // so this is reserved for the box archetype where a hard flat
+      // top edge otherwise reads as an unfinished extrusion.
+      if (!isRound) {
+        dummy.position.set(x, height - 0.14, z);
+        dummy.scale.set(width * 1.1, 0.3, width * 1.1);
+        dummy.rotation.set(0, 0, 0);
+        dummy.updateMatrix();
+        parapetMatrices.push(dummy.matrix.clone());
+        parapetColors.push(new THREE.Color(0.3, 0.31, 0.36));
+      } else {
+        parapetMatrices.push(ZERO_SCALE.clone());
+        parapetColors.push(ZERO_COLOR.clone());
+      }
+
+      // Signature glow band — a bright accent ring wrapped partway up
+      // the facade, appearing only on box towers close to the finale
+      // star. This doesn't exist anywhere else in the skyline, so the
+      // buildings that get one read as this stretch's own "hero"
+      // architecture rather than more of the same towers repeating.
+      const hasSignatureBand =
+        !isRound && starProximity > 0.3 && seeded(i, 67) > 0.4;
+      if (hasSignatureBand) {
+        const bandY = height * (0.55 + seeded(i, 68) * 0.25);
+        dummy.position.set(x, bandY, z);
+        dummy.scale.set(width * 1.03, 0.16, width * 1.03);
+        dummy.rotation.set(0, 0, 0);
+        dummy.updateMatrix();
+        signatureBandMatrices.push(dummy.matrix.clone());
+      } else {
+        signatureBandMatrices.push(ZERO_SCALE.clone());
+      }
 
       // About half of round towers (which read well as observation
-      // decks) get a glowing landing-pad ring.
-      const hasLandingPad = isRound && seeded(i, 59) > 0.45;
+      // decks) get a glowing landing-pad ring — more likely still the
+      // closer the tower sits to the finale star, so that stretch of
+      // skyline reads as more built-up right where the camera lingers
+      // longest during the approach.
+      const hasLandingPad = isRound && seeded(i, 59) > 0.45 - starProximity * 0.35;
       if (hasLandingPad) {
         dummy.position.set(x, height + 0.08, z);
         dummy.scale.set(width * 0.62, 0.05, width * 0.62);
@@ -211,8 +323,9 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       }
 
       // A small fraction of podium roofs gets a rooftop garden accent
-      // for color variety.
-      const hasGarden = hasPodium && seeded(i, 60) > 0.85;
+      // for color variety — again weighted toward the buildings
+      // nearest the star.
+      const hasGarden = hasPodium && seeded(i, 60) > 0.85 - starProximity * 0.4;
       if (hasGarden) {
         const podiumHeight = 2.5 + seeded(i, 23) * 3;
         const podiumWidth = width * (1.5 + seeded(i, 24) * 0.6);
@@ -227,8 +340,9 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       }
 
       // A random ~30% of buildings gets a communication antenna with a
-      // blinking tip.
-      const hasAntenna = seeded(i, 58) > 0.68;
+      // blinking tip — far more of them near the star, where the extra
+      // silhouette detail actually gets seen up close.
+      const hasAntenna = seeded(i, 58) > 0.68 - starProximity * 0.45;
       if (hasAntenna) {
         const antennaHeight = 2.5 + seeded(i, 22) * 4;
         dummy.position.set(x, height + antennaHeight / 2, z);
@@ -273,6 +387,9 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       antennaMatrices,
       antennaLightMatrices,
       antennaLightColors,
+      parapetMatrices,
+      parapetColors,
+      signatureBandMatrices,
     };
   }, [count]);
 
@@ -317,6 +434,14 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
     [data]
   );
   useLayoutEffect(
+    () => applyInstances(parapetRef.current, data.parapetMatrices, data.parapetColors),
+    [data]
+  );
+  useLayoutEffect(
+    () => applyInstances(signatureBandRef.current, data.signatureBandMatrices),
+    [data]
+  );
+  useLayoutEffect(
     () => applyInstances(landingPadsRef.current, data.landingPadMatrices, data.landingPadColors),
     [data]
   );
@@ -347,10 +472,9 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
-    const reveal = windowProgress(t, 0.7, 2.8);
-    // The star's light spills onto nearby facades as the rider closes in.
+    // The star's light spills onto nearby facades as the camera closes in.
     const portalBoost = windowProgress(t, 7.2, INTRO_DURATION) * 0.5;
-    const windowOpacity = 0.15 + reveal * 0.75 + portalBoost;
+    const windowOpacity = 0.9 + portalBoost;
 
     [windowsARef, windowsBRef].forEach((ref) => {
       const mat = ref.current?.material as THREE.MeshBasicMaterial | undefined;
@@ -360,19 +484,24 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
     const roofMat = roofGlowRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
-    if (roofMat) roofMat.opacity = (0.35 + Math.sin(t * 1.1) * 0.15) * reveal;
+    if (roofMat) roofMat.opacity = 0.35 + Math.sin(t * 1.1) * 0.15;
 
     const padMat = landingPadsRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
-    if (padMat) padMat.opacity = (0.55 + Math.sin(t * 1.6) * 0.25) * reveal;
+    if (padMat) padMat.opacity = 0.55 + Math.sin(t * 1.6) * 0.25;
 
     const antennaMat = antennaLightRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
     if (antennaMat) antennaMat.opacity = 0.5 + Math.sin(t * 5.5) * 0.5;
 
-    if (reveal > 0.5) {
+    const bandMat = signatureBandRef.current?.material as
+      | THREE.MeshBasicMaterial
+      | undefined;
+    if (bandMat) bandMat.opacity = (0.6 + Math.sin(t * 2.4) * 0.3) * (0.7 + portalBoost);
+
+    {
       const meshA = windowsARef.current;
       const meshB = windowsBRef.current;
       if (meshA && meshB) {
@@ -393,24 +522,47 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
 
   return (
     <group>
+      {/* Structural building volumes use a lit material rather than the
+          flat-color unlit basic material everything else in this scene
+          uses — with zero shading, every face of a box reads as one
+          uniform flat color and the whole skyline flattens into cutout
+          silhouettes instead of dimensional buildings. Lambert shading
+          against the rig lights below gives each face its own
+          brightness based on which way it's turned, which is what
+          actually reads as a solid 3D mass.
+          Deliberately no `vertexColors` prop here even though these are
+          per-instance colored via setColorAt: instanceColor is read
+          automatically whenever it's set, independent of that flag —
+          but turning the flag on anyway, with no geometry-level `color`
+          attribute on these primitives, zeroes the lit result out
+          entirely under this material (verified empirically; the old
+          unlit basic material tolerated the same combination fine,
+          which is why this went unnoticed until the switch to Lambert). */}
       <instancedMesh ref={buildingsRef} args={[undefined, undefined, count]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshBasicMaterial vertexColors fog />
+        <meshLambertMaterial map={windowMaps.tower} fog />
+      </instancedMesh>
+
+      {/* Parapet ledge — plain, unlit-facade-tone box; no window map,
+          this is trim rather than more facade. */}
+      <instancedMesh ref={parapetRef} args={[undefined, undefined, count]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshLambertMaterial fog />
       </instancedMesh>
 
       <instancedMesh ref={roundTowersRef} args={[undefined, undefined, count]}>
         <cylinderGeometry args={[0.72, 1, 1, 10]} />
-        <meshBasicMaterial vertexColors fog />
+        <meshLambertMaterial map={windowMaps.round} fog />
       </instancedMesh>
 
       <instancedMesh ref={podiumsRef} args={[undefined, undefined, count]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshBasicMaterial vertexColors fog />
+        <meshLambertMaterial map={windowMaps.podium} fog />
       </instancedMesh>
 
       <instancedMesh ref={spiresRef} args={[undefined, undefined, count]}>
         <coneGeometry args={[0.7, 1, 4]} />
-        <meshBasicMaterial vertexColors fog />
+        <meshLambertMaterial fog />
       </instancedMesh>
 
       <instancedMesh ref={windowsARef} args={[undefined, undefined, count]}>
@@ -443,6 +595,23 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           vertexColors
           transparent
           opacity={0.4}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          fog={false}
+        />
+      </instancedMesh>
+
+      {/* Signature glow band — only ever visible on the handful of
+          towers nearest the finale star (everything else gets
+          ZERO_SCALE), so a single fixed bright accent is enough; no
+          instanceColor here after the vertexColors/instanceColor
+          combination proved unreliable elsewhere in this scene. */}
+      <instancedMesh ref={signatureBandRef} args={[undefined, undefined, count]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshBasicMaterial
+          color="#cdeeff"
+          transparent
+          opacity={0.6}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           fog={false}

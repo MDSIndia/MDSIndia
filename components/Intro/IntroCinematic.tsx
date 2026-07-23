@@ -9,7 +9,6 @@ import { RoadDetails } from "./scene/RoadDetails";
 import { CityScape } from "./scene/CityScape";
 import { DistantSkyline } from "./scene/DistantSkyline";
 import { ParticleField } from "./scene/ParticleField";
-import { RiderTrail } from "./scene/RiderTrail";
 import { Billboards } from "./scene/Billboards";
 import { SkyBridges } from "./scene/SkyBridges";
 import { StreetLights } from "./scene/StreetLights";
@@ -179,6 +178,18 @@ export function IntroCinematic({
           >
             <Suspense fallback={null}>
               <ClockGate active={active} />
+              {/* The only lights in the scene — everything else here is
+                  deliberately unlit/additive neon, but the structural
+                  building volumes (see CityScape) need an actual light
+                  to shade, or every face renders as one flat color and
+                  the skyline reads as cardboard cutouts instead of
+                  solid 3D masses. A cheap sky/ground ambient plus one
+                  angled "moon" light is enough to differentiate each
+                  building's faces — no shadows, this is stylized rather
+                  than physically lit and shadow maps would be wasted
+                  cost on hundreds of fast-moving instances. */}
+              <hemisphereLight args={["#3f5a8c", "#02030a", 1.8]} />
+              <directionalLight position={[40, 70, 24]} intensity={3} color="#a8ccff" />
               <CameraRig isMobile={isMobile} />
               <HighwayRoad />
               <RoadDetails isMobile={isMobile} />
@@ -188,7 +199,6 @@ export function IntroCinematic({
               <StreetLights isMobile={isMobile} />
               <HoverTraffic isMobile={isMobile} />
               <ParticleField isMobile={isMobile} />
-              <RiderTrail />
               <Star />
               <CosmicBlast isMobile={isMobile} />
               {/* Textured elements get their own boundary so a slow image
@@ -203,7 +213,7 @@ export function IntroCinematic({
       )}
 
       {/* Soft vignette — darkens the frame edges so the eye settles on
-          the road/rider instead of the flat corners of the viewport. */}
+          the road ahead instead of the flat corners of the viewport. */}
       <div
         aria-hidden
         style={{

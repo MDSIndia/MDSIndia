@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { Compass, ArrowUpRight, ChevronDown } from "lucide-react";
+import { useMobile } from "@/hooks/useMobile";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -14,6 +15,7 @@ export function HeroSection() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
   const reducedMotion = useReducedMotion();
+  const isMobile = useMobile();
 
   // Respect reduced-motion for the video itself too, not just the CSS
   // animations below — pause on the first frame rather than looping a
@@ -48,6 +50,23 @@ export function HeroSection() {
       id="hero"
       className="relative w-full min-h-screen flex items-center overflow-hidden bg-[#020208]"
     >
+      {/* Hidden SVG sharpen filter — the source footage is inherently
+          soft even at native resolution (verified pixel-for-pixel, not
+          a CSS/scaling artifact), so a light unsharp-mask convolution
+          is layered on top to add back some perceived edge contrast.
+          Skipped on mobile: feConvolveMatrix is software-rendered and
+          re-runs every frame of a playing video, which is too costly
+          for weaker GPUs/CPUs there. */}
+      <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden>
+        <filter id="heroSharpen">
+          <feConvolveMatrix
+            order="3"
+            kernelMatrix="0 -0.6 0 -0.6 3.4 -0.6 0 -0.6 0"
+            preserveAlpha="true"
+          />
+        </filter>
+      </svg>
+
       {/* Fullscreen video background — fades in once it actually has a
           frame to show (avoids a flash of black before it buffers),
           and holds a very slow Ken Burns drift for the rest of its
@@ -61,6 +80,7 @@ export function HeroSection() {
         preload="auto"
         onLoadedData={() => setVideoReady(true)}
         className="absolute inset-0 w-full h-full object-cover"
+        style={{ filter: isMobile ? undefined : "url(#heroSharpen)" }}
         initial={{ opacity: 0 }}
         animate={{
           opacity: videoReady ? 1 : 0,

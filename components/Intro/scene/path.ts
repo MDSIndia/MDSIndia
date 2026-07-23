@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { INTRO_DURATION, clamp01, easeInCubic } from "./timeline";
 
 /**
- * Control points for the cinematic camera/rider flight path:
+ * Control points for the cinematic camera flight path:
  * high aerial establishing shot -> descent into the city -> alignment
  * with the highway -> low chase -> an extended cruise through more of
  * the skyline -> a final straight converging back to center, toward
