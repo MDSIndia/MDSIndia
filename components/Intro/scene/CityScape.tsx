@@ -147,7 +147,12 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       // which way it faced. A realistic dark-facade reflectance leaves
       // the directional light room to actually carve out a lit side vs.
       // a shadow side.
-      const dark = 0.1 + seeded(i, 6) * 0.2;
+      // Brighter base reflectance on mobile — a scene lit for a
+      // desktop monitor reads noticeably dimmer on a smaller,
+      // typically outdoor/handheld screen, and mobile also lost the
+      // Phong specular sheen (see the material choice below) that
+      // desktop uses to add a bit of extra highlight brightness.
+      const dark = (0.1 + seeded(i, 6) * 0.2) * (isMobile ? 1.45 : 1);
       const warmth = seeded(i, 64);
       const bodyColor = new THREE.Color(
         dark + warmth * 0.012,
@@ -406,7 +411,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       signatureBandMatrices,
       contactShadowMatrices,
     };
-  }, [count]);
+  }, [count, isMobile]);
 
   const applyInstances = (
     mesh: THREE.InstancedMesh | null,
@@ -493,7 +498,11 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
     const t = state.clock.getElapsedTime();
     // The star's light spills onto nearby facades as the camera closes in.
     const portalBoost = windowProgress(t, 7.2, INTRO_DURATION) * 0.5;
-    const windowOpacity = 0.9 + portalBoost;
+    // Extra flat boost on mobile so the windows/roof/pad glow read
+    // brighter on a smaller screen, same reasoning as the body albedo
+    // and rig light intensity above.
+    const mobileBoost = isMobile ? 0.14 : 0;
+    const windowOpacity = Math.min(1, 0.9 + portalBoost + mobileBoost);
 
     [windowsARef, windowsBRef].forEach((ref) => {
       const mat = ref.current?.material as THREE.MeshBasicMaterial | undefined;
@@ -503,22 +512,26 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
     const roofMat = roofGlowRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
-    if (roofMat) roofMat.opacity = 0.35 + Math.sin(t * 1.1) * 0.15;
+    if (roofMat) roofMat.opacity = Math.min(1, 0.35 + Math.sin(t * 1.1) * 0.15 + mobileBoost);
 
     const padMat = landingPadsRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
-    if (padMat) padMat.opacity = 0.55 + Math.sin(t * 1.6) * 0.25;
+    if (padMat) padMat.opacity = Math.min(1, 0.55 + Math.sin(t * 1.6) * 0.25 + mobileBoost);
 
     const antennaMat = antennaLightRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
-    if (antennaMat) antennaMat.opacity = 0.5 + Math.sin(t * 5.5) * 0.5;
+    if (antennaMat) antennaMat.opacity = Math.min(1, 0.5 + Math.sin(t * 5.5) * 0.5 + mobileBoost);
 
     const bandMat = signatureBandRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
-    if (bandMat) bandMat.opacity = (0.6 + Math.sin(t * 2.4) * 0.3) * (0.7 + portalBoost);
+    if (bandMat)
+      bandMat.opacity = Math.min(
+        1,
+        (0.6 + Math.sin(t * 2.4) * 0.3) * (0.7 + portalBoost) + mobileBoost
+      );
 
     {
       const meshA = windowsARef.current;

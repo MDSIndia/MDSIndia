@@ -9,6 +9,13 @@ import { INTRO_DURATION, clamp01, easeInCubic } from "./timeline";
  * the skyline -> a final straight converging back to center, toward
  * the star waiting at the end of the road.
  *
+ * X stays pinned at 0 the whole way — no lateral weaving — so the rig
+ * travels in a single straight line down the center of the road
+ * (combined with CameraRig's fixed up-vector and lack of shake, this
+ * is what makes the whole flight read as stable rather than a drone
+ * drifting side to side). Only y (altitude) and z (distance travelled)
+ * change between points.
+ *
  * The points extend the journey (previously ending at z=-62) further
  * through the same procedurally-generated city — CityScape/RoadDetails/
  * DistantSkyline/HighwayRoad already cover this whole range, so no
@@ -19,12 +26,12 @@ export const FLIGHT_PATH_POINTS: [number, number, number][] = [
   [0, 2.1, 28],
   [0, 1.9, 12],
   [0, 1.7, -2],
-  [0.4, 1.5, -18],
-  [1.6, 1.6, -34],
-  [2.1, 1.7, -50],
-  [1.7, 1.8, -68],
-  [0.8, 2.0, -86],
-  [0.3, 2.3, -102],
+  [0, 1.5, -18],
+  [0, 1.6, -34],
+  [0, 1.7, -50],
+  [0, 1.8, -68],
+  [0, 2.0, -86],
+  [0, 2.3, -102],
   [0, 2.6, -116],
 ];
 

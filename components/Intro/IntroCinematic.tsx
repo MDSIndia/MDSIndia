@@ -192,8 +192,17 @@ export function IntroCinematic({
                   building's faces — no shadows, this is stylized rather
                   than physically lit and shadow maps would be wasted
                   cost on hundreds of fast-moving instances. */}
-              <hemisphereLight args={["#3f5a8c", "#02030a", 1.8]} />
-              <directionalLight position={[40, 70, 24]} intensity={3} color="#a8ccff" />
+              {/* A bit brighter on mobile specifically — smaller screens
+                  at typical outdoor/handheld brightness read a scene
+                  tuned for a desktop monitor as noticeably dimmer, so
+                  mobile gets its own boosted intensity rather than
+                  sharing the desktop tuning as-is. */}
+              <hemisphereLight args={["#3f5a8c", "#02030a", isMobile ? 2.6 : 1.8]} />
+              <directionalLight
+                position={[40, 70, 24]}
+                intensity={isMobile ? 4.4 : 3}
+                color="#a8ccff"
+              />
               <CameraRig isMobile={isMobile} />
               <Ground />
               <HighwayRoad />
