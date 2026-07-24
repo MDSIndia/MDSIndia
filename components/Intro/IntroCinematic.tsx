@@ -204,7 +204,7 @@ export function IntroCinematic({
               <StreetLights isMobile={isMobile} />
               <HoverTraffic isMobile={isMobile} />
               <ParticleField isMobile={isMobile} />
-              <Star />
+              <Star isMobile={isMobile} />
               <CosmicBlast isMobile={isMobile} />
               {/* Textured elements get their own boundary so a slow image
                   load never blanks the rest of the (already-running) scene. */}

@@ -10,7 +10,7 @@ const NM = "'Neue Machina', 'Inter', sans-serif";
 const MONO = "'JetBrains Mono', ui-monospace, 'Fira Code', Menlo, monospace";
 
 const QUOTE =
-  "Saying is easy. Doing is harder. But we don't stop at doing—we change the status quo.";
+  "Saying is easy. Doing is harder. But we don't stop at doing, we change the status quo.";
 const TYPE_MS = 26;
 const TYPE_START_DELAY_MS = 600;
 /** How long the gate takes to fade out locally before onStart() fires —
@@ -145,13 +145,6 @@ export function IntroStart({
 
       {!isMobile && <div ref={glowRef} className="intro-gate-cursor-glow" aria-hidden />}
 
-      <div className="intro-gate-hud" aria-hidden>
-        <span className="intro-gate-hud-corner" style={{ top: 24, left: 24, borderWidth: "1px 0 0 1px" }} />
-        <span className="intro-gate-hud-corner" style={{ top: 24, right: 24, borderWidth: "1px 1px 0 0" }} />
-        <span className="intro-gate-hud-corner" style={{ bottom: 24, left: 24, borderWidth: "0 0 1px 1px" }} />
-        <span className="intro-gate-hud-corner" style={{ bottom: 24, right: 24, borderWidth: "0 1px 1px 0" }} />
-      </div>
-
       <div className="intro-gate-content">
         <div className="intro-gate-logo-wrap">
           <Image
@@ -166,7 +159,7 @@ export function IntroStart({
 
         <p className="intro-gate-quote">
           &ldquo;{typed}
-          <span className="intro-gate-caret" />
+          {!doneTyping && <span className="intro-gate-caret" />}
           {doneTyping ? "”" : ""}
         </p>
 
@@ -218,21 +211,6 @@ export function IntroStart({
           z-index: 1;
         }
 
-        .intro-gate-hud {
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          opacity: 0;
-          animation: introFadeInOnly 1.2s ease-out 0.4s forwards;
-        }
-        .intro-gate-hud-corner {
-          position: absolute;
-          width: 26px;
-          height: 26px;
-          border-style: solid;
-          border-color: rgba(0, 217, 255, 0.28);
-        }
-
         .intro-gate-content {
           position: relative;
           z-index: 2;
@@ -273,25 +251,10 @@ export function IntroStart({
           font-size: clamp(1.15rem, 3vw, 2.1rem);
           line-height: 1.5;
           letter-spacing: 0.01em;
+          color: #ffffff;
           text-shadow: 0 0 24px rgba(0, 217, 255, 0.18);
           opacity: 0;
-          background-image: linear-gradient(
-            100deg,
-            #6b7280 0%,
-            #6b7280 44%,
-            #ffffff 50%,
-            #6b7280 56%,
-            #6b7280 100%
-          );
-          background-size: 500% 100%;
-          background-position: 100% 0;
-          background-repeat: no-repeat;
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
-          color: transparent;
-          animation: introFadeInOnly 0.8s ease-out 0.5s forwards,
-            introQuoteShine 6s linear 1.4s infinite;
+          animation: introFadeInOnly 0.8s ease-out 0.5s forwards;
         }
         .intro-gate-caret {
           display: inline-block;
@@ -433,14 +396,6 @@ export function IntroStart({
             opacity: 0;
           }
         }
-        @keyframes introQuoteShine {
-          0% {
-            background-position: 100% 0;
-          }
-          100% {
-            background-position: 0% 0;
-          }
-        }
         @keyframes introPromptPulse {
           0%,
           100% {
@@ -449,10 +404,6 @@ export function IntroStart({
           50% {
             opacity: 1;
           }
-        }
-
-        .intro-gate:focus-visible {
-          box-shadow: inset 0 0 0 1px rgba(0, 217, 255, 0.4);
         }
       `}</style>
     </div>

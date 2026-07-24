@@ -81,9 +81,11 @@ function buildPlacements(count: number, imageCount: number): AdPlacement[] {
 function AdPanel({
   placement,
   texture,
+  isMobile,
 }: {
   placement: AdPlacement;
   texture: THREE.Texture;
+  isMobile: boolean;
 }) {
   const glowRef = useRef<THREE.Mesh>(null);
   const sweepRef = useRef<THREE.Mesh>(null);
@@ -96,7 +98,10 @@ function AdPanel({
       mat.opacity = 0.16 + Math.sin(t * 1.4) * 0.07;
     }
 
-    if (sweepRef.current) {
+    // The scan-line sweep is a nice-to-have polish detail, not worth
+    // an extra overdraw pass + per-frame update on every panel on
+    // mobile, where it's not even rendered (see below).
+    if (!isMobile && sweepRef.current) {
       const cycle = (t * 0.22) % 1.6;
       const mat = sweepRef.current.material as THREE.MeshBasicMaterial;
       if (cycle < 1) {
@@ -137,22 +142,24 @@ function AdPanel({
         <meshBasicMaterial map={texture} toneMapped={false} fog={false} side={THREE.DoubleSide} />
       </mesh>
 
-      <mesh
-        ref={sweepRef}
-        scale={[placement.width * 0.98, placement.height * 0.06, 1]}
-        position={[0, 0, 0.02]}
-      >
-        <planeGeometry args={[1, 1]} />
-        <meshBasicMaterial
-          color="#bfffff"
-          transparent
-          opacity={0}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-          fog={false}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
+      {!isMobile && (
+        <mesh
+          ref={sweepRef}
+          scale={[placement.width * 0.98, placement.height * 0.06, 1]}
+          position={[0, 0, 0.02]}
+        >
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial
+            color="#bfffff"
+            transparent
+            opacity={0}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+            fog={false}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      )}
     </group>
   );
 }
@@ -162,7 +169,12 @@ function AdPanel({
  * upstream (see IntroCinematic) so slow texture loads never block the
  * rest of the cinematic. */
 export function Billboards({ isMobile }: { isMobile: boolean }) {
-  const count = isMobile ? 10 : 22;
+  // Each panel is a non-instanced mesh with its own unique texture —
+  // that per-panel cost (draw calls + decoded image memory) doesn't
+  // shrink on its own just because the rest of the scene's instance
+  // counts do, so mobile gets a noticeably lower count rather than a
+  // proportional one.
+  const count = isMobile ? 6 : 22;
   const imagePaths = useMemo(() => AD_IMAGES.slice(0, count), [count]);
   const textures = useTexture(imagePaths) as THREE.Texture[];
   const placements = useMemo(
@@ -173,7 +185,7 @@ export function Billboards({ isMobile }: { isMobile: boolean }) {
   return (
     <group>
       {placements.map((p, i) => (
-        <AdPanel key={i} placement={p} texture={textures[p.textureIndex]} />
+        <AdPanel key={i} placement={p} texture={textures[p.textureIndex]} isMobile={isMobile} />
       ))}
     </group>
   );

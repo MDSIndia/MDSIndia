@@ -16,7 +16,7 @@ const RAY_COLORS = ["#8fe6ff", "#7fb2ff", "#a9e9ff", "#6fa8ff"];
  * and a handful of lens-flare rays, all built from camera-facing
  * sprites (never a solid disc or torus) so it always reads as a point
  * of light rather than a shape, however close the camera gets. */
-export function Star() {
+export function Star({ isMobile }: { isMobile: boolean }) {
   const groupRef = useRef<THREE.Group>(null);
   const coreRef = useRef<THREE.Sprite>(null);
   const innerGlowRef = useRef<THREE.Sprite>(null);
@@ -152,7 +152,7 @@ export function Star() {
       </sprite>
 
       <group ref={sparkleGroupRef}>
-        <Sparkles count={70} scale={2} size={2.5} speed={0.5} color="#cfeeff" />
+        <Sparkles count={isMobile ? 30 : 70} scale={2} size={2.5} speed={0.5} color="#cfeeff" />
       </group>
     </group>
   );

@@ -10,7 +10,6 @@ const navLinks = [
   { label: "Vision",     href: "#vision",     id: "vision" },
   { label: "About MDS",  href: "#about-mds",  id: "about-mds" },
   { label: "Noorva",     href: "#noorva",     id: "noorva" },
-  { label: "Future",     href: "#future-ai",  id: "future-ai" },
   { label: "Invest",     href: "#invest",     id: "invest" },
   { label: "Team",       href: "#team",       id: "team" },
   { label: "Contact",    href: "#contact",    id: "contact" },

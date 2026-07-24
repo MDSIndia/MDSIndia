@@ -30,7 +30,7 @@ interface BannerPlacement {
  * IntroCinematic): a slow banner-image load must never block the
  * critical instanced skyline from rendering. Duplicating a few lines
  * of deterministic math is a much smaller risk than coupling the two. */
-function buildPlacements(count: number): BannerPlacement[] {
+function buildPlacements(count: number, isMobile: boolean): BannerPlacement[] {
   const placements: BannerPlacement[] = [];
   for (let i = 0; i < count; i++) {
     const side = i % 2 === 0 ? -1 : 1;
@@ -45,9 +45,15 @@ function buildPlacements(count: number): BannerPlacement[] {
     // Only tall box towers get a banner — round towers have no flat
     // facade to hang one on, and short mid-rises aren't tall enough
     // for a vertical banner to read as anything but oversized. ~10%
-    // of the eligible buildings get one, so they read as occasional
-    // building-wrap advertising rather than wallpapering the skyline.
-    const isCandidate = !isRound && height > 20 && seeded(i, 70) > 0.9;
+    // of the eligible buildings get one on desktop, so they read as
+    // occasional building-wrap advertising rather than wallpapering the
+    // skyline. Each banner is its own non-instanced mesh with its own
+    // unique full-size image texture — unlike everything else in this
+    // scene, that cost doesn't shrink just because the instance count
+    // did, so mobile gets a much higher bar (~3%) specifically to keep
+    // the number of separate textures/draw calls down.
+    const threshold = isMobile ? 0.97 : 0.9;
+    const isCandidate = !isRound && height > 20 && seeded(i, 70) > threshold;
     if (!isCandidate) continue;
 
     const bannerWidth = width * 0.62;
@@ -95,7 +101,10 @@ function Banner({
 
 export function BuildingBanners({ isMobile }: { isMobile: boolean }) {
   const count = isMobile ? 110 : 200;
-  const placements = useMemo(() => buildPlacements(count), [count]);
+  const placements = useMemo(
+    () => buildPlacements(count, isMobile),
+    [count, isMobile]
+  );
   const imagePaths = useMemo(
     () => placements.map((p) => AD_IMAGES[p.textureIndex]),
     [placements]

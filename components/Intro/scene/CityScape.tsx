@@ -566,12 +566,16 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           sparkle. */}
       <instancedMesh ref={buildingsRef} args={[undefined, undefined, count]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshPhongMaterial
-          map={windowMaps.tower}
-          specular="#3a4a66"
-          shininess={22}
-          fog
-        />
+        {isMobile ? (
+          <meshLambertMaterial map={windowMaps.tower} fog />
+        ) : (
+          <meshPhongMaterial
+            map={windowMaps.tower}
+            specular="#3a4a66"
+            shininess={22}
+            fog
+          />
+        )}
       </instancedMesh>
 
       {/* Parapet ledge — plain, unlit-facade-tone box; no window map,
@@ -583,22 +587,30 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
 
       <instancedMesh ref={roundTowersRef} args={[undefined, undefined, count]}>
         <cylinderGeometry args={[0.72, 1, 1, 10]} />
-        <meshPhongMaterial
-          map={windowMaps.round}
-          specular="#3a4a66"
-          shininess={22}
-          fog
-        />
+        {isMobile ? (
+          <meshLambertMaterial map={windowMaps.round} fog />
+        ) : (
+          <meshPhongMaterial
+            map={windowMaps.round}
+            specular="#3a4a66"
+            shininess={22}
+            fog
+          />
+        )}
       </instancedMesh>
 
       <instancedMesh ref={podiumsRef} args={[undefined, undefined, count]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshPhongMaterial
-          map={windowMaps.podium}
-          specular="#3a4a66"
-          shininess={18}
-          fog
-        />
+        {isMobile ? (
+          <meshLambertMaterial map={windowMaps.podium} fog />
+        ) : (
+          <meshPhongMaterial
+            map={windowMaps.podium}
+            specular="#3a4a66"
+            shininess={18}
+            fog
+          />
+        )}
       </instancedMesh>
 
       <instancedMesh ref={spiresRef} args={[undefined, undefined, count]}>
