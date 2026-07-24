@@ -38,6 +38,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
   const antennaRef = useRef<THREE.InstancedMesh>(null);
   const antennaLightRef = useRef<THREE.InstancedMesh>(null);
   const parapetRef = useRef<THREE.InstancedMesh>(null);
+  const contactShadowRef = useRef<THREE.InstancedMesh>(null);
 
   // One shared canvas gets cloned per structural mesh so each can tile
   // the window grid at its own density (a squat podium needs far fewer
@@ -86,6 +87,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
     const parapetMatrices: THREE.Matrix4[] = [];
     const parapetColors: THREE.Color[] = [];
     const signatureBandMatrices: THREE.Matrix4[] = [];
+    const contactShadowMatrices: THREE.Matrix4[] = [];
 
     for (let i = 0; i < count; i++) {
       const side = i % 2 === 0 ? -1 : 1;
@@ -178,6 +180,18 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         roundMatrices.push(ZERO_SCALE.clone());
         roundColors.push(ZERO_COLOR.clone());
       }
+
+      // Ground contact shadow — a soft dark disc at each building's
+      // foot, multiplied into the ground plane beneath it. Without
+      // this, even with a real ground plane now underneath everything,
+      // a building's base meets it in a hard, evenly-lit line with no
+      // sense of one object resting on another — this is the cheap
+      // stylized-scene stand-in for real ambient occlusion.
+      dummy.position.set(x, 0.01, z);
+      dummy.scale.set(width * 1.6, width * 1.6, 1);
+      dummy.rotation.set(-Math.PI / 2, 0, 0);
+      dummy.updateMatrix();
+      contactShadowMatrices.push(dummy.matrix.clone());
 
       // A wider, shorter podium base on a random subset of towers —
       // the low-rise "skirt" real skyscrapers sit on, which breaks up
@@ -390,6 +404,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       parapetMatrices,
       parapetColors,
       signatureBandMatrices,
+      contactShadowMatrices,
     };
   }, [count]);
 
@@ -439,6 +454,10 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
   );
   useLayoutEffect(
     () => applyInstances(signatureBandRef.current, data.signatureBandMatrices),
+    [data]
+  );
+  useLayoutEffect(
+    () => applyInstances(contactShadowRef.current, data.contactShadowMatrices),
     [data]
   );
   useLayoutEffect(
@@ -537,10 +556,22 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           attribute on these primitives, zeroes the lit result out
           entirely under this material (verified empirically; the old
           unlit basic material tolerated the same combination fine,
-          which is why this went unnoticed until the switch to Lambert). */}
+          which is why this went unnoticed until the switch to Lambert).
+          Phong rather than Lambert specifically for the three glass-
+          faced meshes (tower/round/podium): a real curtain-wall facade
+          throws back a soft specular highlight where it catches the
+          rig light, which is what actually reads as glass rather than
+          painted concrete — a low, tight specular (dim color, modest
+          shininess) keeps it a subtle sheen rather than a plastic
+          sparkle. */}
       <instancedMesh ref={buildingsRef} args={[undefined, undefined, count]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshLambertMaterial map={windowMaps.tower} fog />
+        <meshPhongMaterial
+          map={windowMaps.tower}
+          specular="#3a4a66"
+          shininess={22}
+          fog
+        />
       </instancedMesh>
 
       {/* Parapet ledge — plain, unlit-facade-tone box; no window map,
@@ -552,12 +583,22 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
 
       <instancedMesh ref={roundTowersRef} args={[undefined, undefined, count]}>
         <cylinderGeometry args={[0.72, 1, 1, 10]} />
-        <meshLambertMaterial map={windowMaps.round} fog />
+        <meshPhongMaterial
+          map={windowMaps.round}
+          specular="#3a4a66"
+          shininess={22}
+          fog
+        />
       </instancedMesh>
 
       <instancedMesh ref={podiumsRef} args={[undefined, undefined, count]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshLambertMaterial map={windowMaps.podium} fog />
+        <meshPhongMaterial
+          map={windowMaps.podium}
+          specular="#3a4a66"
+          shininess={18}
+          fog
+        />
       </instancedMesh>
 
       <instancedMesh ref={spiresRef} args={[undefined, undefined, count]}>
@@ -613,6 +654,21 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           transparent
           opacity={0.6}
           blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          fog={false}
+        />
+      </instancedMesh>
+
+      {/* Ground contact shadow — multiplied into the ground plane
+          beneath each building's foot; MultiplyBlending darkens
+          whatever's already there rather than adding light on top, so
+          it reads as a shadow rather than another glowing element. */}
+      <instancedMesh ref={contactShadowRef} args={[undefined, undefined, count]}>
+        <circleGeometry args={[1, 16]} />
+        <meshBasicMaterial
+          color="#4a5568"
+          transparent
+          blending={THREE.MultiplyBlending}
           depthWrite={false}
           fog={false}
         />

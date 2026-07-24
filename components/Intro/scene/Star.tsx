@@ -32,10 +32,14 @@ export function Star() {
     const group = groupRef.current;
     if (!group) return;
 
-    // A tiny, distant point of light that accelerates into a
-    // horizon-filling beacon as the camera closes in.
+    // A tiny, distant point of light that accelerates into a bright
+    // beacon as the camera closes in — capped well short of actually
+    // filling the horizon (it used to grow to 30x, easily engulfing
+    // the whole frame including the buildings around it) so the
+    // skyline stays visible right up to the end instead of the glow
+    // doing all the work alone.
     const growth = windowProgress(t, 6.2, INTRO_DURATION, easeInQuad);
-    const scale = 0.1 + growth * growth * 30;
+    const scale = 0.1 + growth * growth * 13;
     group.visible = growth > 0.002;
     group.scale.setScalar(scale);
     group.position.set(...STAR_POSITION);

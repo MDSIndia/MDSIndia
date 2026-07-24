@@ -4,12 +4,14 @@ import { Canvas, useThree } from "@react-three/fiber";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useMobile } from "@/hooks/useMobile";
 import { CameraRig } from "./scene/CameraRig";
+import { Ground } from "./scene/Ground";
 import { HighwayRoad } from "./scene/HighwayRoad";
 import { RoadDetails } from "./scene/RoadDetails";
 import { CityScape } from "./scene/CityScape";
 import { DistantSkyline } from "./scene/DistantSkyline";
 import { ParticleField } from "./scene/ParticleField";
 import { Billboards } from "./scene/Billboards";
+import { BuildingBanners } from "./scene/BuildingBanners";
 import { SkyBridges } from "./scene/SkyBridges";
 import { StreetLights } from "./scene/StreetLights";
 import { HoverTraffic } from "./scene/HoverTraffic";
@@ -156,13 +158,15 @@ export function IntroCinematic({
             // A cheap, GPU-composited CSS grade on top of the raw
             // WebGL output — real footage is always color-graded, and
             // a flat unlit scene otherwise reads as a video-game
-            // viewport rather than a shot.
-            filter: "contrast(1.06) saturate(1.16) brightness(1.02)",
+            // viewport rather than a shot. Slightly higher contrast and
+            // pulled-back saturation reads as a graded night exterior
+            // rather than an oversaturated render.
+            filter: "contrast(1.1) saturate(1.08) brightness(1.0)",
           }}
         >
           <Canvas
             camera={{
-              position: [0, 16, 46],
+              position: [0, 2.4, 46],
               fov: isMobile ? 64 : 46,
               near: 0.1,
               far: 400,
@@ -191,6 +195,7 @@ export function IntroCinematic({
               <hemisphereLight args={["#3f5a8c", "#02030a", 1.8]} />
               <directionalLight position={[40, 70, 24]} intensity={3} color="#a8ccff" />
               <CameraRig isMobile={isMobile} />
+              <Ground />
               <HighwayRoad />
               <RoadDetails isMobile={isMobile} />
               <CityScape isMobile={isMobile} />
@@ -205,6 +210,7 @@ export function IntroCinematic({
                   load never blanks the rest of the (already-running) scene. */}
               <Suspense fallback={null}>
                 <Billboards isMobile={isMobile} />
+                <BuildingBanners isMobile={isMobile} />
                 <FloatingLogo />
               </Suspense>
             </Suspense>
