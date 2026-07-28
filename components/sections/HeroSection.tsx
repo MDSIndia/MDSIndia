@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { Compass, ArrowUpRight, ChevronDown } from "lucide-react";
-import { useMobile } from "@/hooks/useMobile";
+import { HeroRiverFlow } from "./HeroRiverFlow";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -12,97 +12,44 @@ const fadeUp: Variants = {
 };
 
 export function HeroSection() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [videoReady, setVideoReady] = useState(false);
   const reducedMotion = useReducedMotion();
-  const isMobile = useMobile();
-
-  // Respect reduced-motion for the video itself too, not just the CSS
-  // animations below — pause on the first frame rather than looping a
-  // moving background for users who've asked for less motion.
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    if (reducedMotion) video.pause();
-    else if (videoReady) video.play().catch(() => {});
-  }, [reducedMotion, videoReady]);
-
-  // Safety net: `onLoadedData` can be slow or silently miss firing right
-  // after the intro's heavy WebGL/GPU teardown (observed directly — the
-  // video is decoded and playing but the event never lands in time),
-  // which left the fade-in permanently stuck at opacity 0. A video
-  // that's already playing should never stay invisible, so force the
-  // reveal once it's unmistakably ready even if the event never comes.
-  useEffect(() => {
-    if (videoReady) return;
-    const video = videoRef.current;
-    if (!video) return;
-    if (video.readyState >= 2) {
-      setVideoReady(true);
-      return;
-    }
-    const id = window.setTimeout(() => setVideoReady(true), 1200);
-    return () => window.clearTimeout(id);
-  }, [videoReady]);
 
   return (
     <section
       id="hero"
-      className="relative w-full min-h-screen flex items-center overflow-hidden bg-[#020208]"
+      className="relative w-full min-h-screen flex items-center overflow-hidden"
     >
-      {/* Hidden SVG sharpen filter — the source footage is inherently
-          soft even at native resolution (verified pixel-for-pixel, not
-          a CSS/scaling artifact), so a light unsharp-mask convolution
-          is layered on top to add back some perceived edge contrast.
-          Skipped on mobile: feConvolveMatrix is software-rendered and
-          re-runs every frame of a playing video, which is too costly
-          for weaker GPUs/CPUs there. */}
-      <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden>
-        <filter id="heroSharpen">
-          <feConvolveMatrix
-            order="3"
-            kernelMatrix="0 -0.6 0 -0.6 3.4 -0.6 0 -0.6 0"
-            preserveAlpha="true"
-          />
-        </filter>
-      </svg>
+      {/* Static background image — swapped by breakpoint via Tailwind's
+          responsive `hidden`/`block` rather than a single `<picture>`,
+          so both variants stay simple `next/image fill` covers. */}
+      <Image
+        src="/herodesktop.png"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="hidden md:block object-cover"
+      />
+      <Image
+        src="/heromobile.png"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="block md:hidden object-cover"
+      />
+      <HeroRiverFlow variant="desktop" reducedMotion={!!reducedMotion} />
+      <HeroRiverFlow variant="mobile" reducedMotion={!!reducedMotion} />
 
-      {/* Fullscreen video background — fades in once it actually has a
-          frame to show (avoids a flash of black before it buffers),
-          and holds a very slow Ken Burns drift for the rest of its
-          loop so a fullscreen video doesn't sit dead-static. */}
-      <motion.video
-        ref={videoRef}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        onLoadedData={() => setVideoReady(true)}
-        className="absolute inset-0 w-full h-full object-cover"
-        style={{ filter: isMobile ? undefined : "url(#heroSharpen)" }}
-        initial={{ opacity: 0 }}
-        animate={{
-          opacity: videoReady ? 1 : 0,
-          scale: reducedMotion ? 1 : [1, 1.07, 1],
-        }}
-        transition={{
-          opacity: { duration: 1.1, ease: EASE },
-          scale: { duration: 26, repeat: Infinity, ease: "easeInOut" },
-        }}
-      >
-        <source src="/videos/hero.mp4" type="video/mp4" />
-      </motion.video>
-
-      {/* Dark gradient over the video so the overlaid text stays
-          legible regardless of what's playing underneath — heavier at
-          the bottom/left where the text sits, lighter toward the
-          top-right so the footage still reads through. */}
+      {/* Dark gradient over the hero image so the overlaid text stays
+          legible regardless of what's underneath — heavier at the
+          bottom/left where the text sits, lighter toward the top-right
+          so the image still reads through. */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "linear-gradient(115deg, rgba(2,2,8,0.88) 0%, rgba(2,2,8,0.62) 32%, rgba(2,2,8,0.28) 55%, rgba(2,2,8,0.15) 100%), linear-gradient(to top, rgba(2,2,8,0.85) 0%, rgba(2,2,8,0.2) 40%, rgba(2,2,8,0.35) 100%)",
+            "linear-gradient(115deg, rgba(2,2,8,0.8) 0%, rgba(2,2,8,0.5) 32%, rgba(2,2,8,0.18) 55%, rgba(2,2,8,0.08) 100%), linear-gradient(to top, rgba(2,2,8,0.72) 0%, rgba(2,2,8,0.12) 40%, rgba(2,2,8,0.25) 100%)",
         }}
       />
 
@@ -205,7 +152,7 @@ export function HeroSection() {
           className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 hidden sm:flex flex-col items-center gap-1.5 pointer-events-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.7 }}
-          transition={{ duration: 1, delay: 1.1, ease: EASE }}
+          transition={{ duration: 1, delay: 0.3, ease: EASE }}
         >
           <span
             style={{

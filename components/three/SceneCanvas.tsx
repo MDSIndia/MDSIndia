@@ -1,11 +1,12 @@
 "use client";
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect, useRef, useState } from "react";
+import * as THREE from "three";
 import { useMobile } from "@/hooks/useMobile";
-import { AmbientParticles } from "./scenes/AmbientParticles";
 import { EarthGlobe } from "./scenes/EarthGlobe";
+import { AmbientParticles } from "./scenes/AmbientParticles";
 
-type Scene = "hero" | "noorva" | "earth";
+type Scene = "hero" | "noorva" | "earth" | "cosmos";
 
 export function SceneCanvas() {
   const isMobile = useMobile();
@@ -19,11 +20,17 @@ export function SceneCanvas() {
       { id: "finale", scene: "earth" },
     ];
 
+    // Hero now has its own static image background (see HeroSection),
+    // so it renders nothing here — it's tracked only so the fallback
+    // "cosmos" particle drift doesn't bleed in behind it. Every other
+    // untracked section (e.g. Vision, in between hero and noorva) falls
+    // through to that "cosmos" default.
     const resolve = () => {
       const v = visibleRef.current;
       if (v.has("earth")) setActiveScene("earth");
       else if (v.has("noorva")) setActiveScene("noorva");
-      else setActiveScene("hero");
+      else if (v.has("hero")) setActiveScene("hero");
+      else setActiveScene("cosmos");
     };
 
     const obs = new IntersectionObserver(
@@ -36,7 +43,16 @@ export function SceneCanvas() {
         });
         resolve();
       },
-      { threshold: 0.15 }
+      // `threshold: 0.15` alone counted hero as still "intersecting"
+      // until 85% of it had scrolled away — for one full section-height
+      // of scrolling, the *next*
+      // section's own content was already on screen while its
+      // background was still the previous section's. The negative
+      // bottom `rootMargin` shrinks the effective viewport used for the
+      // intersection calculation up to its top 45%, so a section only
+      // counts as "in view" once it's actually the dominant thing on
+      // screen, not merely still partially visible below the fold.
+      { threshold: 0, rootMargin: "0px 0px -55% 0px" }
     );
 
     sections.forEach(({ id }) => {
@@ -59,12 +75,16 @@ export function SceneCanvas() {
           alpha: true,
           powerPreference: "high-performance",
           stencil: false,
-          depth: false,
+          depth: true,
+        }}
+        onCreated={({ gl }) => {
+          gl.toneMapping = THREE.ACESFilmicToneMapping;
+          gl.toneMappingExposure = 1.1;
         }}
         style={{ background: "transparent" }}
       >
         <Suspense fallback={null}>
-          {activeScene === "hero"   && <AmbientParticles />}
+          {activeScene === "cosmos" && <AmbientParticles />}
           {activeScene === "earth"  && <EarthGlobe />}
         </Suspense>
       </Canvas>
