@@ -251,7 +251,7 @@ function AboutMDSSphere() {
 
       <motion.div
         className="relative w-full h-full"
-        animate={{ y: [0, -14, 0], rotate: [-1.5, 1.5, -1.5] }}
+        animate={{ y: [0, -14, 0] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         style={{
           maskImage:
@@ -262,6 +262,15 @@ function AboutMDSSphere() {
           WebkitMaskComposite: "source-in",
         } as CSSProperties}
       >
+        {/* Static base — the podium, connecting beam, and a fallback
+            copy of the sphere itself. Never rotates: the podium is a
+            platform the sphere sits on, not part of the spinning body,
+            so it has to hold still while the sphere overlay above it
+            turns. Its copy of the sphere only shows through at the
+            rotating layer's feathered edge, where that layer fades to
+            transparent — since both layers share the same source image
+            at rotation 0, that seam is invisible rather than a visible
+            "second sphere" underneath. */}
         <Image
           src="/about.jpeg"
           alt="MDS — a living planet of ideas"
@@ -270,6 +279,34 @@ function AboutMDSSphere() {
           sizes="300px"
           className="object-contain"
         />
+        {/* Rotating overlay — a soft circular cutout of just the ball
+            itself, pre-masked in about-sphere.png tight to its own rim
+            so it excludes the ring entirely (the ring is far wider
+            than the ball and would otherwise have to be included or
+            cut off mid-band as it rotated out of alignment with its
+            own static remainder on the base layer below — visibly
+            "detaching" from the rest of the composition). Leaving the
+            ring on the static base means it stays put, Saturn-style,
+            while just the ball spins inside it. Pivots on the ball's
+            own center (not the full artwork's center, which sits
+            lower toward the podium) so it spins in place instead of
+            swinging in an arc. */}
+        <motion.div
+          className="absolute inset-0"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+          style={{ transformOrigin: "51.2% 39.7%" }}
+        >
+          <Image
+            src="/about-sphere.png"
+            alt=""
+            aria-hidden
+            fill
+            quality={100}
+            sizes="300px"
+            className="object-contain"
+          />
+        </motion.div>
       </motion.div>
     </div>
   );

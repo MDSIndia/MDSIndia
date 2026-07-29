@@ -4,7 +4,7 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { INTRO_DURATION, clamp01, windowProgress } from "./timeline";
-import { getWindowGridTexture } from "./glowTexture";
+import { getWindowGridTexture, getWindowEmissiveTexture } from "./glowTexture";
 import { STAR_POSITION } from "./path";
 
 function seeded(i: number, salt: number) {
@@ -61,6 +61,22 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
     return { tower, round, podium };
   }, []);
 
+  // Emissive counterpart to windowMaps, same repeats so the glow mask
+  // lines up pane-for-pane with the diffuse grid it's layered under.
+  const windowEmissiveMaps = useMemo(() => {
+    const base = getWindowEmissiveTexture();
+    const tower = base.clone();
+    tower.repeat.set(3, 9);
+    tower.needsUpdate = true;
+    const round = base.clone();
+    round.repeat.set(5, 9);
+    round.needsUpdate = true;
+    const podium = base.clone();
+    podium.repeat.set(4, 2.5);
+    podium.needsUpdate = true;
+    return { tower, round, podium };
+  }, []);
+
   const data = useMemo(() => {
     const dummy = new THREE.Object3D();
     const buildingMatrices: THREE.Matrix4[] = [];
@@ -104,12 +120,15 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       // to still land in frame than a distant one does), which is why
       // the skyline used to only "arrive" several seconds in once the
       // camera had flown far enough for its own offset to look small
-      // by comparison. Pulling the near end of the range inward tapers
-      // buildings closer to the road the nearer they are to the start,
-      // so a chunk of skyline is reliably inside the frustum from the
-      // very first frame instead of leaving it to chance.
+      // by comparison. Shrinking the *spread* (not the floor) tapers
+      // these buildings toward the near edge of the flanking band the
+      // nearer they are to the start, so a chunk of skyline is reliably
+      // inside the frustum from the very first frame — the floor stays
+      // fixed at 11 (HighwayRoad's plane is only 8 units to its edge;
+      // see the x >= 11 invariant documented in Ground.tsx) so this
+      // never pulls a building onto the road itself.
       const startBias = clamp01((z - 15) / 40);
-      const x = side * (11 - startBias * 6 + seeded(i, 1) * (24 - startBias * 8));
+      const x = side * (11 + seeded(i, 1) * (24 - startBias * 16));
       // How close this building sits to the star waiting at the end of
       // the highway — buildings in that final stretch are the ones the
       // star's own light actually washes over as the camera arrives, so
@@ -235,7 +254,13 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       dummy.rotation.set(0, 0, 0);
       dummy.updateMatrix();
       windowAMatrices.push(dummy.matrix.clone());
-      windowAColors.push(new THREE.Color(accent));
+      // Lerped toward white rather than the raw accent hue — a flat
+      // saturated color under additive blending still reads as a
+      // colored strip, not a light that's actually switched on; mixing
+      // in white pushes every channel up (not just the ones the accent
+      // already maxes out), which is what makes it read as a bright,
+      // hot light source instead of a tinted panel.
+      windowAColors.push(new THREE.Color(accent).lerp(new THREE.Color("#ffffff"), 0.4));
 
       // Facade B: the opposite edge, so towers still glow when the
       // path curves and briefly reveals their far side.
@@ -249,7 +274,10 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       dummy.updateMatrix();
       windowBMatrices.push(dummy.matrix.clone());
       windowBColors.push(
-        new THREE.Color(ACCENTS[Math.floor(seeded(i, 62) * ACCENTS.length)])
+        new THREE.Color(ACCENTS[Math.floor(seeded(i, 62) * ACCENTS.length)]).lerp(
+          new THREE.Color("#ffffff"),
+          0.4
+        )
       );
 
       // A random subset of tall (non-round) buildings tapers into a
@@ -285,7 +313,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       dummy.updateMatrix();
       roofGlowMatrices.push(dummy.matrix.clone());
       roofGlowColors.push(
-        new THREE.Color(accent).lerp(new THREE.Color("#ffffff"), starProximity * 0.55)
+        new THREE.Color(accent).lerp(new THREE.Color("#ffffff"), 0.3 + starProximity * 0.55)
       );
 
       // Parapet ledge — a slight overhang where a box tower's walls
@@ -502,22 +530,23 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
     // brighter on a smaller screen, same reasoning as the body albedo
     // and rig light intensity above.
     const mobileBoost = isMobile ? 0.14 : 0;
-    const windowOpacity = Math.min(1, 0.9 + portalBoost + mobileBoost);
-
+    // Windows are lit at full opacity throughout rather than ramping up
+    // from a dimmer baseline — the city should read as already-lit
+    // from the very first frame, not gradually brightening.
     [windowsARef, windowsBRef].forEach((ref) => {
       const mat = ref.current?.material as THREE.MeshBasicMaterial | undefined;
-      if (mat) mat.opacity = windowOpacity;
+      if (mat) mat.opacity = 1;
     });
 
     const roofMat = roofGlowRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
-    if (roofMat) roofMat.opacity = Math.min(1, 0.35 + Math.sin(t * 1.1) * 0.15 + mobileBoost);
+    if (roofMat) roofMat.opacity = Math.min(1, 0.55 + Math.sin(t * 1.1) * 0.15 + mobileBoost);
 
     const padMat = landingPadsRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
-    if (padMat) padMat.opacity = Math.min(1, 0.55 + Math.sin(t * 1.6) * 0.25 + mobileBoost);
+    if (padMat) padMat.opacity = Math.min(1, 0.7 + Math.sin(t * 1.6) * 0.25 + mobileBoost);
 
     const antennaMat = antennaLightRef.current?.material as
       | THREE.MeshBasicMaterial
@@ -541,8 +570,12 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         for (let s = 0; s < steps; s++) {
           const idx = flickerCursor.current % count;
           flickerCursor.current++;
-          const lit = seeded(idx, Math.floor(t * 0.5)) > 0.4;
-          flickerColor.set(lit ? ACCENTS[idx % ACCENTS.length] : "#050506");
+          const lit = seeded(idx, Math.floor(t * 0.5)) > 0.25;
+          if (lit) {
+            flickerColor.set(ACCENTS[idx % ACCENTS.length]).lerp(new THREE.Color("#ffffff"), 0.4);
+          } else {
+            flickerColor.set("#050506");
+          }
           meshA.setColorAt(idx, flickerColor);
           meshB.setColorAt((idx + 7) % count, flickerColor);
         }
@@ -580,10 +613,19 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       <instancedMesh ref={buildingsRef} args={[undefined, undefined, count]}>
         <boxGeometry args={[1, 1, 1]} />
         {isMobile ? (
-          <meshLambertMaterial map={windowMaps.tower} fog />
+          <meshLambertMaterial
+            map={windowMaps.tower}
+            emissiveMap={windowEmissiveMaps.tower}
+            emissive="#ffffff"
+            emissiveIntensity={1.6}
+            fog
+          />
         ) : (
           <meshPhongMaterial
             map={windowMaps.tower}
+            emissiveMap={windowEmissiveMaps.tower}
+            emissive="#ffffff"
+            emissiveIntensity={1.4}
             specular="#3a4a66"
             shininess={22}
             fog
@@ -601,10 +643,19 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       <instancedMesh ref={roundTowersRef} args={[undefined, undefined, count]}>
         <cylinderGeometry args={[0.72, 1, 1, 10]} />
         {isMobile ? (
-          <meshLambertMaterial map={windowMaps.round} fog />
+          <meshLambertMaterial
+            map={windowMaps.round}
+            emissiveMap={windowEmissiveMaps.round}
+            emissive="#ffffff"
+            emissiveIntensity={1.6}
+            fog
+          />
         ) : (
           <meshPhongMaterial
             map={windowMaps.round}
+            emissiveMap={windowEmissiveMaps.round}
+            emissive="#ffffff"
+            emissiveIntensity={1.4}
             specular="#3a4a66"
             shininess={22}
             fog
@@ -615,10 +666,19 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       <instancedMesh ref={podiumsRef} args={[undefined, undefined, count]}>
         <boxGeometry args={[1, 1, 1]} />
         {isMobile ? (
-          <meshLambertMaterial map={windowMaps.podium} fog />
+          <meshLambertMaterial
+            map={windowMaps.podium}
+            emissiveMap={windowEmissiveMaps.podium}
+            emissive="#ffffff"
+            emissiveIntensity={1.6}
+            fog
+          />
         ) : (
           <meshPhongMaterial
             map={windowMaps.podium}
+            emissiveMap={windowEmissiveMaps.podium}
+            emissive="#ffffff"
+            emissiveIntensity={1.4}
             specular="#3a4a66"
             shininess={18}
             fog

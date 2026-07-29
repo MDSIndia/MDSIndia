@@ -152,6 +152,55 @@ export function getWindowGridTexture(): THREE.Texture {
   return cachedWindowGrid;
 }
 
+let cachedWindowEmissive: THREE.Texture | null = null;
+
+/** Same grid, same lit/unlit seed as getWindowGridTexture (so the two
+ * stay pixel-aligned when applied to the same UVs at the same
+ * `.repeat`), but rendered as a pure emissive mask: black everywhere
+ * except the lit panes, which are pushed to full brightness. Used as
+ * an `emissiveMap` rather than `map` — emissive output is added on
+ * top of a material's lit/tinted diffuse color rather than multiplied
+ * into it, so a lit window glows at full brightness regardless of how
+ * dark that particular building's own body tint is, the way an actual
+ * light behind glass would outshine the concrete around it instead of
+ * being dimmed by it. */
+export function getWindowEmissiveTexture(): THREE.Texture {
+  if (cachedWindowEmissive) return cachedWindowEmissive;
+  const cols = 4;
+  const rows = 10;
+  const cell = 40;
+  const canvas = document.createElement("canvas");
+  canvas.width = cols * cell;
+  canvas.height = rows * cell;
+  const ctx = canvas.getContext("2d")!;
+
+  ctx.fillStyle = "#000000";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  for (let r = 0; r < rows; r++) {
+    if (r % 4 === 3) continue; // spandrel band — no window on this floor
+    for (let c = 0; c < cols; c++) {
+      const idx = r * cols + c;
+      const lit = seeded(idx, 41) > 0.3;
+      if (!lit) continue;
+      const x = c * cell;
+      const y = r * cell;
+      const pad = cell * 0.2;
+      const w = cell - pad * 2;
+      const h = cell - pad * 2;
+      const warm = seeded(idx, 42) > 0.5;
+      ctx.fillStyle = warm ? "#fff2cf" : "#eaf6ff";
+      ctx.fillRect(x + pad, y + pad, w, h);
+    }
+  }
+
+  cachedWindowEmissive = new THREE.CanvasTexture(canvas);
+  cachedWindowEmissive.wrapS = THREE.RepeatWrapping;
+  cachedWindowEmissive.wrapT = THREE.RepeatWrapping;
+  cachedWindowEmissive.colorSpace = THREE.SRGBColorSpace;
+  return cachedWindowEmissive;
+}
+
 /** A small solid circular sprite (hard-edged), used as the alpha mask
  * for Points-based particle bursts so they render as soft dots instead
  * of the flat squares a bare PointsMaterial falls back to. */
