@@ -12,7 +12,10 @@ function seeded(i: number, salt: number) {
   return v - Math.floor(v);
 }
 
-const ACCENTS = ["#00D4FF", "#7B2FBE", "#0055FF", "#ff2ecb"];
+// All-blue/cyan family — no purple or pink — so the skyline reads as
+// one coherent techie-blue futuristic city instead of a mixed neon
+// palette.
+const ACCENTS = ["#00D4FF", "#0055FF", "#00A8FF", "#33E0FF"];
 const ZERO_SCALE = new THREE.Matrix4().makeScale(0, 0, 0);
 const ZERO_COLOR = new THREE.Color(0, 0, 0);
 
