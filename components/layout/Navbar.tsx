@@ -127,8 +127,8 @@ export function Navbar() {
               rel="noopener noreferrer"
               className="btn-primary text-sm"
             >
-              Discover Noorva
               <ArrowUpRight className="size-3.5" strokeWidth={2.25} />
+              Discover Noorva
             </a>
           </div>
 
@@ -215,8 +215,8 @@ export function Navbar() {
                 className="btn-primary mt-4 justify-center text-sm"
                 onClick={() => setMobileOpen(false)}
               >
-                Discover Noorva
                 <ArrowUpRight className="size-3.5" strokeWidth={2.25} />
+                Discover Noorva
               </a>
             </div>
           </motion.div>

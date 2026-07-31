@@ -267,8 +267,8 @@ export function ContactSection() {
                     className="btn-primary relative text-sm overflow-hidden"
                   >
                     <span className="relative z-10 inline-flex items-center gap-2.5">
-                      {sending ? "Transmitting..." : "Send Message"}
                       {!sending && <ArrowRight className="size-4" strokeWidth={2.25} />}
+                      {sending ? "Transmitting..." : "Send Message"}
                     </span>
                     {sending && (
                       <div className="absolute inset-0 flex items-center justify-center">

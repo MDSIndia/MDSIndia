@@ -158,8 +158,8 @@ export function CareersSection() {
             Don&apos;t see your role? We hire exceptional people regardless.
           </p>
           <a href="mailto:services@mdsindia.in" className="btn-primary text-sm">
-            Send Your Vision
             <ArrowRight className="size-4" strokeWidth={2.25} />
+            Send Your Vision
           </a>
         </motion.div>
       </div>

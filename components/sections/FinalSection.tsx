@@ -85,8 +85,8 @@ export function FinalSection() {
             style={{ background: "linear-gradient(to bottom, rgba(0,212,255,0.5), transparent)" }}
           />
           <a href="#noorva" className="btn-primary text-sm">
-            Begin The Journey
             <ArrowRight className="size-4" strokeWidth={2.25} />
+            Begin The Journey
           </a>
           <p
             className="text-xs tracking-widest uppercase"
