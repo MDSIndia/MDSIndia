@@ -139,9 +139,13 @@ export function getWindowGridTexture(): THREE.Texture {
         // Both lit variants stay in the same cyan/blue family — no
         // warm/cream option — so the skyline reads as one coherent
         // techie-blue futuristic city rather than a mix of warm office
-        // light and cool neon.
+        // light and cool neon. Kept clearly saturated (not near-white)
+        // even in the "bright" variant — a pane this close to white
+        // clips to flat white the instant it's pushed through the
+        // emissive intensity below, which is what read as a plain white
+        // city instead of a blue one.
         const bright = seeded(idx, 42) > 0.5;
-        ctx.fillStyle = bright ? "#bfeeff" : "#4fc3ff";
+        ctx.fillStyle = bright ? "#8fd6ff" : "#3fb0ff";
       } else {
         ctx.fillStyle = "#17171c";
       }
@@ -195,9 +199,11 @@ export function getWindowEmissiveTexture(): THREE.Texture {
       // Same cyan/blue family as the diffuse map's lit panes (no
       // warm/white option) — this is what actually glows, so it's
       // what determines whether the city reads as "techie blue" or
-      // as plain white office light.
+      // as plain white office light. Pulled back from near-white so it
+      // survives the emissiveIntensity multiply below as blue rather
+      // than clipping to flat white.
       const bright = seeded(idx, 42) > 0.5;
-      ctx.fillStyle = bright ? "#8fe9ff" : "#1fb8ff";
+      ctx.fillStyle = bright ? "#6fd2ff" : "#0fa0ff";
       ctx.fillRect(x + pad, y + pad, w, h);
     }
   }

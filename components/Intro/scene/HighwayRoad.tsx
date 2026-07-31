@@ -71,7 +71,7 @@ export function HighwayRoad() {
     // of the strongest "we are going fast" cues cinema uses, and it's
     // free to tune independently of how fast the camera actually
     // translates through the world.
-    const speed = 0.4 + windowProgress(t, 2.6, 8.0) * 4.8;
+    const speed = 0.6 + windowProgress(t, 2.6, 8.0) * 7.2;
     texture.offset.y -= speed * delta;
   });
 

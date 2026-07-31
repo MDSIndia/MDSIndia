@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { motion, useInView, useMotionValue, animate, useTransform } from "framer-motion";
-import { Brain, Crosshair, Microscope, Zap } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Brain, Crosshair, Microscope, Zap } from "lucide-react";
+import { usePortalTransition } from "@/components/PortalTransition/PortalTransitionProvider";
 
 function AnimatedNumber({ target, suffix = "" }: { target: number; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -52,9 +55,9 @@ const whyPoints = [
   { title: "Technical Depth", desc: "Our AI architecture is built for depth, not just scale — real understanding, not statistical outputs.", iconComponent: Microscope },
 ];
 
-export function InvestorSection() {
+export function MarketOpportunityFullContent() {
   return (
-    <section id="invest" className="section-padding relative overflow-hidden">
+    <section className="section-padding relative overflow-hidden">
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -250,21 +253,157 @@ export function InvestorSection() {
           viewport={{ once: true }}
           className="mt-8 text-center"
         >
-          <a
-            href="#contact"
-            className="inline-flex items-center gap-3 px-10 py-5 rounded-full text-white font-semibold text-lg transition-all duration-300 hover:scale-105 hover:brightness-110"
-            style={{
-              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-              background: "linear-gradient(135deg, rgba(0,85,255,0.38), rgba(0,212,255,0.30))",
-              border: "1px solid rgba(0,212,255,0.35)",
-              backdropFilter: "blur(20px) saturate(180%)",
-              WebkitBackdropFilter: "blur(20px) saturate(180%)",
-              boxShadow: "0 0 22px rgba(0,85,255,0.22), inset 0 1px 0 rgba(255,255,255,0.16)",
-            }}
-          >
+          <Link href="/#contact" className="btn-primary text-sm">
+            <ArrowUpRight className="size-4" strokeWidth={2.25} />
             Discuss Investment
-            <span>→</span>
-          </a>
+          </Link>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── Condensed "Market Opportunity" teaser — homepage ──────────────── */
+
+const MARKET_STATEMENT =
+  "Artificial intelligence is redefining how the world lives, works, and creates. With billions of future users and a multi-trillion-dollar market ahead, MDS is building the trusted AI ecosystem for the next generation.";
+
+export function InvestorSection() {
+  const { trigger } = usePortalTransition();
+
+  return (
+    <section id="invest" className="section-padding relative overflow-hidden">
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0,55,210,0.10) 0%, transparent 70%)",
+        }}
+      />
+      <div className="scene-top-fade" />
+      <div className="scene-bottom-fade" />
+
+      <div className="relative max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          className="relative flex flex-col md:flex-row md:items-center md:justify-center md:gap-16"
+        >
+          {/* Left: text */}
+          <div className="order-2 md:order-1 text-center md:text-left md:flex-1">
+            <span
+              className="text-xs font-medium tracking-[0.5em] uppercase"
+              style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(0,212,255,0.8)" }}
+            >
+              Investment Opportunity
+            </span>
+
+            <h2
+              className="neue-machina mt-4 mb-5"
+              style={{ fontSize: "clamp(2.4rem, 5.5vw, 4.5rem)", lineHeight: 0.98, letterSpacing: "0.01em" }}
+            >
+              The <span className="text-gradient">Market</span> Opportunity
+            </h2>
+
+            <p
+              className="mb-8 mx-auto md:mx-0"
+              style={{
+                fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+                fontSize: "clamp(1rem, 1.4vw, 1.15rem)",
+                lineHeight: 1.7,
+                color: "rgba(255,255,255,0.72)",
+                maxWidth: 480,
+              }}
+            >
+              {MARKET_STATEMENT}
+            </p>
+
+            <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+              <Link
+                href="/market-opportunity"
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+                  e.preventDefault();
+                  trigger("/market-opportunity");
+                }}
+                className="btn-primary text-sm"
+              >
+                <ArrowRight className="size-4" strokeWidth={2.25} />
+                Know More
+              </Link>
+            </div>
+          </div>
+
+          {/* Right: image — masked and screen-blended so its black
+              backdrop dissolves into the page instead of sitting in a
+              hard-edged photo frame, same treatment as the pillar
+              images in WhyWeExistSection. */}
+          <div className="order-1 md:order-2 md:flex-1 w-full pt-12 md:pt-0">
+            <div className="relative w-full mx-auto" style={{ maxWidth: 520 }}>
+              <div
+                className="relative"
+                style={{
+                  aspectRatio: "4 / 3",
+                  maskImage:
+                    "radial-gradient(ellipse 60% 62% at 50% 48%, black 0%, rgba(0,0,0,0.92) 28%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.15) 68%, transparent 82%)",
+                  WebkitMaskImage:
+                    "radial-gradient(ellipse 60% 62% at 50% 48%, black 0%, rgba(0,0,0,0.92) 28%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.15) 68%, transparent 82%)",
+                }}
+              >
+                {/* Slow breathing zoom — keeps the globe feeling alive rather than static */}
+                <motion.div
+                  className="absolute inset-0"
+                  animate={{ scale: [1, 1.045, 1] }}
+                  transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <Image
+                    src="/market-globe.png"
+                    alt="A glowing digital globe wrapped in orbiting data rings, representing MDS's global AI market opportunity"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 520px"
+                    style={{
+                      objectFit: "contain",
+                      mixBlendMode: "screen",
+                      filter: "contrast(1.15) brightness(1.08) saturate(1.3)",
+                    }}
+                  />
+                </motion.div>
+
+                {/* Orbiting data particles — echoes the rings already in the artwork */}
+                <div
+                  className="absolute rounded-full"
+                  style={{
+                    top: "50%",
+                    left: "50%",
+                    width: 6,
+                    height: 6,
+                    marginTop: -3,
+                    marginLeft: -3,
+                    background: "rgba(0,212,255,1)",
+                    boxShadow: "0 0 12px rgba(0,212,255,0.9), 0 0 24px rgba(0,212,255,0.45)",
+                    transformOrigin: "3px 3px",
+                    animation: "orbitParticle1 8s linear infinite",
+                  }}
+                />
+                <div
+                  className="absolute rounded-full"
+                  style={{
+                    top: "50%",
+                    left: "50%",
+                    width: 4,
+                    height: 4,
+                    marginTop: -2,
+                    marginLeft: -2,
+                    background: "rgba(255,255,255,0.95)",
+                    boxShadow: "0 0 8px rgba(255,255,255,0.8)",
+                    transformOrigin: "2px 2px",
+                    animation: "orbitParticle2 11s linear infinite reverse",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
         </motion.div>
       </div>
     </section>

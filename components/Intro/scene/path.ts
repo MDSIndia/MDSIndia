@@ -66,5 +66,10 @@ export function createFlightCurve() {
  * without needing its own retune. */
 export function flightU(t: number): number {
   const x = clamp01(t / INTRO_DURATION);
-  return clamp01(easeInCubic(x) * 0.6 + x * 0.4);
+  // More linear weight than before (was 0.6/0.4) — noticeably more
+  // velocity from the first frame instead of most of the motion being
+  // saved for the ease-in cubic's own acceleration later on, while
+  // still landing on the exact same u=0 at t=0 and u=1 at
+  // t=INTRO_DURATION every other effect in this cinematic is keyed to.
+  return clamp01(easeInCubic(x) * 0.45 + x * 0.55);
 }

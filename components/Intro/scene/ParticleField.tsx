@@ -110,7 +110,7 @@ export function ParticleField({ isMobile }: { isMobile: boolean }) {
     // Peak streak speed and stretch are both raised beyond the old
     // values — longer, faster-flying particles are one of the clearest
     // "warp speed" cues, independent of the camera's own translation.
-    const speed = windowProgress(t, 2.6, 8.0) * (isMobile ? 42 : 62);
+    const speed = windowProgress(t, 2.6, 8.0) * (isMobile ? 58 : 86);
     streakMaterial.opacity = windowProgress(t, 2.8, 4.4) * 0.85;
 
     const mesh = streaksRef.current;

@@ -200,8 +200,8 @@ export function IntroCinematic({
               <hemisphereLight args={["#3f5a8c", "#02030a", isMobile ? 2.6 : 1.8]} />
               <directionalLight
                 position={[40, 70, 24]}
-                intensity={isMobile ? 4.4 : 3}
-                color="#a8ccff"
+                intensity={isMobile ? 3.5 : 2.4}
+                color="#7fabf5"
               />
               <CameraRig isMobile={isMobile} />
               <Ground />

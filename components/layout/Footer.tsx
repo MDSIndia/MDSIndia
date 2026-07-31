@@ -46,7 +46,7 @@ export function Footer() {
               Company
             </h4>
             <ul className="space-y-3">
-              {["Vision", "Noorva", "Future AI", "Careers"].map((item) => (
+              {["Noorva", "Future AI", "Careers"].map((item) => (
                 <li key={item}>
                   <a
                     href={`#${item.toLowerCase().replace(" ", "-")}`}

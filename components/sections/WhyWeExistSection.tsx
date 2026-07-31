@@ -10,7 +10,7 @@ import { usePortalTransition } from "@/components/PortalTransition/PortalTransit
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const SG = "var(--font-space-grotesk), 'Inter', sans-serif";
-const NM = "'Neue Machina', 'Inter', sans-serif";
+const NM = "'Clash Display', 'Inter', sans-serif";
 
 const pillars = [
   {
@@ -1075,19 +1075,7 @@ export function WhyWeExistSection() {
                   e.preventDefault();
                   trigger("/about-mds");
                 }}
-                className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full text-sm uppercase transition-all duration-300 hover:scale-105"
-                style={{
-                  fontFamily: "'Neue Machina', 'Inter', sans-serif",
-                  fontWeight: 700,
-                  letterSpacing: "0.03em",
-                  color: "#FFFFFF",
-                  background:
-                    "linear-gradient(rgba(4,6,16,0.72), rgba(4,6,16,0.72)) padding-box, linear-gradient(135deg, #0055FF, #7B2FBE) border-box",
-                  border: "1.5px solid transparent",
-                  backdropFilter: "blur(18px) saturate(180%)",
-                  WebkitBackdropFilter: "blur(18px) saturate(180%)",
-                  boxShadow: "0 0 22px rgba(0,85,255,0.32), 0 0 48px rgba(123,47,190,0.16)",
-                }}
+                className="btn-primary text-sm"
               >
                 <ArrowRight className="size-4" strokeWidth={2.25} />
                 Explore MDS

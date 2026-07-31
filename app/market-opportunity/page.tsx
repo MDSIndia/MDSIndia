@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { PageChrome } from "@/components/layout/PageChrome";
-import { AboutMDSFullContent } from "@/components/sections/WhyWeExistSection";
-import { StorySection } from "@/components/sections/StorySection";
+import { MarketOpportunityFullContent } from "@/components/sections/InvestorSection";
 
-export default function AboutMDSPage() {
+export default function MarketOpportunityPage() {
   return (
     <PageChrome>
       <section className="section-padding relative overflow-hidden" style={{ paddingTop: "8rem" }}>
@@ -14,7 +13,7 @@ export default function AboutMDSPage() {
         <div className="scene-bottom-fade" />
 
         <div className="relative max-w-6xl mx-auto mb-10">
-          <Link href="/#about-mds" className="btn-secondary group text-sm">
+          <Link href="/#invest" className="btn-secondary group text-sm">
             <ArrowLeft
               className="size-4 transition-transform duration-300 group-hover:-translate-x-1"
               strokeWidth={2.25}
@@ -23,10 +22,8 @@ export default function AboutMDSPage() {
           </Link>
         </div>
 
-        <AboutMDSFullContent />
+        <MarketOpportunityFullContent />
       </section>
-
-      <StorySection />
     </PageChrome>
   );
 }

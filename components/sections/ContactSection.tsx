@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 
 export function ContactSection() {
   const [formData, setFormData] = useState({
@@ -194,24 +195,10 @@ export function ContactSection() {
                         key={s}
                         type="button"
                         onClick={() => setFormData({ ...formData, subject: s })}
-                        className="px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs font-medium transition-all duration-200"
-                        style={
-                          formData.subject === s
-                            ? {
-                                background: "linear-gradient(135deg, rgba(0,85,255,0.40), rgba(0,212,255,0.32))",
-                                border: "1px solid rgba(0,212,255,0.35)",
-                                backdropFilter: "blur(12px) saturate(180%)",
-                                WebkitBackdropFilter: "blur(12px) saturate(180%)",
-                                color: "white",
-                              }
-                            : {
-                                background: "rgba(255,255,255,0.07)",
-                                border: "1px solid rgba(255,255,255,0.14)",
-                                backdropFilter: "blur(10px) saturate(150%)",
-                                WebkitBackdropFilter: "blur(10px) saturate(150%)",
-                                color: "rgba(255,255,255,0.50)",
-                              }
-                        }
+                        className={`subject-pill px-3.5 py-1.5 md:px-4 md:py-2 rounded-full text-xs font-medium ${
+                          formData.subject === s ? "is-active" : ""
+                        }`}
+                        style={{ fontFamily: "'General Sans', 'Inter', sans-serif" }}
                       >
                         {s}
                       </button>
@@ -277,18 +264,11 @@ export function ContactSection() {
                   <button
                     type="submit"
                     disabled={sending}
-                    className="relative px-8 py-4 rounded-full font-semibold text-white overflow-hidden disabled:opacity-50 transition-all duration-300 hover:scale-105"
-                    style={{
-                      fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-                      background: "linear-gradient(135deg, rgba(0,85,255,0.38), rgba(0,212,255,0.30))",
-                      border: "1px solid rgba(0,212,255,0.35)",
-                      backdropFilter: "blur(20px) saturate(180%)",
-                      WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                      boxShadow: "0 0 18px rgba(0,85,255,0.20), inset 0 1px 0 rgba(255,255,255,0.16)",
-                    }}
+                    className="btn-primary relative text-sm overflow-hidden"
                   >
-                    <span className="relative z-10">
+                    <span className="relative z-10 inline-flex items-center gap-2.5">
                       {sending ? "Transmitting..." : "Send Message"}
+                      {!sending && <ArrowRight className="size-4" strokeWidth={2.25} />}
                     </span>
                     {sending && (
                       <div className="absolute inset-0 flex items-center justify-center">

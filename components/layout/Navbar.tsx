@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { ArrowUpRight, Menu, X } from "lucide-react";
 import { useScrollProgress } from "@/hooks/useScrollProgress";
 
 const navLinks = [
-  { label: "Vision",     href: "#vision",     id: "vision" },
+  { label: "Home",       href: "#hero",       id: "hero" },
   { label: "About MDS",  href: "#about-mds",  id: "about-mds" },
   { label: "Noorva",     href: "#noorva",     id: "noorva" },
   { label: "Invest",     href: "#invest",     id: "invest" },
@@ -125,19 +125,10 @@ export function Navbar() {
               href="https://noorva.ai"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-5 py-2 rounded-full text-sm uppercase hover:text-white transition-all duration-300"
-              style={{
-                fontFamily: "'Neue Machina', 'Inter', sans-serif",
-                fontWeight: 700,
-                letterSpacing: "0.03em",
-                background: "rgba(0,85,255,0.16)",
-                border: "1px solid rgba(0,153,255,0.35)",
-                backdropFilter: "blur(12px) saturate(160%)",
-                WebkitBackdropFilter: "blur(12px) saturate(160%)",
-                color: "rgba(255,255,255,0.88)",
-              }}
+              className="btn-primary text-sm"
             >
               Discover Noorva
+              <ArrowUpRight className="size-3.5" strokeWidth={2.25} />
             </a>
           </div>
 
@@ -202,7 +193,7 @@ export function Navbar() {
                     transition={{ delay: i * 0.04, ease: [0.22, 1, 0.36, 1] }}
                     className="flex items-center gap-2.5 py-3 text-sm uppercase transition-colors duration-300"
                     style={{
-                      fontFamily: "'Neue Machina', 'Inter', sans-serif",
+                      fontFamily: "'Clash Display', 'Inter', sans-serif",
                       fontWeight: 700,
                       letterSpacing: "0.1em",
                       color: isActive ? "#fff" : "rgba(255,255,255,0.62)",
@@ -221,20 +212,11 @@ export function Navbar() {
                 href="https://noorva.ai"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 text-center py-3.5 rounded-2xl text-sm uppercase text-white"
-                style={{
-                  fontFamily: "'Neue Machina', 'Inter', sans-serif",
-                  fontWeight: 700,
-                  letterSpacing: "0.03em",
-                  background: "linear-gradient(135deg, rgba(0,85,255,0.38), rgba(0,212,255,0.30))",
-                  border: "1px solid rgba(0,212,255,0.35)",
-                  backdropFilter: "blur(16px) saturate(180%)",
-                  WebkitBackdropFilter: "blur(16px) saturate(180%)",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
-                }}
+                className="btn-primary mt-4 justify-center text-sm"
                 onClick={() => setMobileOpen(false)}
               >
                 Discover Noorva
+                <ArrowUpRight className="size-3.5" strokeWidth={2.25} />
               </a>
             </div>
           </motion.div>

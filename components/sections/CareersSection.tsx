@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 
 const roles = [
   {
@@ -156,27 +157,9 @@ export function CareersSection() {
           >
             Don&apos;t see your role? We hire exceptional people regardless.
           </p>
-          <a
-            href="mailto:services@mdsindia.in"
-            className="inline-flex items-center gap-3 px-8 py-4 rounded-full font-semibold text-sm transition-all duration-300"
-            style={{
-              background: "rgba(255,255,255,0.07)",
-              border: "1px solid rgba(255,255,255,0.16)",
-              backdropFilter: "blur(16px) saturate(160%)",
-              WebkitBackdropFilter: "blur(16px) saturate(160%)",
-              color: "rgba(255,255,255,0.75)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(0,85,255,0.4)";
-              e.currentTarget.style.boxShadow = "0 0 25px rgba(0,85,255,0.15)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
-              e.currentTarget.style.boxShadow = "none";
-            }}
-          >
-            <span>Send Your Vision</span>
-            <span>→</span>
+          <a href="mailto:services@mdsindia.in" className="btn-primary text-sm">
+            Send Your Vision
+            <ArrowRight className="size-4" strokeWidth={2.25} />
           </a>
         </motion.div>
       </div>

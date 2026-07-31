@@ -149,8 +149,8 @@ export function CameraRig({ isMobile }: { isMobile: boolean }) {
       // skyline at the short range the camera starts at, rather than
       // leaving that to how many buildings happen to fall near center.
       const establishWide = (1 - windowProgress(t, 0, 2.6)) * (isMobile ? 8 : 16);
-      const speedPush = windowProgress(t, 2.6, 6.6) * 20;
-      const finalPush = windowProgress(t, 7.1, 8.5) * 13;
+      const speedPush = windowProgress(t, 2.6, 6.6) * 27;
+      const finalPush = windowProgress(t, 7.1, 8.5) * 17;
       // A gentler final punch-in than before — the star's own glow is
       // now doing less of the "consume the whole frame" work (see the
       // fog below), so an aggressive FOV crush here would just crop the

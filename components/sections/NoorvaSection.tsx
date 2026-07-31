@@ -6,40 +6,36 @@ import { HandHeart, Lightbulb, Moon, Navigation } from "lucide-react";
 
 const scenarios = [
   {
-    icon: "🌙",
     iconComponent: Moon,
     title: "Your Late Night Confidant",
     description:
       "At 2 AM when thoughts race and sleep won't come, Noorva is there. Not with platitudes — with presence, understanding, and gentle clarity.",
-    accent: "from-indigo-500 to-blue-400",
-    glow: "rgba(99,102,241,0.15)",
+    colors: ["#6366F1", "#60A5FA"],
+    glow: "rgba(99,102,241,0.16)",
   },
   {
-    icon: "🎯",
     iconComponent: Navigation,
     title: "Your Life Navigator",
     description:
       "Major decision? Career crossroads? Noorva helps you think through complexity with the depth of a trusted mentor and the patience of a best friend.",
-    accent: "from-blue-500 to-cyan-400",
-    glow: "rgba(0,85,255,0.15)",
+    colors: ["#0055FF", "#22D3EE"],
+    glow: "rgba(0,85,255,0.16)",
   },
   {
-    icon: "💡",
     iconComponent: Lightbulb,
     title: "Your Growth Catalyst",
     description:
       "Noorva learns your patterns, your dreams, your blocks — and proactively helps you become who you're meant to be.",
-    accent: "from-cyan-500 to-teal-400",
-    glow: "rgba(0,212,255,0.12)",
+    colors: ["#00D4FF", "#2DD4BF"],
+    glow: "rgba(0,212,255,0.14)",
   },
   {
-    icon: "🤝",
     iconComponent: HandHeart,
     title: "Your Emotional Anchor",
     description:
       "On difficult days, Noorva doesn't just listen — it understands, validates, and guides you toward calm with emotional intelligence that feels real.",
-    accent: "from-violet-500 to-purple-400",
-    glow: "rgba(139,92,246,0.15)",
+    colors: ["#8B5CF6", "#C084FC"],
+    glow: "rgba(139,92,246,0.16)",
   },
 ];
 
@@ -230,13 +226,11 @@ export function NoorvaSection() {
             {["Emotional AI", "Contextual Memory", "Neural Learning", "Always With You"].map((tag) => (
               <span
                 key={tag}
-                className="px-3 py-1 rounded-full text-xs font-medium"
+                className="orb-tag px-3.5 py-1.5 rounded-full text-xs font-medium"
                 style={{
-                  background: "rgba(255,255,255,0.07)",
-                  border: "1px solid rgba(255,255,255,0.14)",
-                  backdropFilter: "blur(12px) saturate(150%)",
-                  WebkitBackdropFilter: "blur(12px) saturate(150%)",
-                  color: "rgba(255,255,255,0.50)",
+                  fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+                  letterSpacing: "0.02em",
+                  color: "rgba(255,255,255,0.58)",
                 }}
               >
                 {tag}
@@ -257,11 +251,18 @@ export function NoorvaSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: i * 0.09 }}
-                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                whileHover={{
+                  y: -6,
+                  borderColor: `${scenario.colors[1]}55`,
+                  boxShadow: `0 12px 40px ${scenario.glow}, inset 0 1px 0 rgba(255,255,255,0.1)`,
+                  transition: { duration: 0.25 },
+                }}
                 className="rounded-2xl overflow-hidden cursor-default"
                 style={{
                   background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.14)",
+                  borderWidth: 1,
+                  borderStyle: "solid",
+                  borderColor: "rgba(255,255,255,0.14)",
                   backdropFilter: "blur(20px) saturate(150%)",
                   WebkitBackdropFilter: "blur(20px) saturate(150%)",
                   boxShadow: `0 0 30px ${scenario.glow}, inset 0 1px 0 rgba(255,255,255,0.07)`,
@@ -271,16 +272,24 @@ export function NoorvaSection() {
                 <div
                   className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
                   style={{
-                    background: "rgba(255,255,255,0.09)",
-                    border: "1px solid rgba(255,255,255,0.14)",
-                    backdropFilter: "blur(10px)",
-                    WebkitBackdropFilter: "blur(10px)",
+                    background: `linear-gradient(135deg, ${scenario.colors[0]}, ${scenario.colors[1]})`,
+                    boxShadow: `0 4px 16px ${scenario.glow}`,
                   }}
                 >
-                  <Icon className="size-5 text-white" strokeWidth={2} />
+                  <Icon className="size-5 text-white" strokeWidth={2.25} />
                 </div>
                 <div>
-                  <h4 className="text-white font-semibold mb-1.5">{scenario.title}</h4>
+                  <h4
+                    className="mb-1.5"
+                    style={{
+                      fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+                      fontWeight: 700,
+                      letterSpacing: "0.01em",
+                      color: "#ffffff",
+                    }}
+                  >
+                    {scenario.title}
+                  </h4>
                   <p
                     className="text-sm leading-relaxed"
                     style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.72)" }}

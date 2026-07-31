@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 
 export function FinalSection() {
   return (
@@ -83,19 +84,9 @@ export function FinalSection() {
             className="w-px h-12"
             style={{ background: "linear-gradient(to bottom, rgba(0,212,255,0.5), transparent)" }}
           />
-          <a
-            href="#noorva"
-            className="px-10 py-5 rounded-full text-white font-semibold text-lg transition-all duration-300 hover:scale-105 hover:brightness-110"
-            style={{
-              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-              background: "linear-gradient(135deg, rgba(0,85,255,0.38), rgba(0,212,255,0.30))",
-              border: "1px solid rgba(0,212,255,0.35)",
-              backdropFilter: "blur(20px) saturate(180%)",
-              WebkitBackdropFilter: "blur(20px) saturate(180%)",
-              boxShadow: "0 0 24px rgba(0,85,255,0.22), inset 0 1px 0 rgba(255,255,255,0.16)",
-            }}
-          >
+          <a href="#noorva" className="btn-primary text-sm">
             Begin The Journey
+            <ArrowRight className="size-4" strokeWidth={2.25} />
           </a>
           <p
             className="text-xs tracking-widest uppercase"

@@ -16,6 +16,11 @@ function seeded(i: number, salt: number) {
 // one coherent techie-blue futuristic city instead of a mixed neon
 // palette.
 const ACCENTS = ["#00D4FF", "#0055FF", "#00A8FF", "#33E0FF"];
+// What every "lerp toward white" below actually lerps toward — a pale
+// blue rather than pure white, so even the brightest, most-washed-out
+// glows (rooftops right next to the finale star) keep a visible blue
+// cast instead of clipping to plain white.
+const GLOW_WHITE = "#dff3ff";
 const ZERO_SCALE = new THREE.Matrix4().makeScale(0, 0, 0);
 const ZERO_COLOR = new THREE.Color(0, 0, 0);
 
@@ -263,7 +268,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       // in white pushes every channel up (not just the ones the accent
       // already maxes out), which is what makes it read as a bright,
       // hot light source instead of a tinted panel.
-      windowAColors.push(new THREE.Color(accent).lerp(new THREE.Color("#ffffff"), 0.4));
+      windowAColors.push(new THREE.Color(accent).lerp(new THREE.Color(GLOW_WHITE), 0.25));
 
       // Facade B: the opposite edge, so towers still glow when the
       // path curves and briefly reveals their far side.
@@ -278,8 +283,8 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       windowBMatrices.push(dummy.matrix.clone());
       windowBColors.push(
         new THREE.Color(ACCENTS[Math.floor(seeded(i, 62) * ACCENTS.length)]).lerp(
-          new THREE.Color("#ffffff"),
-          0.4
+          new THREE.Color(GLOW_WHITE),
+          0.25
         )
       );
 
@@ -316,7 +321,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       dummy.updateMatrix();
       roofGlowMatrices.push(dummy.matrix.clone());
       roofGlowColors.push(
-        new THREE.Color(accent).lerp(new THREE.Color("#ffffff"), 0.3 + starProximity * 0.55)
+        new THREE.Color(accent).lerp(new THREE.Color(GLOW_WHITE), 0.2 + starProximity * 0.45)
       );
 
       // Parapet ledge — a slight overhang where a box tower's walls
@@ -575,7 +580,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           flickerCursor.current++;
           const lit = seeded(idx, Math.floor(t * 0.5)) > 0.25;
           if (lit) {
-            flickerColor.set(ACCENTS[idx % ACCENTS.length]).lerp(new THREE.Color("#ffffff"), 0.4);
+            flickerColor.set(ACCENTS[idx % ACCENTS.length]).lerp(new THREE.Color(GLOW_WHITE), 0.25);
           } else {
             flickerColor.set("#050506");
           }
@@ -619,16 +624,16 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           <meshLambertMaterial
             map={windowMaps.tower}
             emissiveMap={windowEmissiveMaps.tower}
-            emissive="#ffffff"
-            emissiveIntensity={1.6}
+            emissive="#bfe4ff"
+            emissiveIntensity={1.35}
             fog
           />
         ) : (
           <meshPhongMaterial
             map={windowMaps.tower}
             emissiveMap={windowEmissiveMaps.tower}
-            emissive="#ffffff"
-            emissiveIntensity={1.4}
+            emissive="#bfe4ff"
+            emissiveIntensity={1.15}
             specular="#3a4a66"
             shininess={22}
             fog
@@ -649,16 +654,16 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           <meshLambertMaterial
             map={windowMaps.round}
             emissiveMap={windowEmissiveMaps.round}
-            emissive="#ffffff"
-            emissiveIntensity={1.6}
+            emissive="#bfe4ff"
+            emissiveIntensity={1.35}
             fog
           />
         ) : (
           <meshPhongMaterial
             map={windowMaps.round}
             emissiveMap={windowEmissiveMaps.round}
-            emissive="#ffffff"
-            emissiveIntensity={1.4}
+            emissive="#bfe4ff"
+            emissiveIntensity={1.15}
             specular="#3a4a66"
             shininess={22}
             fog
@@ -672,16 +677,16 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           <meshLambertMaterial
             map={windowMaps.podium}
             emissiveMap={windowEmissiveMaps.podium}
-            emissive="#ffffff"
-            emissiveIntensity={1.6}
+            emissive="#bfe4ff"
+            emissiveIntensity={1.35}
             fog
           />
         ) : (
           <meshPhongMaterial
             map={windowMaps.podium}
             emissiveMap={windowEmissiveMaps.podium}
-            emissive="#ffffff"
-            emissiveIntensity={1.4}
+            emissive="#bfe4ff"
+            emissiveIntensity={1.15}
             specular="#3a4a66"
             shininess={18}
             fog

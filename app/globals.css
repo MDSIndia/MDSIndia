@@ -64,8 +64,102 @@ body {
 }
 
 .neue-machina {
-  font-family: 'Neue Machina', 'Inter', sans-serif;
-  font-weight: 800;
+  font-family: 'Clash Display', 'Inter', sans-serif;
+  font-weight: 700;
+}
+
+/* ── Unified button system ──────────────────────────────────────────
+   One shared definition instead of each CTA hand-rolling its own
+   gradient-border/glow — solid fill, modest radius, a small lift on
+   hover instead of a large glow bloom. .btn-primary is the single
+   "do the thing" action per view; .btn-secondary is for lower-emphasis
+   or "go back" actions. */
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.6rem;
+  border-radius: 0.75rem;
+  font-family: 'General Sans', 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0055FF 0%, #0091E8 100%);
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 4px 14px rgba(0,85,255,0.28);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,85,255,0.38);
+  filter: brightness(1.08);
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.6rem;
+  border-radius: 0.75rem;
+  font-family: 'General Sans', 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.16);
+  transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease, color 0.25s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(0,153,255,0.45);
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.orb-tag {
+  background: linear-gradient(rgba(255,255,255,0.05), rgba(255,255,255,0.05)) padding-box,
+              linear-gradient(135deg, rgba(0,212,255,0.32), rgba(139,92,246,0.32)) border-box;
+  border: 1px solid transparent;
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.orb-tag:hover {
+  background: linear-gradient(rgba(255,255,255,0.09), rgba(255,255,255,0.09)) padding-box,
+              linear-gradient(135deg, rgba(0,212,255,0.55), rgba(139,92,246,0.55)) border-box;
+  color: rgba(255,255,255,0.88) !important;
+}
+
+.subject-pill {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.14);
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  color: rgba(255,255,255,0.55);
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.subject-pill:hover {
+  background: rgba(255,255,255,0.11);
+  border-color: rgba(0,212,255,0.35);
+  color: rgba(255,255,255,0.88);
+}
+
+.subject-pill.is-active {
+  background: linear-gradient(135deg, #0055FF 0%, #0091E8 100%);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(0,85,255,0.25);
 }
 
 .space-grotesk {
