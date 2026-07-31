@@ -99,7 +99,7 @@ export function getWindowGridTexture(): THREE.Texture {
   canvas.height = rows * cell;
   const ctx = canvas.getContext("2d")!;
 
-  ctx.fillStyle = "#4d4d57";
+  ctx.fillStyle = "#3d4a63";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Alternating pilaster bays — a slightly different tone every other
@@ -131,7 +131,7 @@ export function getWindowGridTexture(): THREE.Texture {
       // Mullion frame: a darker inset border so each pane reads as
       // glass set into a frame rather than a flat rectangle floating
       // on the facade.
-      ctx.fillStyle = "#242429";
+      ctx.fillStyle = "#161c2c";
       ctx.fillRect(x + pad - 2, y + pad - 2, w + 4, h + 4);
 
       const lit = seeded(idx, 41) > 0.3;
@@ -147,7 +147,10 @@ export function getWindowGridTexture(): THREE.Texture {
         const bright = seeded(idx, 42) > 0.5;
         ctx.fillStyle = bright ? "#8fd6ff" : "#3fb0ff";
       } else {
-        ctx.fillStyle = "#17171c";
+        // Blue-black rather than neutral black, so even the "off"
+        // panes still carry the city's blue cast instead of reading as
+        // pure neutral gaps in the facade.
+        ctx.fillStyle = "#0c1220";
       }
       ctx.fillRect(x + pad, y + pad, w, h);
     }

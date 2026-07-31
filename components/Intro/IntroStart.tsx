@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { CSSProperties, KeyboardEvent } from "react";
 import Image from "next/image";
 import { useMobile } from "@/hooks/useMobile";
 
@@ -53,8 +53,14 @@ export function IntroStart({
         y: seeded(i, 2) * 100,
         size: 1 + seeded(i, 3) * 1.6,
         opacity: 0.2 + seeded(i, 4) * 0.5,
-        duration: 3 + seeded(i, 5) * 5,
+        duration: 2 + seeded(i, 5) * 3,
         delay: seeded(i, 6) * 5,
+        // Gentle drift so the field reads as alive rather than a fixed
+        // twinkling pattern — small enough to stay ambient, not a
+        // visible pan across the frame.
+        dx: (seeded(i, 7) - 0.5) * 46,
+        dy: (seeded(i, 8) - 0.5) * 30,
+        driftDuration: 7 + seeded(i, 9) * 8,
       })),
     []
   );
@@ -137,8 +143,10 @@ export function IntroStart({
               background: "#ffffff",
               opacity: s.opacity,
               boxShadow: `0 0 ${s.size * 4}px rgba(255,255,255,${s.opacity})`,
-              animation: `introStarTwinkle ${s.duration}s ease-in-out ${s.delay}s infinite`,
-            }}
+              animation: `introStarTwinkle ${s.duration}s ease-in-out ${s.delay}s infinite, introStarDrift ${s.driftDuration}s ease-in-out ${s.delay}s infinite alternate`,
+              ["--star-dx" as string]: `${s.dx}px`,
+              ["--star-dy" as string]: `${s.dy}px`,
+            } as CSSProperties}
           />
         ))}
       </div>
@@ -185,7 +193,7 @@ export function IntroStart({
           opacity: 0;
           animation:
             introFadeInOnly 1.2s ease-out 0s forwards,
-            introNebulaPulse 9s ease-in-out 1.2s infinite;
+            introNebulaPulse 5s ease-in-out 1.2s infinite;
         }
 
         .intro-gate-stars {
@@ -357,15 +365,23 @@ export function IntroStart({
             filter: brightness(1.4);
           }
         }
+        @keyframes introStarDrift {
+          from {
+            transform: translate3d(0, 0, 0);
+          }
+          to {
+            transform: translate3d(var(--star-dx), var(--star-dy), 0);
+          }
+        }
         @keyframes introNebulaPulse {
           0%,
           100% {
             opacity: 0.75;
-            transform: scale(1);
+            transform: scale(1) translate3d(0, 0, 0);
           }
           50% {
             opacity: 1;
-            transform: scale(1.06);
+            transform: scale(1.06) translate3d(1.5%, -1.5%, 0);
           }
         }
         @keyframes introLogoFloat {

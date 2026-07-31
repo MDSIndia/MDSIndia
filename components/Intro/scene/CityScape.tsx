@@ -181,17 +181,23 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       // desktop uses to add a bit of extra highlight brightness.
       const dark = (0.1 + seeded(i, 6) * 0.2) * (isMobile ? 1.45 : 1);
       const warmth = seeded(i, 64);
+      // A fixed blue bias on the B channel (independent of `warmth`)
+      // plus a smaller warm-channel spread than before — even the
+      // "warmer" facades stay a cool blue-grey rather than crossing
+      // into neutral or warm territory.
       const bodyColor = new THREE.Color(
-        dark + warmth * 0.012,
         dark + warmth * 0.008,
-        dark + (1 - warmth) * 0.02
+        dark + warmth * 0.006,
+        dark + 0.045 + (1 - warmth) * 0.015
       );
       // Nudged toward the same neon accent as this building's own
       // windows — reads as ambient city-light bouncing off the facade,
       // so even a distant silhouette (before the window strips are
       // legible) still carries a futuristic color cast instead of
-      // sitting as a neutral grey cutout.
-      bodyColor.lerp(new THREE.Color(accent), 0.16);
+      // sitting as a neutral grey cutout. Doubled from 0.16 so the
+      // concrete/glass structure itself reads visibly blue, not just
+      // the window panes.
+      bodyColor.lerp(new THREE.Color(accent), 0.32);
 
       if (isRound) {
         dummy.position.set(x, height / 2, z);
@@ -244,8 +250,8 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         const podiumLit = seeded(i, 65) > 0.5;
         podiumColors.push(
           podiumLit
-            ? new THREE.Color(dark * 1.7, dark * 1.5, dark * 1.9)
-            : new THREE.Color(dark * 0.45, dark * 0.45, dark * 0.5)
+            ? new THREE.Color(dark * 1.4, dark * 1.35, dark * 2.15)
+            : new THREE.Color(dark * 0.4, dark * 0.42, dark * 0.62)
         );
       } else {
         podiumMatrices.push(ZERO_SCALE.clone());
@@ -298,7 +304,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         dummy.rotation.set(0, 0, 0);
         dummy.updateMatrix();
         spireMatrices.push(dummy.matrix.clone());
-        spireColors.push(new THREE.Color(0.22, 0.24, 0.3));
+        spireColors.push(new THREE.Color(0.16, 0.2, 0.36));
       } else {
         spireMatrices.push(ZERO_SCALE.clone());
         spireColors.push(ZERO_COLOR.clone());
@@ -336,7 +342,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         dummy.rotation.set(0, 0, 0);
         dummy.updateMatrix();
         parapetMatrices.push(dummy.matrix.clone());
-        parapetColors.push(new THREE.Color(0.3, 0.31, 0.36));
+        parapetColors.push(new THREE.Color(0.22, 0.27, 0.42));
       } else {
         parapetMatrices.push(ZERO_SCALE.clone());
         parapetColors.push(ZERO_COLOR.clone());
@@ -626,6 +632,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
             emissiveMap={windowEmissiveMaps.tower}
             emissive="#bfe4ff"
             emissiveIntensity={1.35}
+            toneMapped={false}
             fog
           />
         ) : (
@@ -634,6 +641,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
             emissiveMap={windowEmissiveMaps.tower}
             emissive="#bfe4ff"
             emissiveIntensity={1.15}
+            toneMapped={false}
             specular="#3a4a66"
             shininess={22}
             fog
@@ -656,6 +664,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
             emissiveMap={windowEmissiveMaps.round}
             emissive="#bfe4ff"
             emissiveIntensity={1.35}
+            toneMapped={false}
             fog
           />
         ) : (
@@ -664,6 +673,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
             emissiveMap={windowEmissiveMaps.round}
             emissive="#bfe4ff"
             emissiveIntensity={1.15}
+            toneMapped={false}
             specular="#3a4a66"
             shininess={22}
             fog
@@ -679,6 +689,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
             emissiveMap={windowEmissiveMaps.podium}
             emissive="#bfe4ff"
             emissiveIntensity={1.35}
+            toneMapped={false}
             fog
           />
         ) : (
@@ -687,6 +698,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
             emissiveMap={windowEmissiveMaps.podium}
             emissive="#bfe4ff"
             emissiveIntensity={1.15}
+            toneMapped={false}
             specular="#3a4a66"
             shininess={18}
             fog
@@ -699,6 +711,12 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         <meshLambertMaterial fog />
       </instancedMesh>
 
+      {/* toneMapped=false on every additive glow material below: the
+          Canvas's default ACES tone mapping compresses/desaturates
+          bright highlights toward white, which is what was quietly
+          fighting every blue hex value above — Star.tsx's sprites
+          already opt out of this for the same reason, this just
+          extends that to the city's own glow. */}
       <instancedMesh ref={windowsARef} args={[undefined, undefined, count]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshBasicMaterial
@@ -708,6 +726,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           fog={false}
+          toneMapped={false}
         />
       </instancedMesh>
 
@@ -720,6 +739,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           fog={false}
+          toneMapped={false}
         />
       </instancedMesh>
 
@@ -732,6 +752,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           fog={false}
+          toneMapped={false}
         />
       </instancedMesh>
 
@@ -743,12 +764,13 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       <instancedMesh ref={signatureBandRef} args={[undefined, undefined, count]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshBasicMaterial
-          color="#cdeeff"
+          color="#7fd4ff"
           transparent
           opacity={0.6}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           fog={false}
+          toneMapped={false}
         />
       </instancedMesh>
 
@@ -776,6 +798,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           fog={false}
+          toneMapped={false}
         />
       </instancedMesh>
 
@@ -788,6 +811,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           fog={false}
+          toneMapped={false}
         />
       </instancedMesh>
 
@@ -805,6 +829,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           fog={false}
+          toneMapped={false}
         />
       </instancedMesh>
     </group>
