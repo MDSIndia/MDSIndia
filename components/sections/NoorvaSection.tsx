@@ -1,41 +1,48 @@
 "use client";
 
 import React from "react";
+import type { CSSProperties } from "react";
 import { motion } from "framer-motion";
 import { HandHeart, Lightbulb, Moon, Navigation } from "lucide-react";
 
+// Every accent below is drawn from Noorva's own established palette —
+// the exact stops used by the orb's core gradient and the "Noorva"
+// text-gradient-warm treatment (cyan #00D4FF, blue #0055FF, purple
+// #7B2FBE, violet #A855F7) — rather than one-off hues invented per
+// card, so the four cards read as points along Noorva's own spectrum
+// instead of an arbitrary rainbow.
 const scenarios = [
   {
     iconComponent: Moon,
     title: "Your Late Night Confidant",
     description:
       "At 2 AM when thoughts race and sleep won't come, Noorva is there. Not with platitudes — with presence, understanding, and gentle clarity.",
-    colors: ["#6366F1", "#60A5FA"],
-    glow: "rgba(99,102,241,0.16)",
+    colors: ["#0055FF", "#00D4FF"],
+    glow: "rgba(0,85,255,0.2)",
   },
   {
     iconComponent: Navigation,
     title: "Your Life Navigator",
     description:
       "Major decision? Career crossroads? Noorva helps you think through complexity with the depth of a trusted mentor and the patience of a best friend.",
-    colors: ["#0055FF", "#22D3EE"],
-    glow: "rgba(0,85,255,0.16)",
+    colors: ["#00D4FF", "#7B2FBE"],
+    glow: "rgba(0,212,255,0.18)",
   },
   {
     iconComponent: Lightbulb,
     title: "Your Growth Catalyst",
     description:
       "Noorva learns your patterns, your dreams, your blocks — and proactively helps you become who you're meant to be.",
-    colors: ["#00D4FF", "#2DD4BF"],
-    glow: "rgba(0,212,255,0.14)",
+    colors: ["#A855F7", "#00D4FF"],
+    glow: "rgba(168,85,247,0.2)",
   },
   {
     iconComponent: HandHeart,
     title: "Your Emotional Anchor",
     description:
       "On difficult days, Noorva doesn't just listen — it understands, validates, and guides you toward calm with emotional intelligence that feels real.",
-    colors: ["#8B5CF6", "#C084FC"],
-    glow: "rgba(139,92,246,0.16)",
+    colors: ["#7B2FBE", "#A855F7"],
+    glow: "rgba(123,47,190,0.2)",
   },
 ];
 
@@ -221,18 +228,19 @@ export function NoorvaSection() {
           className="mb-10"
         >
           <NoorvaOrb />
-          {/* Label tags around orb */}
+          {/* Label tags around orb — HUD status-readout chips */}
           <div className="flex items-center justify-center gap-3 flex-wrap mt-10">
             {["Emotional AI", "Contextual Memory", "Neural Learning", "Always With You"].map((tag) => (
               <span
                 key={tag}
-                className="orb-tag px-3.5 py-1.5 rounded-full text-xs font-medium"
+                className="hud-tag px-3.5 py-1.5 rounded-full text-[0.7rem] font-medium uppercase"
                 style={{
-                  fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-                  letterSpacing: "0.02em",
-                  color: "rgba(255,255,255,0.58)",
+                  fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+                  letterSpacing: "0.06em",
+                  color: "rgba(180,225,255,0.85)",
                 }}
               >
+                <span className="hud-tag-dot" />
                 {tag}
               </span>
             ))}
@@ -253,52 +261,60 @@ export function NoorvaSection() {
                 transition={{ duration: 0.6, delay: i * 0.09 }}
                 whileHover={{
                   y: -6,
-                  borderColor: `${scenario.colors[1]}55`,
-                  boxShadow: `0 12px 40px ${scenario.glow}, inset 0 1px 0 rgba(255,255,255,0.1)`,
+                  boxShadow: `0 12px 44px ${scenario.glow}, inset 0 1px 0 rgba(255,255,255,0.1)`,
                   transition: { duration: 0.25 },
                 }}
-                className="rounded-2xl overflow-hidden cursor-default"
+                className="hud-panel cursor-default"
                 style={{
-                  background: "rgba(255,255,255,0.06)",
-                  borderWidth: 1,
-                  borderStyle: "solid",
-                  borderColor: "rgba(255,255,255,0.14)",
-                  backdropFilter: "blur(20px) saturate(150%)",
-                  WebkitBackdropFilter: "blur(20px) saturate(150%)",
-                  boxShadow: `0 0 30px ${scenario.glow}, inset 0 1px 0 rgba(255,255,255,0.07)`,
-                }}
+                  ["--card-c0" as string]: scenario.colors[0],
+                  ["--card-c1" as string]: scenario.colors[1],
+                } as CSSProperties}
               >
-                <div className="flex gap-4 p-5">
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-                  style={{
-                    background: `linear-gradient(135deg, ${scenario.colors[0]}, ${scenario.colors[1]})`,
-                    boxShadow: `0 4px 16px ${scenario.glow}`,
-                  }}
-                >
-                  <Icon className="size-5 text-white" strokeWidth={2.25} />
-                </div>
-                <div>
-                  <h4
-                    className="mb-1.5"
+                <div className="hud-panel-inner">
+                  {/* Index readout — reinforces the panel-of-data feel */}
+                  <span
+                    className="absolute top-4 right-5 text-[0.65rem] z-10"
                     style={{
-                      fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-                      fontWeight: 700,
-                      letterSpacing: "0.01em",
-                      color: "#ffffff",
+                      fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+                      color: `${scenario.colors[1]}99`,
+                      letterSpacing: "0.05em",
                     }}
                   >
-                    {scenario.title}
-                  </h4>
-                  <p
-                    className="text-sm leading-relaxed"
-                    style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.72)" }}
-                  >
-                    {scenario.description}
-                  </p>
+                    N.0{i + 1}
+                  </span>
+
+                  <div className="relative flex gap-4 p-5">
+                    <div
+                      className="hud-icon w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                      style={{
+                        background: `linear-gradient(135deg, ${scenario.colors[0]}, ${scenario.colors[1]})`,
+                        ["--icon-glow" as string]: scenario.glow,
+                      } as CSSProperties}
+                    >
+                      <Icon className="size-5 text-white" strokeWidth={2.25} />
+                    </div>
+                    <div>
+                      <h4
+                        className="mb-1.5"
+                        style={{
+                          fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+                          fontWeight: 700,
+                          letterSpacing: "0.01em",
+                          color: "#ffffff",
+                        }}
+                      >
+                        {scenario.title}
+                      </h4>
+                      <p
+                        className="text-sm leading-relaxed"
+                        style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.72)" }}
+                      >
+                        {scenario.description}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
             );
           })}
         </div>

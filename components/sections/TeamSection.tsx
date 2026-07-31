@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
@@ -15,9 +16,10 @@ const team = [
       "The architect of MDS's grand vision — a believer that AI should serve humanity's highest potential, not just its productivity. Sumanth leads MDS with purpose, pushing the boundaries of what intelligent technology can mean for human life.",
     photo: "/Sumanth-avatar.jpg",
     accent: "#00D4FF",
+    accent2: "#0055FF",
     glow: "0,212,255",
   },
-  
+
   {
     name: "Rakesh Nerella",
     role: "Chief Technology Officer",
@@ -27,6 +29,7 @@ const team = [
       "The technical force behind Noorva's intelligence — designing AI systems that genuinely understand the complexity of human life. Rakesh builds the future one breakthrough at a time.",
     photo: "/Rakesh-avatar.jpg",
     accent: "#A855F7",
+    accent2: "#7B2FBE",
     glow: "168,85,247",
   },
 ];
@@ -87,9 +90,11 @@ export function TeamSection() {
           </p>
         </motion.div>
 
-        {/* Cards — full-bleed editorial portrait, not the generic
-            avatar-in-a-ring "directory card" pattern. */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        {/* Cards — holographic ID-badge frame: an octagonal card with a
+            glowing gradient rim in the member's own accent color and
+            an inset (not full-bleed) photo, echoing an access-badge
+            rather than a plain rounded card. */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
           {team.map((member, i) => (
             <motion.div
               key={member.name}
@@ -97,93 +102,93 @@ export function TeamSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.15, duration: 0.9, ease: EASE }}
-              whileHover={{
-                y: -10,
-                borderColor: `rgba(${member.glow},0.5)`,
-                boxShadow: `0 20px 80px rgba(${member.glow},0.25), inset 0 1px 0 rgba(255,255,255,0.1)`,
-                transition: { duration: 0.4 },
-              }}
-              className="group relative flex flex-col rounded-3xl overflow-hidden"
+              whileHover={{ y: -10, transition: { duration: 0.4 } }}
+              className="id-card-frame group relative flex flex-col"
               style={{
-                background: "linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",
-                borderWidth: 1,
-                borderStyle: "solid",
-                borderColor: "rgba(255,255,255,0.12)",
-                boxShadow: "0 8px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)",
-              }}
+                ["--id-c0" as string]: member.accent,
+                ["--id-c1" as string]: member.accent2,
+                ["--id-glow" as string]: `rgba(${member.glow},0.3)`,
+              } as CSSProperties}
             >
-              {/* Portrait — bleeds to the card's top edges */}
-              <div className="relative w-full overflow-hidden" style={{ aspectRatio: "4 / 5" }}>
-                <div className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-[1.07]">
-                  <Image
-                    src={member.photo}
-                    alt={member.name}
-                    fill
-                    quality={100}
-                    sizes="(max-width: 640px) 100vw, 420px"
+              {/* Portrait — inset with its own octagon frame, not
+                  full-bleed to the card's edges */}
+              <div className="relative p-3 pb-0">
+                <div
+                  className="id-card-photo-frame relative w-full overflow-hidden"
+                  style={{ aspectRatio: "1 / 1", border: `1px solid rgba(${member.glow},0.35)` }}
+                >
+                  <div className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-[1.07]">
+                    <Image
+                      src={member.photo}
+                      alt={member.name}
+                      fill
+                      quality={100}
+                      sizes="(max-width: 640px) 100vw, 420px"
+                      style={{
+                        objectFit: "cover",
+                        objectPosition: "top center",
+                        filter: "contrast(1.1) saturate(1.05) brightness(0.97)",
+                      }}
+                    />
+                  </div>
+
+                  {/* Accent color wash, tying the photo to the card's identity color */}
+                  <div
+                    className="absolute inset-0 pointer-events-none"
                     style={{
-                      objectFit: "cover",
-                      objectPosition: "top center",
-                      filter: "contrast(1.1) saturate(1.05) brightness(0.97)",
+                      background: `linear-gradient(150deg, rgba(${member.glow},0.28) 0%, transparent 45%)`,
+                      mixBlendMode: "overlay",
                     }}
                   />
-                </div>
-
-                {/* Accent color wash, tying the photo to the card's identity color */}
-                <div
-                  className="absolute inset-0 pointer-events-none"
-                  style={{
-                    background: `linear-gradient(150deg, rgba(${member.glow},0.28) 0%, transparent 45%)`,
-                    mixBlendMode: "overlay",
-                  }}
-                />
-                {/* Fade into the content block below */}
-                <div
-                  className="absolute inset-0 pointer-events-none"
-                  style={{
-                    background:
-                      "linear-gradient(to top, rgba(6,7,16,0.98) 0%, rgba(6,7,16,0.5) 32%, transparent 62%)",
-                  }}
-                />
-
-                {/* Founder badge — Sumanth only */}
-                {i === 0 && (
+                  {/* Fade into the content block below */}
                   <div
-                    className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+                    className="absolute inset-0 pointer-events-none"
                     style={{
-                      background: "linear-gradient(135deg, rgba(0,212,255,0.18) 0%, rgba(0,85,255,0.18) 100%)",
-                      border: "1px solid rgba(0,212,255,0.35)",
-                      backdropFilter: "blur(10px) saturate(160%)",
-                      WebkitBackdropFilter: "blur(10px) saturate(160%)",
-                      boxShadow: "0 0 12px rgba(0,212,255,0.20)",
+                      background:
+                        "linear-gradient(to top, rgba(6,7,16,0.9) 0%, rgba(6,7,16,0.35) 32%, transparent 62%)",
                     }}
-                  >
-                    <span style={{ fontSize: "0.55rem", color: "#00D4FF", lineHeight: 1 }}>✦</span>
-                    <span
+                  />
+
+                  {/* Founder badge — Sumanth only */}
+                  {i === 0 && (
+                    <div
+                      className="absolute top-2.5 right-2.5 flex items-center gap-1.5 px-2 py-0.5 rounded-full"
                       style={{
-                        fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-                        fontSize: "0.58rem",
-                        fontWeight: 600,
-                        letterSpacing: "0.18em",
-                        textTransform: "uppercase",
-                        color: "rgba(0,212,255,0.92)",
+                        background: "linear-gradient(135deg, rgba(0,212,255,0.18) 0%, rgba(0,85,255,0.18) 100%)",
+                        border: "1px solid rgba(0,212,255,0.35)",
+                        backdropFilter: "blur(10px) saturate(160%)",
+                        WebkitBackdropFilter: "blur(10px) saturate(160%)",
+                        boxShadow: "0 0 12px rgba(0,212,255,0.20)",
                       }}
                     >
-                      Founder
-                    </span>
-                  </div>
-                )}
+                      <span style={{ fontSize: "0.5rem", color: "#00D4FF", lineHeight: 1 }}>✦</span>
+                      <span
+                        style={{
+                          fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+                          fontSize: "0.52rem",
+                          fontWeight: 600,
+                          letterSpacing: "0.16em",
+                          textTransform: "uppercase",
+                          color: "rgba(0,212,255,0.92)",
+                        }}
+                      >
+                        Founder
+                      </span>
+                    </div>
+                  )}
+                </div>
 
-                {/* Short badge — sits on the photo fade */}
+                {/* Short badge — straddles the photo's bottom edge */}
                 <span
-                  className="absolute bottom-4 left-5 px-3 py-1 rounded-full text-[0.62rem] font-semibold tracking-[0.22em] uppercase"
+                  className="absolute left-6 -bottom-2.5 px-2.5 py-0.5 rounded-full text-[0.56rem] font-semibold tracking-[0.2em] uppercase z-10"
                   style={{
-                    background: `rgba(${member.glow},0.18)`,
-                    border: `1px solid rgba(${member.glow},0.4)`,
+                    background: "rgba(8,10,20,0.92)",
+                    border: `1px solid rgba(${member.glow},0.55)`,
                     backdropFilter: "blur(10px) saturate(160%)",
                     WebkitBackdropFilter: "blur(10px) saturate(160%)",
                     color: member.accent,
                     fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+                    boxShadow: `0 0 10px rgba(${member.glow},0.3)`,
                   }}
                 >
                   {member.short}
@@ -191,10 +196,10 @@ export function TeamSection() {
               </div>
 
               {/* Content */}
-              <div className="relative flex flex-col text-left px-7 pt-6 pb-7">
+              <div className="relative flex flex-col text-left px-5 pt-5 pb-5">
                 {/* Role */}
                 <span
-                  className="text-[0.6rem] font-medium tracking-[0.3em] uppercase block mb-2"
+                  className="text-[0.55rem] font-medium tracking-[0.24em] uppercase block mb-1.5"
                   style={{ color: `rgba(${member.glow},0.75)`, fontFamily: "var(--font-space-grotesk)" }}
                 >
                   {member.role}
@@ -202,11 +207,11 @@ export function TeamSection() {
 
                 {/* Name */}
                 <h3
-                  className="mb-2"
+                  className="mb-1.5"
                   style={{
                     fontFamily: "'General Sans', 'Inter', sans-serif",
                     fontWeight: 600,
-                    fontSize: "clamp(1.4rem, 2vw, 1.75rem)",
+                    fontSize: "clamp(1.05rem, 1.5vw, 1.25rem)",
                     lineHeight: 1.15,
                     color: "rgba(255,255,255,0.96)",
                     letterSpacing: "-0.005em",
@@ -217,7 +222,7 @@ export function TeamSection() {
 
                 {/* Tagline */}
                 <p
-                  className="text-[0.68rem] tracking-[0.18em] uppercase mb-4"
+                  className="text-[0.6rem] tracking-[0.15em] uppercase mb-3"
                   style={{ color: member.accent, fontFamily: "var(--font-space-grotesk)", opacity: 0.85 }}
                 >
                   {member.tagline}
@@ -225,7 +230,7 @@ export function TeamSection() {
 
                 {/* Divider */}
                 <div
-                  className="w-10 h-px mb-4 rounded-full"
+                  className="w-8 h-px mb-3 rounded-full"
                   style={{ background: `linear-gradient(to right, ${member.accent}, transparent)` }}
                 />
 
@@ -233,9 +238,9 @@ export function TeamSection() {
                 <p
                   style={{
                     fontFamily: "var(--font-space-grotesk)",
-                    fontSize: "0.875rem",
+                    fontSize: "0.78rem",
                     color: "rgba(255,255,255,0.72)",
-                    lineHeight: 1.8,
+                    lineHeight: 1.65,
                   }}
                 >
                   {member.description}

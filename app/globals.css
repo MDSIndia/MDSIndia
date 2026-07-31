@@ -147,6 +147,173 @@ body {
   color: rgba(255,255,255,0.88) !important;
 }
 
+/* ── HUD tag chip — status-readout style pill used by the Noorva orb's
+   capability tags: monospace, a pulsing status dot, a hairline border
+   instead of a filled pill. */
+.hud-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(6,10,20,0.55);
+  border: 1px solid rgba(0,212,255,0.28);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.hud-tag:hover {
+  border-color: rgba(0,212,255,0.6);
+  background: rgba(6,10,20,0.75);
+}
+
+.hud-tag-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #00D4FF;
+  box-shadow: 0 0 6px rgba(0,212,255,0.9);
+  flex-shrink: 0;
+  animation: hudDotPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes hudDotPulse {
+  0%, 100% { opacity: 0.5; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+/* ── HUD panel — premium readout card with a continuously rotating
+   gradient border (the "conic ring" effect used by premium AI product
+   cards) instead of static HUD corner brackets, plus a slow breathing
+   glow in the card's own accent color. --card-c0/--card-c1 are set
+   per-instance so each card carries its own rotating rim color. */
+@property --hud-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.hud-panel {
+  position: relative;
+  border-radius: 20px;
+  isolation: isolate;
+  animation: hudGlowBreathe 4.5s ease-in-out infinite;
+}
+
+.hud-panel::after {
+  /* The rotating ring itself: a conic gradient masked down to just the
+     border-width ring via mask-composite exclude (content-box cut out
+     of the full box), so only a thin glowing rim shows and rotates. */
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--hud-angle),
+    var(--card-c0, #0055FF),
+    var(--card-c1, #00D4FF),
+    rgba(255,255,255,0.75),
+    var(--card-c1, #00D4FF),
+    var(--card-c0, #0055FF)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: hudBorderSpin 5s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes hudBorderSpin {
+  to { --hud-angle: 360deg; }
+}
+
+@keyframes hudGlowBreathe {
+  0%, 100% { filter: drop-shadow(0 0 14px color-mix(in srgb, var(--card-c1, #00D4FF) 30%, transparent)); }
+  50% { filter: drop-shadow(0 0 26px color-mix(in srgb, var(--card-c1, #00D4FF) 55%, transparent)); }
+}
+
+.hud-panel-inner {
+  position: relative;
+  height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(8,10,20,0.85), rgba(8,10,20,0.85)),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 24px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 24px);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  transition: filter 0.3s ease;
+}
+
+.hud-panel:hover .hud-panel-inner {
+  filter: brightness(1.2);
+}
+
+.hud-panel-inner::before {
+  /* Diagonal scan sweep — a soft light band drifting across the panel
+     on a slow loop, the classic "system is live" HUD cue. */
+  content: '';
+  position: absolute;
+  inset: -40% -10%;
+  background: linear-gradient(115deg, transparent 42%, rgba(255,255,255,0.09) 50%, transparent 58%);
+  animation: hudScan 6s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes hudScan {
+  0% { transform: translateX(-60%); }
+  100% { transform: translateX(60%); }
+}
+
+.hud-icon {
+  animation: hudIconPulse 3.2s ease-in-out infinite;
+}
+
+@keyframes hudIconPulse {
+  0%, 100% { box-shadow: 0 4px 16px var(--icon-glow, rgba(0,85,255,0.25)); transform: scale(1); }
+  50% { box-shadow: 0 4px 26px var(--icon-glow, rgba(0,85,255,0.45)); transform: scale(1.05); }
+}
+
+/* ── Holographic ID-badge frame — used by the Team cards: an octagonal
+   card (all four corners clipped) with a glowing gradient rim in the
+   member's own accent color and a slow breathing pulse, reading as a
+   futuristic access badge rather than a plain rounded card.
+   --id-c0/--id-c1 set per-instance for the rim color. */
+.id-card-frame {
+  position: relative;
+  clip-path: polygon(
+    22px 0, calc(100% - 22px) 0, 100% 22px,
+    100% calc(100% - 22px), calc(100% - 22px) 100%, 22px 100%,
+    0 calc(100% - 22px), 0 22px
+  );
+  background:
+    linear-gradient(160deg, rgba(14,16,28,0.94) 0%, rgba(7,8,16,0.94) 100%) padding-box,
+    linear-gradient(160deg, var(--id-c0, #00D4FF), var(--id-c1, #0055FF)) border-box;
+  border: 1.5px solid transparent;
+  box-shadow: 0 0 24px var(--id-glow, rgba(0,212,255,0.22)), 0 8px 40px rgba(0,0,0,0.5);
+  animation: idCardBreathe 4.5s ease-in-out infinite;
+}
+
+@keyframes idCardBreathe {
+  0%, 100% { box-shadow: 0 0 18px var(--id-glow, rgba(0,212,255,0.18)), 0 8px 40px rgba(0,0,0,0.5); }
+  50% { box-shadow: 0 0 32px var(--id-glow, rgba(0,212,255,0.38)), 0 8px 40px rgba(0,0,0,0.5); }
+}
+
+.id-card-frame:hover {
+  animation-play-state: paused;
+  box-shadow: 0 0 44px var(--id-glow, rgba(0,212,255,0.5)), 0 24px 70px rgba(0,0,0,0.55);
+}
+
+.id-card-photo-frame {
+  clip-path: polygon(
+    12px 0, calc(100% - 12px) 0, 100% 12px,
+    100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%,
+    0 calc(100% - 12px), 0 12px
+  );
+}
+
 .subject-pill {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.14);
