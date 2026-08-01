@@ -198,7 +198,7 @@ export function ContactSection() {
                         className={`subject-pill px-3.5 py-1.5 md:px-4 md:py-2 rounded-full text-xs font-medium ${
                           formData.subject === s ? "is-active" : ""
                         }`}
-                        style={{ fontFamily: "'General Sans', 'Inter', sans-serif" }}
+                        style={{ fontFamily: "var(--font-inter), sans-serif" }}
                       >
                         {s}
                       </button>

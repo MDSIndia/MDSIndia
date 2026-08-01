@@ -193,7 +193,7 @@ export function Navbar() {
                     transition={{ delay: i * 0.04, ease: [0.22, 1, 0.36, 1] }}
                     className="flex items-center gap-2.5 py-3 text-sm uppercase transition-colors duration-300"
                     style={{
-                      fontFamily: "'Clash Display', 'Inter', sans-serif",
+                      fontFamily: "var(--font-display)",
                       fontWeight: 700,
                       letterSpacing: "0.1em",
                       color: isActive ? "#fff" : "rgba(255,255,255,0.62)",

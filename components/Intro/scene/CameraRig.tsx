@@ -90,23 +90,10 @@ export function CameraRig({ isMobile }: { isMobile: boolean }) {
     const uLook = Math.min(1, u + 0.035);
 
     targetPos.copy(curve.getPointAt(u));
+    // Look straight down the path itself — no artificial tilt added to
+    // the look target, so the camera angle stays level and stable from
+    // the very first frame instead of pitching up toward the skyline.
     const lookPos = curve.getPointAt(uLook);
-    // A small upward tilt so the shot takes in more of the skyline's
-    // height instead of framing mostly road and low facade — a fixed
-    // offset on the look target (rather than pitching the rig itself)
-    // keeps the position/banking logic below untouched. Faded out as u
-    // approaches 1: uLook is also clamped to 1 there, so the look point
-    // and the rig converge on the same spot and the horizontal distance
-    // between them collapses toward zero — holding a constant vertical
-    // offset against a vanishing horizontal one swings the required
-    // look angle sharply upward right at the climax (read as the camera
-    // "flipping up" into the sky instead of going straight into the
-    // star). Fading it to zero by the time the rig actually reaches the
-    // end keeps the final approach — and the coast afterward, which
-    // just carries this same look offset forward unchanged — level and
-    // straight into the glow.
-    const tiltFade = 1 - clamp01((u - 0.9) / 0.1);
-    lookPos.y += 1.8 * tiltFade;
 
     // Gentle decelerating coast past the end of the path, so the
     // camera is still softly moving forward through the whole

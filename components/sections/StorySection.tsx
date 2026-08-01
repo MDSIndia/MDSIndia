@@ -5,7 +5,7 @@ import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
-const NM = "'Clash Display', 'Inter', sans-serif";
+const NM = "var(--font-display)";
 const SG = "var(--font-space-grotesk), 'Inter', sans-serif";
 
 interface PrincipleProps {

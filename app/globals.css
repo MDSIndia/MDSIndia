@@ -14,6 +14,15 @@
   --text-primary: #FFFFFF;
   --text-secondary: rgba(255, 255, 255, 0.65);
   --text-muted: rgba(255, 255, 255, 0.35);
+  /* Single site-wide typeface: Outfit, a geometric, minimal sans, used
+     for everything — headlines, body, labels, nav, buttons. Existing
+     component styles were written against --font-display /
+     --font-satoshi / --font-space-grotesk — all three alias here so
+     every usage picks up Outfit without touching each call site. */
+  --font-sans: var(--font-outfit), 'Segoe UI', Arial, sans-serif;
+  --font-display: var(--font-sans);
+  --font-satoshi: var(--font-sans);
+  --font-space-grotesk: var(--font-sans);
 }
 
 * {
@@ -32,7 +41,7 @@ body {
   background: #020208;
   background-color: #020208;
   color: var(--text-primary);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-satoshi);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -64,8 +73,9 @@ body {
 }
 
 .neue-machina {
-  font-family: 'Clash Display', 'Inter', sans-serif;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 /* ── Unified button system ──────────────────────────────────────────
@@ -81,7 +91,7 @@ body {
   gap: 0.6rem;
   padding: 0.85rem 1.7rem;
   border-radius: 9999px;
-  font-family: 'General Sans', 'Inter', sans-serif;
+  font-family: var(--font-satoshi);
   font-weight: 700;
   font-size: 0.85rem;
   letter-spacing: 0.04em;
@@ -112,7 +122,7 @@ body {
   gap: 0.6rem;
   padding: 0.85rem 1.7rem;
   border-radius: 9999px;
-  font-family: 'General Sans', 'Inter', sans-serif;
+  font-family: var(--font-satoshi);
   font-weight: 700;
   font-size: 0.85rem;
   letter-spacing: 0.04em;
@@ -267,51 +277,83 @@ body {
   100% { transform: translateX(60%); }
 }
 
-.hud-icon {
-  animation: hudIconPulse 3.2s ease-in-out infinite;
-}
-
-@keyframes hudIconPulse {
-  0%, 100% { box-shadow: 0 4px 16px var(--icon-glow, rgba(0,85,255,0.25)); transform: scale(1); }
-  50% { box-shadow: 0 4px 26px var(--icon-glow, rgba(0,85,255,0.45)); transform: scale(1.05); }
-}
-
-/* ── Holographic ID-badge frame — used by the Team cards: an octagonal
-   card (all four corners clipped) with a glowing gradient rim in the
-   member's own accent color and a slow breathing pulse, reading as a
-   futuristic access badge rather than a plain rounded card.
+/* ── Holographic ID-badge frame — used by the Team cards: a rounded
+   card with a thick glowing gradient rim in the member's own accent
+   color and a slow breathing pulse, reading as a futuristic access
+   badge rather than a plain flat card.
    --id-c0/--id-c1 set per-instance for the rim color. */
 .id-card-frame {
   position: relative;
-  clip-path: polygon(
-    22px 0, calc(100% - 22px) 0, 100% 22px,
-    100% calc(100% - 22px), calc(100% - 22px) 100%, 22px 100%,
-    0 calc(100% - 22px), 0 22px
-  );
+  border-radius: 20px;
+  overflow: hidden;
   background:
     linear-gradient(160deg, rgba(14,16,28,0.94) 0%, rgba(7,8,16,0.94) 100%) padding-box,
     linear-gradient(160deg, var(--id-c0, #00D4FF), var(--id-c1, #0055FF)) border-box;
-  border: 1.5px solid transparent;
-  box-shadow: 0 0 24px var(--id-glow, rgba(0,212,255,0.22)), 0 8px 40px rgba(0,0,0,0.5);
+  border: 2.5px solid transparent;
+  box-shadow:
+    0 0 16px var(--id-glow-strong, rgba(0,212,255,0.55)),
+    0 0 46px var(--id-glow, rgba(0,212,255,0.4)),
+    0 0 100px var(--id-glow-wide, rgba(0,212,255,0.22)),
+    0 8px 40px rgba(0,0,0,0.5);
   animation: idCardBreathe 4.5s ease-in-out infinite;
 }
 
 @keyframes idCardBreathe {
-  0%, 100% { box-shadow: 0 0 18px var(--id-glow, rgba(0,212,255,0.18)), 0 8px 40px rgba(0,0,0,0.5); }
-  50% { box-shadow: 0 0 32px var(--id-glow, rgba(0,212,255,0.38)), 0 8px 40px rgba(0,0,0,0.5); }
+  0%, 100% {
+    box-shadow:
+      0 0 14px var(--id-glow-strong, rgba(0,212,255,0.45)),
+      0 0 38px var(--id-glow, rgba(0,212,255,0.3)),
+      0 0 80px var(--id-glow-wide, rgba(0,212,255,0.16)),
+      0 8px 40px rgba(0,0,0,0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 20px var(--id-glow-strong, rgba(0,212,255,0.65)),
+      0 0 56px var(--id-glow, rgba(0,212,255,0.48)),
+      0 0 120px var(--id-glow-wide, rgba(0,212,255,0.28)),
+      0 8px 40px rgba(0,0,0,0.5);
+  }
 }
 
 .id-card-frame:hover {
   animation-play-state: paused;
-  box-shadow: 0 0 44px var(--id-glow, rgba(0,212,255,0.5)), 0 24px 70px rgba(0,0,0,0.55);
+  box-shadow:
+    0 0 26px var(--id-glow-strong, rgba(0,212,255,0.8)),
+    0 0 70px var(--id-glow, rgba(0,212,255,0.6)),
+    0 0 150px var(--id-glow-wide, rgba(0,212,255,0.35)),
+    0 24px 70px rgba(0,0,0,0.55);
+}
+
+/* Sheen sweep — a bright diagonal catch-light that crosses the whole
+   badge once on hover, the same cue a real holographic ID catches
+   when tilted toward the light. */
+.id-card-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.16) 50%, transparent 65%);
+  transform: translateX(-130%);
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.id-card-frame:hover::after {
+  transform: translateX(130%);
 }
 
 .id-card-photo-frame {
-  clip-path: polygon(
-    12px 0, calc(100% - 12px) 0, 100% 12px,
-    100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%,
-    0 calc(100% - 12px), 0 12px
-  );
+  border-radius: 14px;
+}
+
+.id-card-photo-frame::after {
+  /* Slow holographic scan-line drifting over the portrait. */
+  content: '';
+  position: absolute;
+  inset: -30% -10%;
+  background: linear-gradient(115deg, transparent 44%, rgba(255,255,255,0.14) 50%, transparent 56%);
+  animation: hudScan 7s linear infinite;
+  pointer-events: none;
 }
 
 .subject-pill {
@@ -342,7 +384,7 @@ body {
 }
 
 .space-grotesk {
-  font-family: var(--font-space-grotesk), 'Inter', sans-serif;
+  font-family: var(--font-satoshi);
 }
 
 @keyframes principleFloat {

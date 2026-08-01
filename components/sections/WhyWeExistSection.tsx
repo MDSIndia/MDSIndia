@@ -10,7 +10,7 @@ import { usePortalTransition } from "@/components/PortalTransition/PortalTransit
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const SG = "var(--font-space-grotesk), 'Inter', sans-serif";
-const NM = "'Clash Display', 'Inter', sans-serif";
+const NM = "var(--font-display)";
 
 const pillars = [
   {

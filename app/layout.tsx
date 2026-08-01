@@ -1,21 +1,14 @@
 import type { Metadata } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
+import { Outfit } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { LenisProvider } from "@/components/providers/LenisProvider";
 import { PortalTransitionProvider } from "@/components/PortalTransition/PortalTransitionProvider";
 
-const inter = Inter({
+const outfit = Outfit({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-outfit",
   display: "swap",
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-space-grotesk",
-  display: "swap",
-  weight: ["400", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -67,18 +60,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${spaceGrotesk.variable}`}
+      className={outfit.variable}
       style={{ backgroundColor: "#020208" }}
     >
-      <head>
-        <link rel="preconnect" href="https://api.fontshare.com" />
-        <link
-          href="https://api.fontshare.com/v2/css?f[]=clash-display@700,600&f[]=general-sans@700,600,500&display=swap"
-          rel="stylesheet"
-        />
-      </head>
       <body
-        className={`${inter.className} noise`}
+        className="noise"
         style={{ backgroundColor: "#020208", color: "#ffffff" }}
       >
         <PortalTransitionProvider>

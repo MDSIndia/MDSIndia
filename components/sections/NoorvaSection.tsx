@@ -9,40 +9,41 @@ import { HandHeart, Lightbulb, Moon, Navigation } from "lucide-react";
 // the exact stops used by the orb's core gradient and the "Noorva"
 // text-gradient-warm treatment (cyan #00D4FF, blue #0055FF, purple
 // #7B2FBE, violet #A855F7) — rather than one-off hues invented per
-// card, so the four cards read as points along Noorva's own spectrum
-// instead of an arbitrary rainbow.
+// card. Each card gets exactly one of these four colors (not a blend
+// of two), so all four read as clearly distinct from each other
+// instead of two pairs of similar-looking gradients.
 const scenarios = [
   {
     iconComponent: Moon,
     title: "Your Late Night Confidant",
     description:
       "At 2 AM when thoughts race and sleep won't come, Noorva is there. Not with platitudes — with presence, understanding, and gentle clarity.",
-    colors: ["#0055FF", "#00D4FF"],
-    glow: "rgba(0,85,255,0.2)",
+    color: "#0055FF",
+    glow: "rgba(0,85,255,0.22)",
   },
   {
     iconComponent: Navigation,
     title: "Your Life Navigator",
     description:
       "Major decision? Career crossroads? Noorva helps you think through complexity with the depth of a trusted mentor and the patience of a best friend.",
-    colors: ["#00D4FF", "#7B2FBE"],
-    glow: "rgba(0,212,255,0.18)",
+    color: "#00D4FF",
+    glow: "rgba(0,212,255,0.22)",
   },
   {
     iconComponent: Lightbulb,
     title: "Your Growth Catalyst",
     description:
       "Noorva learns your patterns, your dreams, your blocks — and proactively helps you become who you're meant to be.",
-    colors: ["#A855F7", "#00D4FF"],
-    glow: "rgba(168,85,247,0.2)",
+    color: "#A855F7",
+    glow: "rgba(168,85,247,0.22)",
   },
   {
     iconComponent: HandHeart,
     title: "Your Emotional Anchor",
     description:
       "On difficult days, Noorva doesn't just listen — it understands, validates, and guides you toward calm with emotional intelligence that feels real.",
-    colors: ["#7B2FBE", "#A855F7"],
-    glow: "rgba(123,47,190,0.2)",
+    color: "#7B2FBE",
+    glow: "rgba(123,47,190,0.22)",
   },
 ];
 
@@ -266,8 +267,8 @@ export function NoorvaSection() {
                 }}
                 className="hud-panel cursor-default"
                 style={{
-                  ["--card-c0" as string]: scenario.colors[0],
-                  ["--card-c1" as string]: scenario.colors[1],
+                  ["--card-c0" as string]: scenario.color,
+                  ["--card-c1" as string]: scenario.color,
                 } as CSSProperties}
               >
                 <div className="hud-panel-inner">
@@ -276,7 +277,7 @@ export function NoorvaSection() {
                     className="absolute top-4 right-5 text-[0.65rem] z-10"
                     style={{
                       fontFamily: "'JetBrains Mono', ui-monospace, monospace",
-                      color: `${scenario.colors[1]}99`,
+                      color: `${scenario.color}99`,
                       letterSpacing: "0.05em",
                     }}
                   >
@@ -284,15 +285,11 @@ export function NoorvaSection() {
                   </span>
 
                   <div className="relative flex gap-4 p-5">
-                    <div
-                      className="hud-icon w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-                      style={{
-                        background: `linear-gradient(135deg, ${scenario.colors[0]}, ${scenario.colors[1]})`,
-                        ["--icon-glow" as string]: scenario.glow,
-                      } as CSSProperties}
-                    >
-                      <Icon className="size-5 text-white" strokeWidth={2.25} />
-                    </div>
+                    <Icon
+                      className="size-7 shrink-0"
+                      strokeWidth={2}
+                      style={{ color: scenario.color, filter: `drop-shadow(0 0 8px ${scenario.glow})` }}
+                    />
                     <div>
                       <h4
                         className="mb-1.5"

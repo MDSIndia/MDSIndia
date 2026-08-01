@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useMobile } from "@/hooks/useMobile";
 
 const SG = "var(--font-space-grotesk), Inter, sans-serif";
-const NM = "'Clash Display', 'Inter', sans-serif";
+const NM = "var(--font-display)";
 const MONO = "'JetBrains Mono', ui-monospace, 'Fira Code', Menlo, monospace";
 
 const QUOTE =

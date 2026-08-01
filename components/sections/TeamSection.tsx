@@ -58,8 +58,8 @@ export function TeamSection() {
           </span>
           <h2
             style={{
-              fontFamily: "'General Sans', 'Inter', sans-serif",
-              fontWeight: 700,
+              fontFamily: "var(--font-display)",
+              fontWeight: 600,
               fontSize: "clamp(2.8rem, 7vw, 7rem)",
               lineHeight: 0.92,
               letterSpacing: "-0.01em",
@@ -90,10 +90,10 @@ export function TeamSection() {
           </p>
         </motion.div>
 
-        {/* Cards — holographic ID-badge frame: an octagonal card with a
-            glowing gradient rim in the member's own accent color and
-            an inset (not full-bleed) photo, echoing an access-badge
-            rather than a plain rounded card. */}
+        {/* Cards — holographic ID-badge frame: a rounded card with a
+            thick glowing gradient rim in the member's own accent color
+            and an inset (not full-bleed) photo, echoing an
+            access-badge rather than a plain flat card. */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
           {team.map((member, i) => (
             <motion.div
@@ -107,10 +107,12 @@ export function TeamSection() {
               style={{
                 ["--id-c0" as string]: member.accent,
                 ["--id-c1" as string]: member.accent2,
-                ["--id-glow" as string]: `rgba(${member.glow},0.3)`,
+                ["--id-glow-strong" as string]: `rgba(${member.glow},0.55)`,
+                ["--id-glow" as string]: `rgba(${member.glow},0.4)`,
+                ["--id-glow-wide" as string]: `rgba(${member.glow},0.22)`,
               } as CSSProperties}
             >
-              {/* Portrait — inset with its own octagon frame, not
+              {/* Portrait — inset with its own rounded frame, not
                   full-bleed to the card's edges */}
               <div className="relative p-3 pb-0">
                 <div
@@ -209,7 +211,7 @@ export function TeamSection() {
                 <h3
                   className="mb-1.5"
                   style={{
-                    fontFamily: "'General Sans', 'Inter', sans-serif",
+                    fontFamily: "var(--font-inter), sans-serif",
                     fontWeight: 600,
                     fontSize: "clamp(1.05rem, 1.5vw, 1.25rem)",
                     lineHeight: 1.15,
@@ -230,8 +232,11 @@ export function TeamSection() {
 
                 {/* Divider */}
                 <div
-                  className="w-8 h-px mb-3 rounded-full"
-                  style={{ background: `linear-gradient(to right, ${member.accent}, transparent)` }}
+                  className="w-8 h-[2px] mb-3 rounded-full"
+                  style={{
+                    background: `linear-gradient(to right, ${member.accent}, transparent)`,
+                    boxShadow: `0 0 8px ${member.accent}`,
+                  }}
                 />
 
                 {/* Description */}
