@@ -5,11 +5,11 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 /** Makes the highway itself feel engineered rather than a bare plane:
- * low glass-like energy guard rails running both edges, plus small
- * floating diamond-shaped lane-indicator markers hovering just above
- * the surface with a shared pulsing glow suggesting live embedded
- * lighting. Fixed world positions, animated only via opacity, so
- * there's no per-frame position math to get wrong — both are cheap
+ * plain metal guard rails running both edges (with a dim reflective
+ * strip along the top, the way real galvanized rail catches headlights)
+ * plus small amber reflective road studs set into the lane divider.
+ * Fixed world positions, animated only via a faint reflective flicker,
+ * so there's no per-frame position math to get wrong — both are cheap
  * instanced passes. */
 export function RoadDetails({ isMobile }: { isMobile: boolean }) {
   const railCount = isMobile ? 26 : 46;
@@ -46,9 +46,9 @@ export function RoadDetails({ isMobile }: { isMobile: boolean }) {
     const matrices: THREE.Matrix4[] = [];
     for (let i = 0; i < chevronCount; i++) {
       const z = 40 - (i / chevronCount) * 160;
-      dummy.position.set(0, 0.28, z);
-      dummy.scale.set(0.22, 0.22, 0.22);
-      dummy.rotation.set(-Math.PI / 2, 0, Math.PI / 4);
+      dummy.position.set(0, 0.03, z);
+      dummy.scale.set(0.16, 0.03, 0.16);
+      dummy.rotation.set(0, Math.PI / 4, 0);
       dummy.updateMatrix();
       matrices.push(dummy.matrix.clone());
     }
@@ -78,57 +78,56 @@ export function RoadDetails({ isMobile }: { isMobile: boolean }) {
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
 
+    // A faint, irregular sparkle rather than a smooth pulse — real
+    // galvanized rail catches passing headlight glints unevenly, not a
+    // uniform breathing glow.
     const glowMat = railGlowRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
-    if (glowMat) glowMat.opacity = 0.55 + Math.sin(t * 1.4) * 0.2;
+    if (glowMat) glowMat.opacity = 0.22 + Math.max(0, Math.sin(t * 3.1)) * 0.12;
 
     const railMat = railRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
-    if (railMat) railMat.opacity = 0.3;
+    if (railMat) railMat.opacity = 0.85;
 
+    // Reflective road studs catch light steadily, no visible pulse.
     const chevronMat = chevronRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
-    if (chevronMat) chevronMat.opacity = 0.4 + Math.sin(t * 3) * 0.2;
+    if (chevronMat) chevronMat.opacity = 0.7;
   });
 
   return (
     <group>
       <instancedMesh ref={railRef} args={[undefined, undefined, railCount]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshBasicMaterial
-          color="#0a1c33"
+        <meshLambertMaterial
+          color="#5a5f68"
           transparent
-          opacity={0.3}
-          fog={false}
+          opacity={0.85}
+          fog
           side={THREE.DoubleSide}
         />
       </instancedMesh>
 
+      {/* Thin top edge of the rail — a dim highlight strip rather than
+          an additive neon glow. */}
       <instancedMesh ref={railGlowRef} args={[undefined, undefined, railCount]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshBasicMaterial
-          color="#00d4ff"
+          color="#c7cdd6"
           transparent
-          opacity={0.5}
-          blending={THREE.AdditiveBlending}
+          opacity={0.3}
           depthWrite={false}
           fog={false}
         />
       </instancedMesh>
 
+      {/* Amber reflective road studs set into the lane divider. */}
       <instancedMesh ref={chevronRef} args={[undefined, undefined, chevronCount]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshBasicMaterial
-          color="#8fe6ff"
-          transparent
-          opacity={0.4}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-          fog={false}
-        />
+        <meshBasicMaterial color="#ffb347" transparent opacity={0.7} fog={false} />
       </instancedMesh>
     </group>
   );

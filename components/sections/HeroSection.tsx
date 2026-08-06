@@ -99,18 +99,18 @@ export function HeroSection() {
             Empowering The Future Through Products
           </motion.p>
 
-          <motion.div variants={fadeUp} className="flex flex-wrap gap-3 justify-center md:justify-start">
-            <a href="#about-mds" className="btn-primary text-sm">
-              <Compass className="size-4" strokeWidth={2.25} />
+          <motion.div variants={fadeUp} className="flex flex-wrap gap-3.5 justify-center md:justify-start">
+            <a href="#about-mds" className="btn-primary hero-cta hero-cta-primary text-sm">
+              <Compass className="hero-cta-icon size-4" strokeWidth={2.25} />
               Explore MDS
             </a>
             <a
               href="https://noorva.ai"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-secondary text-sm"
+              className="btn-secondary hero-cta hero-cta-secondary text-sm"
             >
-              <ArrowUpRight className="size-4" strokeWidth={2.25} />
+              <ArrowUpRight className="hero-cta-icon size-4" strokeWidth={2.25} />
               Discover Noorva
             </a>
           </motion.div>

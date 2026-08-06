@@ -32,7 +32,7 @@ export function DistantSkyline({ isMobile }: { isMobile: boolean }) {
     const bodyColors: THREE.Color[] = [];
     const lightMatrices: THREE.Matrix4[] = [];
     const lightColors: THREE.Color[] = [];
-    const palette = ["#00D4FF", "#7B2FBE", "#0055FF"];
+    const palette = ["#00D4FF", "#0055FF", "#33E0FF"];
 
     for (let i = 0; i < count; i++) {
       const side = i % 2 === 0 ? -1 : 1;

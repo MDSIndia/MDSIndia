@@ -24,3 +24,9 @@ export const AD_IMAGES = [
 
 /** The MDS mark, used sparingly as a floating holographic brand projection. */
 export const BRAND_LOGO = "/logo.png";
+
+/** Hand-authored SVG glass panel (frame + tinted glass + a diagonal
+ * sky-reflection sweep) used for every vehicle's cabin windows —
+ * a real vector asset rather than a flat color, so cabins read as
+ * actual glass instead of a solid painted block. */
+export const CAR_GLASS = "/car-glass.svg";

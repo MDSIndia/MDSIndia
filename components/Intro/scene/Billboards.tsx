@@ -16,7 +16,7 @@ function seeded(i: number, salt: number) {
   return v - Math.floor(v);
 }
 
-const GLOW_COLORS = ["#00d4ff", "#7B2FBE", "#0055FF", "#ff2ecb"];
+const GLOW_COLORS = ["#f4f2e8", "#ffcf8a", "#dce6f2", "#ffdca8"];
 
 type Tier = "street" | "sky";
 
@@ -75,41 +75,22 @@ function buildPlacements(count: number, imageCount: number): AdPlacement[] {
   return placements;
 }
 
-/** A single premium digital ad panel: dark bezel, additive glow bloom,
- * the brand image, and a slow animated scan-line sweep. Double-sided so
- * it reads correctly regardless of which way the camera approaches. */
+/** A single digital ad panel: dark bezel, soft glow bloom, and the
+ * brand image. Double-sided so it reads correctly regardless of which
+ * way the camera approaches. */
 function AdPanel({
   placement,
   texture,
-  isMobile,
 }: {
   placement: AdPlacement;
   texture: THREE.Texture;
-  isMobile: boolean;
 }) {
   const glowRef = useRef<THREE.Mesh>(null);
-  const sweepRef = useRef<THREE.Mesh>(null);
 
-  useFrame((state) => {
-    const t = state.clock.getElapsedTime() + placement.phase;
-
+  useFrame(() => {
     if (glowRef.current) {
       const mat = glowRef.current.material as THREE.MeshBasicMaterial;
-      mat.opacity = 0.16 + Math.sin(t * 1.4) * 0.07;
-    }
-
-    // The scan-line sweep is a nice-to-have polish detail, not worth
-    // an extra overdraw pass + per-frame update on every panel on
-    // mobile, where it's not even rendered (see below).
-    if (!isMobile && sweepRef.current) {
-      const cycle = (t * 0.22) % 1.6;
-      const mat = sweepRef.current.material as THREE.MeshBasicMaterial;
-      if (cycle < 1) {
-        sweepRef.current.position.y = (cycle - 0.5) * placement.height;
-        mat.opacity = 0.28;
-      } else {
-        mat.opacity = 0;
-      }
+      mat.opacity = 0.14;
     }
   });
 
@@ -141,25 +122,6 @@ function AdPanel({
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial map={texture} toneMapped={false} fog={false} side={THREE.DoubleSide} />
       </mesh>
-
-      {!isMobile && (
-        <mesh
-          ref={sweepRef}
-          scale={[placement.width * 0.98, placement.height * 0.06, 1]}
-          position={[0, 0, 0.02]}
-        >
-          <planeGeometry args={[1, 1]} />
-          <meshBasicMaterial
-            color="#bfffff"
-            transparent
-            opacity={0}
-            blending={THREE.AdditiveBlending}
-            depthWrite={false}
-            fog={false}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      )}
     </group>
   );
 }
@@ -185,7 +147,7 @@ export function Billboards({ isMobile }: { isMobile: boolean }) {
   return (
     <group>
       {placements.map((p, i) => (
-        <AdPanel key={i} placement={p} texture={textures[p.textureIndex]} isMobile={isMobile} />
+        <AdPanel key={i} placement={p} texture={textures[p.textureIndex]} />
       ))}
     </group>
   );

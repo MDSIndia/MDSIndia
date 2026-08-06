@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { clamp01 } from "./timeline";
 import { AD_IMAGES } from "./adImages";
+import { keepClearOfCrossStreets } from "./crossStreetPositions";
 
 // Loaded eagerly alongside Billboards' own preload — same asset set,
 // so there's nothing extra to warm up here.
@@ -17,7 +19,6 @@ function seeded(i: number, salt: number) {
 
 interface BannerPlacement {
   position: [number, number, number];
-  rotationY: number;
   width: number;
   height: number;
   textureIndex: number;
@@ -34,9 +35,18 @@ function buildPlacements(count: number, isMobile: boolean): BannerPlacement[] {
   const placements: BannerPlacement[] = [];
   for (let i = 0; i < count; i++) {
     const side = i % 2 === 0 ? -1 : 1;
-    const z = 55 - seeded(i, 2) * 165;
+    // Nudged clear of cross streets exactly like CityScape does to the
+    // same raw value — has to match precisely, since this whole
+    // function exists purely to recompute where CityScape's own
+    // buildings actually ended up.
+    const z = keepClearOfCrossStreets(55 - seeded(i, 2) * 165);
     const startBias = clamp01((z - 15) / 40);
-    const x = side * (11 - startBias * 6 + seeded(i, 1) * (24 - startBias * 8));
+    // Matches CityScape's own (now tightened) spread exactly — this
+    // previously used a slightly different formula than CityScape's
+    // actual placement math, which is exactly the kind of drift that
+    // leaves a banner not quite flush against its host building's
+    // real facade.
+    const x = side * (11 + seeded(i, 1) * (11 - startBias * 6));
     const height = 4 + seeded(i, 3) * 50;
     const heightFactor = clamp01((height - 4) / 50);
     const width = (1.6 + seeded(i, 4) * 5) * (1.18 - heightFactor * 0.4);
@@ -64,9 +74,13 @@ function buildPlacements(count: number, isMobile: boolean): BannerPlacement[] {
       // Flush against the road-facing facade, matching the same
       // unrotated placement convention CityScape's own window-strip
       // accents use (see windowA/B) rather than tracking each
-      // building's own small random yaw.
+      // building's own small random yaw. Orientation itself isn't
+      // fixed here anymore — see the per-frame billboarding in Banner
+      // below, which keeps the printed face pointed at the camera
+      // throughout the flight rather than a static rotation that's
+      // only ever face-on for the instant the camera is directly
+      // alongside it.
       position: [x - side * (width / 2 + 0.03), centerY, z],
-      rotationY: side > 0 ? Math.PI / 2 : -Math.PI / 2,
       width: bannerWidth,
       height: bannerHeight,
       textureIndex: i % AD_IMAGES.length,
@@ -82,8 +96,26 @@ function Banner({
   placement: BannerPlacement;
   texture: THREE.Texture;
 }) {
+  const groupRef = useRef<THREE.Group>(null);
+
+  // Billboarded toward the camera every frame (yaw only — it's mounted
+  // on a vertical wall, so it shouldn't pitch) rather than a fixed
+  // rotation baked in at placement time. A static rotation is only
+  // ever face-on for the instant the camera is directly alongside it;
+  // for most of the flight the camera is approaching from further down
+  // the road, where a wall-perpendicular banner is seen at an
+  // increasingly glancing, unreadable angle. Billboarding keeps the
+  // printed face pointed at the camera throughout.
+  useFrame(({ camera }) => {
+    const group = groupRef.current;
+    if (!group) return;
+    const dx = camera.position.x - placement.position[0];
+    const dz = camera.position.z - placement.position[2];
+    group.rotation.y = Math.atan2(dx, dz);
+  });
+
   return (
-    <group position={placement.position} rotation={[0, placement.rotationY, 0]}>
+    <group ref={groupRef} position={placement.position}>
       {/* Dark backing bezel, slightly larger than the image — reads as
           a mounted banner/vinyl wrap rather than an image floating
           flush against the wall. */}

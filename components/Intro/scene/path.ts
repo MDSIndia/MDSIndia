@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { INTRO_DURATION, clamp01, easeInCubic } from "./timeline";
+import { INTRO_DURATION, clamp01 } from "./timeline";
 
 /**
  * Control points for the cinematic camera flight path: a straight,
@@ -55,21 +55,31 @@ export function createFlightCurve() {
  * to the moment it reaches the star, matching "races toward it at full
  * velocity" rather than gliding to a stop before entering the light.
  *
- * Pure cubic ease-in has zero velocity at x=0, which read as an
- * almost-motionless crawl for the first couple of seconds once the
- * flight starts already at street level (there's no longer a high
- * aerial descent to disguise it). Blending in a linear term gives the
- * camera real, noticeable speed from the very first frame while still
- * landing on the exact same u=0 at t=0 and u=1 at t=INTRO_DURATION —
- * every other effect in this cinematic keyed to those two absolute
- * endpoints (fog, star growth, the engulf) stays perfectly in sync
- * without needing its own retune. */
+ * A single power curve (x^1.4), not a blend of two eases. Two failed
+ * attempts along the way are worth recording:
+ *  - Pure cubic ease-in (x^3) has zero velocity at x=0, which read as
+ *    an almost-motionless crawl for the first couple of seconds once
+ *    the flight starts already at street level.
+ *  - Blending in a linear term fixed the crawl but put the camera at
+ *    full linear velocity in the very first rendered frame — no real
+ *    rig already has momentum the instant it starts, so this read as
+ *    the shot snapping straight into motion instead of launching.
+ *    Fading that linear term in over a short window fixed *that*, but
+ *    a weighted-sum-of-two-curves ramp isn't itself monotonic — the
+ *    two terms briefly out-accelerate their own settled cruise speed
+ *    before easing back down, i.e. a velocity overshoot/bump right as
+ *    the ramp hands off.
+ * x^1.4 sidesteps both: for any exponent n>1, d/dx[x^n] = n*x^(n-1) is
+ * exactly 0 at x=0 (genuine standing start, no snap) and itself
+ * monotonically non-decreasing over [0,1] (guaranteed — a single power
+ * of x has no seam where two pieces could fight each other), so
+ * velocity rises smoothly with no bump anywhere in the flight. 1.4 is
+ * chosen empirically to closely track the old blended curve's pacing
+ * from ~1s onward (so the bulk of the flight — and everything else
+ * keyed to absolute time, like the FOV pushes and fog below — reads
+ * the same as before), while giving the first ~second a genuine,
+ * gradual liftoff instead of either extreme. */
 export function flightU(t: number): number {
   const x = clamp01(t / INTRO_DURATION);
-  // More linear weight than before (was 0.6/0.4) — noticeably more
-  // velocity from the first frame instead of most of the motion being
-  // saved for the ease-in cubic's own acceleration later on, while
-  // still landing on the exact same u=0 at t=0 and u=1 at
-  // t=INTRO_DURATION every other effect in this cinematic is keyed to.
-  return clamp01(easeInCubic(x) * 0.45 + x * 0.55);
+  return clamp01(Math.pow(x, 1.4));
 }

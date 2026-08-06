@@ -3,7 +3,6 @@ import { Outfit } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { LenisProvider } from "@/components/providers/LenisProvider";
-import { PortalTransitionProvider } from "@/components/PortalTransition/PortalTransitionProvider";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -67,9 +66,7 @@ export default function RootLayout({
         className="noise"
         style={{ backgroundColor: "#020208", color: "#ffffff" }}
       >
-        <PortalTransitionProvider>
-          <LenisProvider>{children}</LenisProvider>
-        </PortalTransitionProvider>
+        <LenisProvider>{children}</LenisProvider>
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-DN53L6G5J7"
           strategy="afterInteractive"

@@ -7,6 +7,7 @@ import { CameraRig } from "./scene/CameraRig";
 import { Ground } from "./scene/Ground";
 import { HighwayRoad } from "./scene/HighwayRoad";
 import { RoadDetails } from "./scene/RoadDetails";
+import { CrossStreets } from "./scene/CrossStreets";
 import { CityScape } from "./scene/CityScape";
 import { DistantSkyline } from "./scene/DistantSkyline";
 import { ParticleField } from "./scene/ParticleField";
@@ -14,8 +15,11 @@ import { Billboards } from "./scene/Billboards";
 import { BuildingBanners } from "./scene/BuildingBanners";
 import { SkyBridges } from "./scene/SkyBridges";
 import { StreetLights } from "./scene/StreetLights";
-import { HoverTraffic } from "./scene/HoverTraffic";
+import { FlyingCars } from "./scene/FlyingCars";
+import { StreetCars } from "./scene/StreetCars";
+import { ParkingLot } from "./scene/ParkingLot";
 import { FloatingLogo } from "./scene/FloatingLogo";
+import { Landmark } from "./scene/Landmark";
 import { Star } from "./scene/Star";
 import { CosmicBlast } from "./scene/CosmicBlast";
 import { INTRO_DURATION } from "./scene/timeline";
@@ -207,20 +211,26 @@ export function IntroCinematic({
               <Ground />
               <HighwayRoad />
               <RoadDetails isMobile={isMobile} />
+              <CrossStreets isMobile={isMobile} />
               <CityScape isMobile={isMobile} />
               <DistantSkyline isMobile={isMobile} />
               <SkyBridges isMobile={isMobile} />
               <StreetLights isMobile={isMobile} />
-              <HoverTraffic isMobile={isMobile} />
               <ParticleField isMobile={isMobile} />
               <Star isMobile={isMobile} />
               <CosmicBlast isMobile={isMobile} />
               {/* Textured elements get their own boundary so a slow image
-                  load never blanks the rest of the (already-running) scene. */}
+                  load never blanks the rest of the (already-running) scene —
+                  this now includes the vehicles, since their cabins load the
+                  SVG glass texture. */}
               <Suspense fallback={null}>
+                <ParkingLot isMobile={isMobile} />
+                <StreetCars isMobile={isMobile} />
+                <FlyingCars isMobile={isMobile} />
                 <Billboards isMobile={isMobile} />
                 <BuildingBanners isMobile={isMobile} />
                 <FloatingLogo />
+                <Landmark />
               </Suspense>
             </Suspense>
           </Canvas>

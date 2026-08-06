@@ -5,13 +5,10 @@ import type { CSSProperties } from "react";
 import { motion } from "framer-motion";
 import { HandHeart, Lightbulb, Moon, Navigation } from "lucide-react";
 
-// Every accent below is drawn from Noorva's own established palette —
-// the exact stops used by the orb's core gradient and the "Noorva"
-// text-gradient-warm treatment (cyan #00D4FF, blue #0055FF, purple
-// #7B2FBE, violet #A855F7) — rather than one-off hues invented per
-// card. Each card gets exactly one of these four colors (not a blend
-// of two), so all four read as clearly distinct from each other
-// instead of two pairs of similar-looking gradients.
+// Each card gets one clearly distinct accent so all four read apart
+// at a glance: blue and cyan come from Noorva's own orb/text-gradient
+// palette; violet and rose extend that same family into hues that
+// stay far enough apart to avoid the "two purples" look.
 const scenarios = [
   {
     iconComponent: Moon,
@@ -42,8 +39,8 @@ const scenarios = [
     title: "Your Emotional Anchor",
     description:
       "On difficult days, Noorva doesn't just listen — it understands, validates, and guides you toward calm with emotional intelligence that feels real.",
-    color: "#7B2FBE",
-    glow: "rgba(123,47,190,0.22)",
+    color: "#EC4899",
+    glow: "rgba(236,72,153,0.22)",
   },
 ];
 
@@ -241,7 +238,6 @@ export function NoorvaSection() {
                   color: "rgba(180,225,255,0.85)",
                 }}
               >
-                <span className="hud-tag-dot" />
                 {tag}
               </span>
             ))}

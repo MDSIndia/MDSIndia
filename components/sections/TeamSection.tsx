@@ -16,7 +16,6 @@ const team = [
       "The architect of MDS's grand vision — a believer that AI should serve humanity's highest potential, not just its productivity. Sumanth leads MDS with purpose, pushing the boundaries of what intelligent technology can mean for human life.",
     photo: "/Sumanth-avatar.jpg",
     accent: "#00D4FF",
-    accent2: "#0055FF",
     glow: "0,212,255",
   },
 
@@ -29,7 +28,6 @@ const team = [
       "The technical force behind Noorva's intelligence — designing AI systems that genuinely understand the complexity of human life. Rakesh builds the future one breakthrough at a time.",
     photo: "/Rakesh-avatar.jpg",
     accent: "#A855F7",
-    accent2: "#7B2FBE",
     glow: "168,85,247",
   },
 ];
@@ -90,11 +88,9 @@ export function TeamSection() {
           </p>
         </motion.div>
 
-        {/* Cards — holographic ID-badge frame: a rounded card with a
-            thick glowing gradient rim in the member's own accent color
-            and an inset (not full-bleed) photo, echoing an
-            access-badge rather than a plain flat card. */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
+        {/* Cards — a quiet glass card at rest; the member's accent
+            color only shows up as a border tint + soft glow on hover. */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-[300px] sm:max-w-2xl mx-auto">
           {team.map((member, i) => (
             <motion.div
               key={member.name}
@@ -102,22 +98,20 @@ export function TeamSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.15, duration: 0.9, ease: EASE }}
-              whileHover={{ y: -10, transition: { duration: 0.4 } }}
+              whileHover={{ y: -6, transition: { duration: 0.4 } }}
               className="id-card-frame group relative flex flex-col"
               style={{
                 ["--id-c0" as string]: member.accent,
-                ["--id-c1" as string]: member.accent2,
-                ["--id-glow-strong" as string]: `rgba(${member.glow},0.55)`,
-                ["--id-glow" as string]: `rgba(${member.glow},0.4)`,
-                ["--id-glow-wide" as string]: `rgba(${member.glow},0.22)`,
+                ["--id-glow" as string]: `rgba(${member.glow},0.16)`,
+                ["--id-glow-strong" as string]: `rgba(${member.glow},0.4)`,
               } as CSSProperties}
             >
               {/* Portrait — inset with its own rounded frame, not
                   full-bleed to the card's edges */}
-              <div className="relative p-3 pb-0">
+              <div className="relative p-2.5 sm:p-3.5 pb-0">
                 <div
-                  className="id-card-photo-frame relative w-full overflow-hidden"
-                  style={{ aspectRatio: "1 / 1", border: `1px solid rgba(${member.glow},0.35)` }}
+                  className="id-card-photo-frame relative w-full overflow-hidden mx-auto"
+                  style={{ aspectRatio: "1 / 1", maxWidth: "88%", border: `1px solid rgba(${member.glow},0.35)` }}
                 >
                   <div className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-[1.07]">
                     <Image
@@ -125,7 +119,7 @@ export function TeamSection() {
                       alt={member.name}
                       fill
                       quality={100}
-                      sizes="(max-width: 640px) 100vw, 420px"
+                      sizes="(max-width: 640px) 80vw, 400px"
                       style={{
                         objectFit: "cover",
                         objectPosition: "top center",
@@ -198,7 +192,7 @@ export function TeamSection() {
               </div>
 
               {/* Content */}
-              <div className="relative flex flex-col text-left px-5 pt-5 pb-5">
+              <div className="relative flex flex-col text-left px-4 pt-7 pb-4 sm:px-5 sm:pt-8 sm:pb-5">
                 {/* Role */}
                 <span
                   className="text-[0.55rem] font-medium tracking-[0.24em] uppercase block mb-1.5"

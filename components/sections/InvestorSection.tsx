@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useInView, useMotionValue, animate, useTransform } from "framer-motion";
 import { ArrowRight, ArrowUpRight, Brain, Crosshair, Microscope, Zap } from "lucide-react";
-import { usePortalTransition } from "@/components/PortalTransition/PortalTransitionProvider";
 
 function AnimatedNumber({ target, suffix = "" }: { target: number; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -269,8 +268,6 @@ const MARKET_STATEMENT =
   "Artificial intelligence is redefining how the world lives, works, and creates. With billions of future users and a multi-trillion-dollar market ahead, MDS is building the trusted AI ecosystem for the next generation.";
 
 export function InvestorSection() {
-  const { trigger } = usePortalTransition();
-
   return (
     <section id="invest" className="section-padding relative overflow-hidden">
       <div
@@ -320,15 +317,7 @@ export function InvestorSection() {
             </p>
 
             <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-              <Link
-                href="/market-opportunity"
-                onClick={(e) => {
-                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-                  e.preventDefault();
-                  trigger("/market-opportunity");
-                }}
-                className="btn-primary text-sm"
-              >
+              <Link href="/market-opportunity" className="btn-primary text-sm">
                 <ArrowRight className="size-4" strokeWidth={2.25} />
                 Know More
               </Link>
@@ -399,6 +388,66 @@ export function InvestorSection() {
                     boxShadow: "0 0 8px rgba(255,255,255,0.8)",
                     transformOrigin: "2px 2px",
                     animation: "orbitParticle2 11s linear infinite reverse",
+                  }}
+                />
+                <div
+                  className="absolute rounded-full"
+                  style={{
+                    top: "50%",
+                    left: "50%",
+                    width: 5,
+                    height: 5,
+                    marginTop: -2.5,
+                    marginLeft: -2.5,
+                    background: "rgba(168,85,247,1)",
+                    boxShadow: "0 0 10px rgba(168,85,247,0.9), 0 0 20px rgba(168,85,247,0.45)",
+                    transformOrigin: "2.5px 2.5px",
+                    animation: "orbitParticle3 13s linear infinite",
+                  }}
+                />
+                <div
+                  className="absolute rounded-full"
+                  style={{
+                    top: "50%",
+                    left: "50%",
+                    width: 4,
+                    height: 4,
+                    marginTop: -2,
+                    marginLeft: -2,
+                    background: "rgba(0,85,255,1)",
+                    boxShadow: "0 0 10px rgba(0,85,255,0.9), 0 0 20px rgba(0,85,255,0.45)",
+                    transformOrigin: "2px 2px",
+                    animation: "orbitParticle4 14s linear infinite reverse",
+                  }}
+                />
+                <div
+                  className="absolute rounded-full"
+                  style={{
+                    top: "50%",
+                    left: "50%",
+                    width: 4,
+                    height: 4,
+                    marginTop: -2,
+                    marginLeft: -2,
+                    background: "rgba(0,212,255,1)",
+                    boxShadow: "0 0 10px rgba(0,212,255,0.9), 0 0 20px rgba(0,212,255,0.45)",
+                    transformOrigin: "2px 2px",
+                    animation: "orbitParticle5 9.5s linear infinite",
+                  }}
+                />
+                <div
+                  className="absolute rounded-full"
+                  style={{
+                    top: "50%",
+                    left: "50%",
+                    width: 3,
+                    height: 3,
+                    marginTop: -1.5,
+                    marginLeft: -1.5,
+                    background: "rgba(255,255,255,0.9)",
+                    boxShadow: "0 0 8px rgba(255,255,255,0.75)",
+                    transformOrigin: "1.5px 1.5px",
+                    animation: "orbitParticle6 16s linear infinite reverse",
                   }}
                 />
               </div>

@@ -56,30 +56,39 @@ export function SkyBridges({ isMobile }: { isMobile: boolean }) {
     mesh.instanceMatrix.needsUpdate = true;
   }, [data]);
 
-  useFrame((state) => {
+  useFrame(() => {
     const mat = edgeRef.current?.material as THREE.MeshBasicMaterial | undefined;
-    if (mat) mat.opacity = 0.4 + Math.sin(state.clock.getElapsedTime() * 0.9) * 0.15;
+    if (mat) mat.opacity = 0.16;
   });
 
   return (
     <group>
+      {/* Lit (Lambert) rather than flat MeshBasicMaterial — an unlit
+          panel this dark reads as nearly invisible against a night
+          sky, which is exactly what let the additive edge strip below
+          dominate as a stray glowing bar instead of a physical
+          structure. A lit, more opaque body actually catches the rig
+          light and reads as glass/metal spanning the road. */}
       <instancedMesh ref={bodyRef} args={[undefined, undefined, count]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshBasicMaterial
-          color="#0a1830"
+        <meshLambertMaterial
+          color="#26364f"
           transparent
-          opacity={0.32}
-          fog={false}
+          opacity={0.75}
+          fog
           side={THREE.DoubleSide}
         />
       </instancedMesh>
 
+      {/* A subtle underside accent, not the dominant element — pulled
+          back in both opacity and size so it reads as trim on the
+          bridge rather than a bright line floating on its own. */}
       <instancedMesh ref={edgeRef} args={[undefined, undefined, count]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshBasicMaterial
-          color="#00d4ff"
+          color="#8fb4d8"
           transparent
-          opacity={0.45}
+          opacity={0.16}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           fog={false}

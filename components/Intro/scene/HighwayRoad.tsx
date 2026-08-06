@@ -4,6 +4,13 @@ import { useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { windowProgress } from "./timeline";
+import {
+  ASPHALT_COLOR,
+  ROAD_EDGE_LINE_COLOR,
+  ROAD_DASH_LINE_COLOR,
+  paintAsphaltGrain,
+  applyRoadTextureDefaults,
+} from "./roadSurface";
 
 function buildRoadTexture() {
   const canvas = document.createElement("canvas");
@@ -11,56 +18,55 @@ function buildRoadTexture() {
   canvas.height = 512;
   const ctx = canvas.getContext("2d")!;
 
-  ctx.fillStyle = "#04040f";
+  // Plain dark asphalt rather than glossy black glass — a real road
+  // surface is matte and slightly uneven, not a mirrored panel. Same
+  // shared color/grain every paved surface in the scene uses, so the
+  // highway and the cross streets read as one continuous material.
+  ctx.fillStyle = ASPHALT_COLOR;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  paintAsphaltGrain(ctx, canvas.width, canvas.height);
 
-  // reflective black-glass sheen bands
-  ctx.fillStyle = "rgba(255,255,255,0.02)";
-  for (let i = 0; i < 6; i++) {
-    ctx.fillRect(0, i * 90, canvas.width, 3);
-  }
-
-  // glowing cyan edge strips
-  ctx.strokeStyle = "rgba(0,212,255,0.95)";
-  ctx.lineWidth = 7;
+  // Solid white shoulder lines along both edges of the two-lane carriageway.
+  ctx.strokeStyle = ROAD_EDGE_LINE_COLOR;
+  ctx.lineWidth = 5;
   ctx.beginPath();
-  ctx.moveTo(9, 0);
-  ctx.lineTo(9, canvas.height);
-  ctx.moveTo(canvas.width - 9, 0);
-  ctx.lineTo(canvas.width - 9, canvas.height);
+  ctx.moveTo(14, 0);
+  ctx.lineTo(14, canvas.height);
+  ctx.moveTo(canvas.width - 14, 0);
+  ctx.lineTo(canvas.width - 14, canvas.height);
   ctx.stroke();
 
-  // dashed energy divider down the center
-  ctx.strokeStyle = "rgba(170,240,255,0.85)";
+  // Dashed white lane divider down the center — standard highway
+  // road-marking proportions rather than an "energy" line.
+  ctx.strokeStyle = ROAD_DASH_LINE_COLOR;
   ctx.lineWidth = 4;
-  ctx.setLineDash([30, 24]);
+  ctx.setLineDash([34, 26]);
   ctx.beginPath();
   ctx.moveTo(canvas.width / 2, 0);
   ctx.lineTo(canvas.width / 2, canvas.height);
   ctx.stroke();
-
-  // faint speed cross-ties
   ctx.setLineDash([]);
-  ctx.strokeStyle = "rgba(0,150,255,0.16)";
-  ctx.lineWidth = 2;
-  for (let y = 0; y < canvas.height; y += 32) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(canvas.width, y);
-    ctx.stroke();
-  }
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(1, 48);
+  applyRoadTextureDefaults(texture);
   return texture;
 }
 
 export function HighwayRoad() {
   const texture = useMemo(() => buildRoadTexture(), []);
+  // fog: false — with it on, the road fades toward the (dark early,
+  // then brightening) fog color as it recedes into the distance, which
+  // combined with ACES tone mapping's non-linear response made the
+  // same asphalt color read as very different shades depending on how
+  // far down the road a given patch was from the camera. Turning fog
+  // off here means the road always shows its true, consistent color —
+  // the one surface in the scene where matching color mattered more
+  // than atmospheric distance-fade.
   const material = useMemo(
-    () => new THREE.MeshBasicMaterial({ map: texture }),
+    () => new THREE.MeshBasicMaterial({ map: texture, fog: false }),
     [texture]
   );
 
@@ -78,7 +84,19 @@ export function HighwayRoad() {
   return (
     <mesh
       rotation={[-Math.PI / 2, 0, 0]}
-      position={[0, 0, -30]}
+      // y=0.025 — slightly above CrossStreets' own y=0.02 (itself above
+      // CityScape's per-building contact-shadow discs at y=0.01, or a
+      // building near the road would darken the asphalt right through
+      // it). Two coplanar road meshes overlapping at an intersection
+      // z-fight: with equal depth, which one wins is decided by
+      // Three's internal opaque render-order sort, not JSX order, so
+      // it isn't safe to just leave both at the same height and hope —
+      // that non-deterministic fight (not a real texture/color
+      // difference) was what made the cross streets read as a
+      // different shade of asphalt in the overlap. A small, deliberate
+      // epsilon makes the through-road win every time, the same way a
+      // real intersection's main route reads as continuous.
+      position={[0, 0.025, -30]}
       material={material}
     >
       <planeGeometry args={[16, 220]} />

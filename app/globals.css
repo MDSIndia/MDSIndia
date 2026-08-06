@@ -142,6 +142,112 @@ body {
   box-shadow: 0 0 26px rgba(0,212,255,0.4);
 }
 
+/* ── Hero CTAs — the single most-seen pair of buttons on the site, so
+   they get a richer treatment layered on top of the shared system: a
+   slowly rotating gradient rim, deeper ambient glow, and a light-sweep
+   that runs across on hover. */
+.hero-cta {
+  position: relative;
+  padding: 1.05rem 2.15rem;
+  font-size: 1rem;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.hero-cta::before {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  padding: 1.5px;
+  z-index: -1;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: hudBorderSpin 6s linear infinite;
+}
+
+.hero-cta::after {
+  /* Light sweep — a soft diagonal band that glides across on hover */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.4) 50%, transparent 65%);
+  transform: translateX(-130%);
+  transition: transform 0.65s ease;
+  pointer-events: none;
+}
+
+.hero-cta:hover::after {
+  transform: translateX(130%);
+}
+
+.hero-cta-primary::before {
+  background: conic-gradient(from var(--hud-angle), #00D4FF, #0055FF, #7B2FBE, #00D4FF);
+}
+
+.hero-cta-primary {
+  background: linear-gradient(rgba(6,9,20,0.88), rgba(6,9,20,0.88)) padding-box,
+              linear-gradient(135deg, #00D4FF, #0055FF) border-box;
+  box-shadow:
+    0 0 0 1px rgba(0,212,255,0.35),
+    0 0 16px rgba(0,153,255,0.5),
+    0 0 32px rgba(0,85,255,0.22),
+    0 8px 28px rgba(0,20,60,0.4);
+  transition: box-shadow 0.35s ease, transform 0.25s ease, background 0.35s ease;
+}
+
+.hero-cta-primary:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow:
+    0 0 0 1px rgba(0,212,255,0.85),
+    0 0 10px rgba(0,212,255,0.8),
+    0 0 26px rgba(0,153,255,0.7),
+    0 0 52px rgba(0,212,255,0.4),
+    0 12px 34px rgba(0,20,60,0.5);
+}
+
+.hero-cta-primary .hero-cta-icon {
+  transition: transform 0.35s ease;
+}
+
+.hero-cta-primary:hover .hero-cta-icon {
+  transform: rotate(90deg);
+}
+
+.hero-cta-secondary::before {
+  background: conic-gradient(from var(--hud-angle), rgba(168,85,247,0.9), rgba(0,212,255,0.8), rgba(255,255,255,0.3), rgba(168,85,247,0.9));
+  animation-direction: reverse;
+}
+
+.hero-cta-secondary {
+  background: linear-gradient(rgba(6,9,20,0.82), rgba(6,9,20,0.82)) padding-box,
+              linear-gradient(135deg, rgba(168,85,247,0.65), rgba(0,212,255,0.55)) border-box;
+  box-shadow:
+    0 0 0 1px rgba(168,85,247,0.3),
+    0 0 14px rgba(139,92,246,0.4),
+    0 0 28px rgba(0,153,255,0.16);
+  transition: box-shadow 0.35s ease, transform 0.25s ease, background 0.35s ease;
+}
+
+.hero-cta-secondary:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 0 0 1px rgba(168,85,247,0.8),
+    0 0 10px rgba(168,85,247,0.75),
+    0 0 24px rgba(139,92,246,0.55),
+    0 0 46px rgba(0,212,255,0.3),
+    0 12px 30px rgba(20,0,40,0.4);
+}
+
+.hero-cta-secondary .hero-cta-icon {
+  transition: transform 0.35s ease;
+}
+
+.hero-cta-secondary:hover .hero-cta-icon {
+  transform: translate(2px, -2px);
+}
+
 .orb-tag {
   background: linear-gradient(rgba(255,255,255,0.05), rgba(255,255,255,0.05)) padding-box,
               linear-gradient(135deg, rgba(0,212,255,0.32), rgba(139,92,246,0.32)) border-box;
@@ -277,61 +383,61 @@ body {
   100% { transform: translateX(60%); }
 }
 
-/* ── Holographic ID-badge frame — used by the Team cards: a rounded
-   card with a thick glowing gradient rim in the member's own accent
-   color and a slow breathing pulse, reading as a futuristic access
-   badge rather than a plain flat card.
-   --id-c0/--id-c1 set per-instance for the rim color. */
+/* ── ID-badge frame — used by the Team cards. Premium glass card: a
+   soft diagonal fill, a hairline gradient rim that catches light from
+   one corner (white fading into the member's accent), and a wide,
+   low, floating ambient glow instead of a hard neon ring.
+   --id-c0/--id-glow/--id-glow-strong set per-instance. */
 .id-card-frame {
   position: relative;
-  border-radius: 20px;
+  border-radius: 24px;
   overflow: hidden;
-  background:
-    linear-gradient(160deg, rgba(14,16,28,0.94) 0%, rgba(7,8,16,0.94) 100%) padding-box,
-    linear-gradient(160deg, var(--id-c0, #00D4FF), var(--id-c1, #0055FF)) border-box;
-  border: 2.5px solid transparent;
+  background: linear-gradient(165deg, rgba(255,255,255,0.075), rgba(255,255,255,0.02) 60%);
   box-shadow:
-    0 0 16px var(--id-glow-strong, rgba(0,212,255,0.55)),
-    0 0 46px var(--id-glow, rgba(0,212,255,0.4)),
-    0 0 100px var(--id-glow-wide, rgba(0,212,255,0.22)),
-    0 8px 40px rgba(0,0,0,0.5);
-  animation: idCardBreathe 4.5s ease-in-out infinite;
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    0 30px 70px -30px rgba(0,0,0,0.7),
+    0 20px 60px -18px var(--id-glow, rgba(0,212,255,0.18));
+  transition: box-shadow 0.45s ease;
 }
 
-@keyframes idCardBreathe {
-  0%, 100% {
-    box-shadow:
-      0 0 14px var(--id-glow-strong, rgba(0,212,255,0.45)),
-      0 0 38px var(--id-glow, rgba(0,212,255,0.3)),
-      0 0 80px var(--id-glow-wide, rgba(0,212,255,0.16)),
-      0 8px 40px rgba(0,0,0,0.5);
-  }
-  50% {
-    box-shadow:
-      0 0 20px var(--id-glow-strong, rgba(0,212,255,0.65)),
-      0 0 56px var(--id-glow, rgba(0,212,255,0.48)),
-      0 0 120px var(--id-glow-wide, rgba(0,212,255,0.28)),
-      0 8px 40px rgba(0,0,0,0.5);
-  }
+.id-card-frame::before {
+  /* Hairline gradient rim — white catch-light at the top-left corner
+     fading through the accent color, same mask-composite technique
+     used across the site's other rims. */
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(160deg, rgba(255,255,255,0.55), var(--id-c0, #00D4FF) 38%, rgba(255,255,255,0.05) 62%, transparent 85%);
+  opacity: 0.6;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+  z-index: 2;
 }
 
 .id-card-frame:hover {
-  animation-play-state: paused;
   box-shadow:
-    0 0 26px var(--id-glow-strong, rgba(0,212,255,0.8)),
-    0 0 70px var(--id-glow, rgba(0,212,255,0.6)),
-    0 0 150px var(--id-glow-wide, rgba(0,212,255,0.35)),
-    0 24px 70px rgba(0,0,0,0.55);
+    inset 0 1px 0 rgba(255,255,255,0.1),
+    0 40px 90px -28px rgba(0,0,0,0.75),
+    0 26px 80px -14px var(--id-glow-strong, rgba(0,212,255,0.4));
 }
 
-/* Sheen sweep — a bright diagonal catch-light that crosses the whole
+.id-card-frame:hover::before {
+  opacity: 1;
+}
+
+/* Sheen sweep — a faint diagonal catch-light that crosses the whole
    badge once on hover, the same cue a real holographic ID catches
    when tilted toward the light. */
 .id-card-frame::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.16) 50%, transparent 65%);
+  background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.12) 50%, transparent 65%);
   transform: translateX(-130%);
   transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none;
@@ -357,30 +463,122 @@ body {
 }
 
 .subject-pill {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.13);
   backdrop-filter: blur(10px) saturate(150%);
   -webkit-backdrop-filter: blur(10px) saturate(150%);
   color: rgba(255,255,255,0.55);
-  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
 }
 
 .subject-pill:hover {
-  background: rgba(255,255,255,0.11);
-  border-color: rgba(0,212,255,0.35);
-  color: rgba(255,255,255,0.88);
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(0,212,255,0.4);
+  color: rgba(255,255,255,0.92);
+  transform: translateY(-1px);
 }
 
 .subject-pill.is-active {
   background: linear-gradient(rgba(6,9,20,0.82), rgba(6,9,20,0.82)) padding-box,
-              linear-gradient(135deg, #0055FF, #00D4FF) border-box;
+              linear-gradient(135deg, #0055FF, #00D4FF, #7B2FBE) border-box;
   border: 1px solid transparent;
   color: #ffffff;
-  box-shadow: 0 0 16px rgba(0,153,255,0.35);
+  box-shadow: 0 0 18px rgba(0,153,255,0.4), inset 0 1px 0 rgba(255,255,255,0.12);
 }
 
 .subject-pill.is-active:hover {
-  box-shadow: 0 0 24px rgba(0,212,255,0.5);
+  box-shadow: 0 0 26px rgba(0,212,255,0.55), inset 0 1px 0 rgba(255,255,255,0.12);
+  transform: translateY(-1px);
+}
+
+/* Contact form — premium panel treatment: a faint drifting gradient
+   rim (via mask-composite exclude, same technique as .hud-panel) plus
+   a subtle grid texture, so the form reads as an instrument panel
+   rather than a flat glass card. */
+.contact-panel {
+  background:
+    linear-gradient(rgba(10,12,24,0.55), rgba(10,12,24,0.55)),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 28px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 28px),
+    rgba(255,255,255,0.05);
+}
+
+.contact-panel::before {
+  /* A slow, softly rotating gradient rim — same conic-gradient/mask
+     technique as .hud-panel::after — reads as a quietly alive edge
+     rather than a static border. */
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--hud-angle),
+    rgba(236,72,153,0.55),
+    rgba(123,47,190,0.5),
+    rgba(0,85,255,0.5),
+    rgba(0,212,255,0.55),
+    rgba(236,72,153,0.55)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: hudBorderSpin 12s linear infinite;
+  pointer-events: none;
+}
+
+.premium-field {
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.premium-field::placeholder {
+  color: rgba(255,255,255,0.32);
+}
+
+/* Waitlist-style submit — a plain dark pill with a vivid, always-on
+   pink → violet → blue gradient border and matching glow, so the
+   button reads as the one point of color in an otherwise quiet form. */
+.contact-submit-btn {
+  background: linear-gradient(rgba(8,6,16,0.92), rgba(8,6,16,0.92)) padding-box,
+              linear-gradient(115deg, #EC4899, #A855F7 40%, #7B2FBE 65%, #0055FF 85%, #00D4FF) border-box;
+  border: 1.5px solid transparent;
+  box-shadow:
+    0 0 0 1px rgba(236,72,153,0.3),
+    0 0 18px rgba(236,72,153,0.45),
+    0 0 36px rgba(123,47,190,0.4),
+    0 0 56px rgba(0,85,255,0.25),
+    0 10px 28px rgba(10,0,30,0.4);
+  transition: box-shadow 0.35s ease, transform 0.25s ease;
+}
+
+.contact-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 1px rgba(236,72,153,0.55),
+    0 0 26px rgba(236,72,153,0.65),
+    0 0 50px rgba(123,47,190,0.55),
+    0 0 76px rgba(0,85,255,0.35),
+    0 14px 34px rgba(10,0,30,0.5);
+}
+
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  width: fit-content;
+}
+
+.field-label::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(0,212,255,0.8);
+  box-shadow: 0 0 6px rgba(0,212,255,0.7);
 }
 
 .space-grotesk {
@@ -612,6 +810,21 @@ body.custom-cursor-active * { cursor: none !important; }
 @keyframes orbitParticle3 {
   0%   { transform: rotate(240deg) translateX(152px) rotate(-240deg); }
   100% { transform: rotate(600deg) translateX(152px) rotate(-600deg); }
+}
+
+@keyframes orbitParticle4 {
+  0%   { transform: rotate(60deg) translateX(175px) rotate(-60deg); }
+  100% { transform: rotate(420deg) translateX(175px) rotate(-420deg); }
+}
+
+@keyframes orbitParticle5 {
+  0%   { transform: rotate(300deg) translateX(120px) rotate(-300deg); }
+  100% { transform: rotate(660deg) translateX(120px) rotate(-660deg); }
+}
+
+@keyframes orbitParticle6 {
+  0%   { transform: rotate(180deg) translateX(196px) rotate(-180deg); }
+  100% { transform: rotate(540deg) translateX(196px) rotate(-540deg); }
 }
 
 @keyframes scanLine {

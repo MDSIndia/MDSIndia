@@ -12,17 +12,13 @@ function seeded(i: number, salt: number) {
 const ZERO_SCALE = new THREE.Matrix4().makeScale(0, 0, 0);
 
 /** Two alternating lamp archetypes lining both edges of the highway —
- * a slim pole topped with a pulsing glow orb, and a taller cantilevered
- * arm reaching out over the road with a linear neon fixture at its tip
- * — plus a glowing base ring at every lamp's foot (a "power conduit"
- * cue tying it to the ground rather than just planted). Each element
- * type gets its own fixed accent (cyan orbs, magenta arm fixtures, blue
- * base rings) rather than a per-instance random hue: `vertexColors` +
- * `setColorAt` on a transparent/additive InstancedMesh reliably reads
- * back as solid black in this three.js version for some material/
- * geometry combinations (verified empirically — swapping geometry
- * didn't fix it, only removing `vertexColors` did), so per-lamp color
- * variety isn't worth re-introducing that risk for here. */
+ * a slim pole topped with a warm sodium-vapor style glow orb, and a
+ * taller cantilevered arm reaching out over the road with a linear LED
+ * fixture at its tip — plus a soft ground pool of light at every lamp's
+ * foot, the way a real streetlamp casts a puddle of light on the
+ * pavement beneath it. Every fixture stays in the same warm/white
+ * "real streetlight" family rather than a themed neon accent per
+ * element type. */
 export function StreetLights({ isMobile }: { isMobile: boolean }) {
   const count = isMobile ? 26 : 52;
   const poleRef = useRef<THREE.InstancedMesh>(null);
@@ -108,66 +104,69 @@ export function StreetLights({ isMobile }: { isMobile: boolean }) {
     [data]
   );
 
-  useFrame((state) => {
-    const t = state.clock.getElapsedTime();
+  useFrame(() => {
+    // Steady light output, no pulsing — real streetlamps don't breathe.
     const orbMat = orbRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
-    if (orbMat) orbMat.opacity = 0.55 + Math.sin(t * 2.2) * 0.2;
+    if (orbMat) orbMat.opacity = 0.85;
 
     const barMat = barRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
-    if (barMat) barMat.opacity = 0.6 + Math.sin(t * 1.8 + 1.1) * 0.2;
+    if (barMat) barMat.opacity = 0.85;
 
     const baseMat = baseGlowRef.current?.material as
       | THREE.MeshBasicMaterial
       | undefined;
-    if (baseMat) baseMat.opacity = 0.35 + Math.sin(t * 1.4) * 0.15;
+    if (baseMat) baseMat.opacity = 0.3;
   });
 
   return (
     <group>
       <instancedMesh ref={poleRef} args={[undefined, undefined, count]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshBasicMaterial color="#04040a" fog={false} />
+        <meshLambertMaterial color="#2b2d33" fog />
       </instancedMesh>
 
       <instancedMesh ref={armRef} args={[undefined, undefined, count]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshBasicMaterial color="#04040a" fog={false} />
+        <meshLambertMaterial color="#2b2d33" fog />
       </instancedMesh>
 
+      {/* Warm sodium-vapor style orb lamp. */}
       <instancedMesh ref={orbRef} args={[undefined, undefined, count]}>
         <sphereGeometry args={[1, 8, 8]} />
         <meshBasicMaterial
-          color="#00d4ff"
+          color="#ffcd8a"
           transparent
-          opacity={0.7}
+          opacity={0.85}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           fog={false}
         />
       </instancedMesh>
 
+      {/* Cooler white LED strip on the cantilevered fixture. */}
       <instancedMesh ref={barRef} args={[undefined, undefined, count]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshBasicMaterial
-          color="#ff5fd8"
+          color="#f4f2e8"
           transparent
-          opacity={0.7}
+          opacity={0.85}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           fog={false}
         />
       </instancedMesh>
 
+      {/* Soft warm pool of light on the ground beneath each lamp. */}
       <instancedMesh ref={baseGlowRef} args={[undefined, undefined, count]}>
         <cylinderGeometry args={[1, 1, 1, 16]} />
         <meshBasicMaterial
-          color="#7fb2ff"
+          color="#ffcd8a"
           transparent
-          opacity={0.4}
+          opacity={0.3}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           fog={false}

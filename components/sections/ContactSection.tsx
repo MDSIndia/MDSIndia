@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 
 export function ContactSection() {
   const [formData, setFormData] = useState({
@@ -94,20 +94,13 @@ export function ContactSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="rounded-3xl p-5 sm:p-8 md:p-12 relative overflow-hidden"
+          className="contact-panel rounded-3xl p-5 sm:p-8 md:p-12 relative overflow-hidden"
           style={{
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.14)",
             backdropFilter: "blur(28px) saturate(160%)",
             WebkitBackdropFilter: "blur(28px) saturate(160%)",
-            boxShadow: "0 0 60px rgba(0,85,255,0.12), 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)",
+            boxShadow: "0 0 90px rgba(236,72,153,0.10), 0 0 70px rgba(0,85,255,0.14), 0 20px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08)",
           }}
         >
-          <div
-            className="absolute top-0 left-0 right-0 h-px"
-            style={{ background: "linear-gradient(to right, transparent, rgba(0,212,255,0.5), transparent)" }}
-          />
-
           <AnimatePresence mode="wait">
             {!sent ? (
               <motion.form
@@ -120,8 +113,8 @@ export function ContactSection() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label
-                      className="text-xs uppercase tracking-widest mb-2 block"
-                      style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.55)" }}
+                      className="field-label text-xs uppercase tracking-widest mb-2.5"
+                      style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.6)" }}
                     >
                       Name
                     </label>
@@ -131,28 +124,22 @@ export function ContactSection() {
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="Your name"
-                      className="w-full rounded-xl px-4 py-3 text-white text-sm focus:outline-none transition-all duration-300"
-                      style={{
-                        background: "rgba(255,255,255,0.07)",
-                        border: "1px solid rgba(255,255,255,0.14)",
-                        backdropFilter: "blur(12px) saturate(150%)",
-                        WebkitBackdropFilter: "blur(12px) saturate(150%)",
-                        colorScheme: "dark",
-                      }}
+                      className="premium-field w-full rounded-full px-6 py-3.5 text-white text-sm focus:outline-none transition-all duration-300"
+                      style={{ colorScheme: "dark" }}
                       onFocus={(e) => {
-                        e.target.style.borderColor = "rgba(0,212,255,0.35)";
-                        e.target.style.boxShadow = "0 0 20px rgba(0,212,255,0.08)";
+                        e.target.style.borderColor = "rgba(255,255,255,0.32)";
+                        e.target.style.background = "rgba(255,255,255,0.075)";
                       }}
                       onBlur={(e) => {
-                        e.target.style.borderColor = "rgba(255,255,255,0.10)";
-                        e.target.style.boxShadow = "none";
+                        e.target.style.borderColor = "rgba(255,255,255,0.14)";
+                        e.target.style.background = "rgba(255,255,255,0.045)";
                       }}
                     />
                   </div>
                   <div>
                     <label
-                      className="text-xs uppercase tracking-widest mb-2 block"
-                      style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.55)" }}
+                      className="field-label text-xs uppercase tracking-widest mb-2.5"
+                      style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.6)" }}
                     >
                       Email
                     </label>
@@ -162,21 +149,15 @@ export function ContactSection() {
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       placeholder="your@email.com"
-                      className="w-full rounded-xl px-4 py-3 text-white text-sm focus:outline-none transition-all duration-300"
-                      style={{
-                        background: "rgba(255,255,255,0.07)",
-                        border: "1px solid rgba(255,255,255,0.14)",
-                        backdropFilter: "blur(12px) saturate(150%)",
-                        WebkitBackdropFilter: "blur(12px) saturate(150%)",
-                        colorScheme: "dark",
-                      }}
+                      className="premium-field w-full rounded-full px-6 py-3.5 text-white text-sm focus:outline-none transition-all duration-300"
+                      style={{ colorScheme: "dark" }}
                       onFocus={(e) => {
-                        e.target.style.borderColor = "rgba(0,212,255,0.35)";
-                        e.target.style.boxShadow = "0 0 20px rgba(0,212,255,0.08)";
+                        e.target.style.borderColor = "rgba(255,255,255,0.32)";
+                        e.target.style.background = "rgba(255,255,255,0.075)";
                       }}
                       onBlur={(e) => {
-                        e.target.style.borderColor = "rgba(255,255,255,0.10)";
-                        e.target.style.boxShadow = "none";
+                        e.target.style.borderColor = "rgba(255,255,255,0.14)";
+                        e.target.style.background = "rgba(255,255,255,0.045)";
                       }}
                     />
                   </div>
@@ -184,22 +165,23 @@ export function ContactSection() {
 
                 <div>
                   <label
-                    className="text-xs uppercase tracking-widest mb-2 block"
-                    style={{ color: "rgba(255,255,255,0.35)" }}
+                    className="field-label text-xs uppercase tracking-widest mb-2.5"
+                    style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.6)" }}
                   >
                     Subject
                   </label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2.5">
                     {subjects.map((s) => (
                       <button
                         key={s}
                         type="button"
                         onClick={() => setFormData({ ...formData, subject: s })}
-                        className={`subject-pill px-3.5 py-1.5 md:px-4 md:py-2 rounded-full text-xs font-medium ${
+                        className={`subject-pill inline-flex items-center gap-1.5 px-4 py-2 md:px-5 md:py-2.5 rounded-full text-xs font-medium ${
                           formData.subject === s ? "is-active" : ""
                         }`}
                         style={{ fontFamily: "var(--font-inter), sans-serif" }}
                       >
+                        {formData.subject === s && <Check className="size-3" strokeWidth={3} />}
                         {s}
                       </button>
                     ))}
@@ -208,8 +190,8 @@ export function ContactSection() {
 
                 <div>
                   <label
-                    className="text-xs uppercase tracking-widest mb-2 block"
-                    style={{ color: "rgba(255,255,255,0.35)" }}
+                    className="field-label text-xs uppercase tracking-widest mb-2.5"
+                    style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.6)" }}
                   >
                     Message
                   </label>
@@ -219,21 +201,15 @@ export function ContactSection() {
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     placeholder="Share your vision, question, or idea..."
-                    className="w-full rounded-xl px-4 py-3 text-white text-sm focus:outline-none transition-all duration-300 resize-none"
-                    style={{
-                      background: "rgba(255,255,255,0.07)",
-                      border: "1px solid rgba(255,255,255,0.14)",
-                      backdropFilter: "blur(12px) saturate(150%)",
-                      WebkitBackdropFilter: "blur(12px) saturate(150%)",
-                      colorScheme: "dark",
-                    }}
+                    className="premium-field w-full rounded-[28px] px-6 py-4 text-white text-sm focus:outline-none transition-all duration-300 resize-none"
+                    style={{ colorScheme: "dark" }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = "rgba(0,212,255,0.35)";
-                      e.target.style.boxShadow = "0 0 20px rgba(0,212,255,0.08)";
+                      e.target.style.borderColor = "rgba(255,255,255,0.32)";
+                      e.target.style.background = "rgba(255,255,255,0.075)";
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderColor = "rgba(255,255,255,0.10)";
-                      e.target.style.boxShadow = "none";
+                      e.target.style.borderColor = "rgba(255,255,255,0.14)";
+                      e.target.style.background = "rgba(255,255,255,0.045)";
                     }}
                   />
                 </div>
@@ -254,9 +230,14 @@ export function ContactSection() {
                   </p>
                 )}
 
+                <div
+                  className="h-px w-full"
+                  style={{ background: "linear-gradient(to right, rgba(255,255,255,0.14), transparent 60%)" }}
+                />
+
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div
-                    className="text-xs"
+                    className="text-xs tracking-wide"
                     style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.45)" }}
                   >
                     services@mdsindia.in · Hyderabad, Telangana, India
@@ -264,7 +245,7 @@ export function ContactSection() {
                   <button
                     type="submit"
                     disabled={sending}
-                    className="btn-primary relative text-sm overflow-hidden"
+                    className="btn-primary contact-submit-btn relative text-sm overflow-hidden"
                   >
                     <span className="relative z-10 inline-flex items-center gap-2.5">
                       {!sending && <ArrowRight className="size-4" strokeWidth={2.25} />}
