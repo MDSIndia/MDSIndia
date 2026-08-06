@@ -96,10 +96,21 @@ export function getWindowGridTexture(): THREE.Texture {
   // it stopped reading as individual windows and became a speckled
   // texture instead — a real tower's floor count and window bays are
   // nowhere near that dense at the distances this city is viewed
-  // from). 5x11 keeps individual panes identifiable as windows without
-  // either extreme.
+  // from). 5 columns keeps individual panes identifiable as windows
+  // without either extreme.
+  //
+  // 60 rows rather than the original 11: this canvas is the *only*
+  // window pattern every building in a given height bucket shares
+  // (CityScape clones it per-bucket and just changes `.repeat`), so a
+  // short base tile means the same handful of floors gets stamped out
+  // over and over up a single tower — with the old 11-row tile, the
+  // tallest bucket repeated it 20 times top to bottom, which is what
+  // actually read as a printed/wallpaper pattern rather than distinct
+  // floors. 60 unique rows cuts that down to under 4 repeats even for
+  // the tallest bucket (see CityScape's repeat values), while still
+  // being one cheap canvas built once and cached.
   const cols = 5;
-  const rows = 11;
+  const rows = 60;
   const cell = 40;
   const canvas = document.createElement("canvas");
   canvas.width = cols * cell;
@@ -131,6 +142,15 @@ export function getWindowGridTexture(): THREE.Texture {
 
   for (let r = 0; r < rows; r++) {
     if (r % 4 === 3) continue; // spandrel band — no window on this floor
+    // A per-floor occupancy bias, on top of the per-pane roll below —
+    // real towers read as whole floors that are dark (unoccupied,
+    // after-hours) next to floors that are mostly lit, not every
+    // single pane rolling independently. Without this, an all-panes-
+    // iid grid lands on a uniform speckle at any density (the "TV
+    // static" look), no matter how the per-pane rate is tuned, because
+    // there's never a large lit or dark region for the eye to latch
+    // onto. +-0.3 swing around the base 0.46 threshold below.
+    const floorBias = (seeded(r, 141) - 0.5) * 0.6;
     for (let c = 0; c < cols; c++) {
       const idx = r * cols + c;
       const x = c * cell;
@@ -149,8 +169,9 @@ export function getWindowGridTexture(): THREE.Texture {
       // not mostly dark either — a third read as too empty (blank,
       // abandoned-looking voids across the facade), all-lit read as a
       // stadium. Roughly half lit lands on an actually inhabited-
-      // looking building.
-      const lit = seeded(idx, 41) > 0.46;
+      // looking building, with floorBias above clustering that mix
+      // into whole lit/dark floors rather than independent noise.
+      const lit = seeded(idx, 41) > 0.46 - floorBias;
       if (lit) {
         // Blue-dominant, techie-cyberpunk mix rather than a realistic
         // warm-incandescent skyline — most panes read as cool
@@ -256,7 +277,7 @@ let cachedWindowEmissive: THREE.Texture | null = null;
 export function getWindowEmissiveTexture(): THREE.Texture {
   if (cachedWindowEmissive) return cachedWindowEmissive;
   const cols = 5;
-  const rows = 11;
+  const rows = 60;
   const cell = 40;
   const canvas = document.createElement("canvas");
   canvas.width = cols * cell;
@@ -268,9 +289,13 @@ export function getWindowEmissiveTexture(): THREE.Texture {
 
   for (let r = 0; r < rows; r++) {
     if (r % 4 === 3) continue; // spandrel band — no window on this floor
+    // Same per-floor bias as getWindowGridTexture, same salt, so the
+    // emissive mask stays pixel-aligned with which panes the diffuse
+    // map actually drew as lit.
+    const floorBias = (seeded(r, 141) - 0.5) * 0.6;
     for (let c = 0; c < cols; c++) {
       const idx = r * cols + c;
-      const lit = seeded(idx, 41) > 0.46;
+      const lit = seeded(idx, 41) > 0.46 - floorBias;
       if (!lit) continue;
       const x = c * cell;
       const y = r * cell;
@@ -315,7 +340,7 @@ let cachedWindowNormal: THREE.Texture | null = null;
 export function getWindowNormalTexture(): THREE.Texture {
   if (cachedWindowNormal) return cachedWindowNormal;
   const cols = 5;
-  const rows = 11;
+  const rows = 60;
   const cell = 40;
   const width = cols * cell;
   const height = rows * cell;

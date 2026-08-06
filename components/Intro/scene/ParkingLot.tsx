@@ -21,8 +21,9 @@ function seeded(i: number, salt: number) {
 }
 
 // The same premium, near-monochrome "car of the future" palette the
-// moving traffic uses.
-const CAR_COLORS = ["#eef1f3", "#15171b", "#7d838c", "#2a3550", "#3a3f45", "#5a6572"];
+// moving traffic uses (see StreetCars for why it's skewed lighter than
+// a first pass).
+const CAR_COLORS = ["#eef1f3", "#c9cdd3", "#7d838c", "#3a4568", "#5a6270", "#8b93a0"];
 
 /** Small curbside parking bays tucked into the narrow strip between
  * the highway shoulder and the building line (the same corridor
@@ -44,6 +45,7 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
   const wheelRef = useRef<THREE.InstancedMesh>(null);
   const rimRef = useRef<THREE.InstancedMesh>(null);
   const mirrorRef = useRef<THREE.InstancedMesh>(null);
+  const markerRef = useRef<THREE.InstancedMesh>(null);
   const shadowRef = useRef<THREE.InstancedMesh>(null);
 
   const shellGeometry = useMemo(() => createAeroCarBodyGeometry(), []);
@@ -60,6 +62,7 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
     const wheelMatrices: THREE.Matrix4[] = [];
     const rimMatrices: THREE.Matrix4[] = [];
     const mirrorMatrices: THREE.Matrix4[] = [];
+    const markerMatrices: THREE.Matrix4[] = [];
     const shadowMatrices: THREE.Matrix4[] = [];
 
     const stallWidth = 1.05;
@@ -143,6 +146,23 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
         dummy.updateMatrix();
         mirrorMatrices.push(dummy.matrix.clone());
 
+        // A dim parking-marker glow on the tail — the side facing the
+        // road, since these are parked nose-in against the building.
+        // Without this, a car this dark (see the lighter-skewed
+        // CAR_COLORS above, still mostly cool greys) sitting in a
+        // shadowed curb bay had nothing to catch the eye against the
+        // black asphalt and read as a flat dark smudge rather than a
+        // parked vehicle; every other lit surface in this scene (window
+        // glow, roof glow, storefronts, moving traffic's own tail
+        // lights) gets some form of self-glow, so a completely dark,
+        // unlit car was the odd one out.
+        dummy.position.set(carX, 0.22, carZ);
+        dummy.rotation.set(0, facing, 0);
+        dummy.translateZ(-(length / 2 - 0.06));
+        dummy.scale.set(width * 0.62, 0.035, 0.025);
+        dummy.updateMatrix();
+        markerMatrices.push(dummy.matrix.clone());
+
         const axleOff = length / 2 - 0.32;
         const trackOff = width / 2 + 0.02;
         [-1, 1].forEach((wx) => {
@@ -183,6 +203,7 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
       wheelMatrices,
       rimMatrices,
       mirrorMatrices,
+      markerMatrices,
       shadowMatrices,
     };
   }, [lotCount, carCount]);
@@ -209,6 +230,7 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
   useLayoutEffect(() => applyInstances(wheelRef.current, data.wheelMatrices), [data]);
   useLayoutEffect(() => applyInstances(rimRef.current, data.rimMatrices), [data]);
   useLayoutEffect(() => applyInstances(mirrorRef.current, data.mirrorMatrices), [data]);
+  useLayoutEffect(() => applyInstances(markerRef.current, data.markerMatrices), [data]);
   useLayoutEffect(() => applyInstances(shadowRef.current, data.shadowMatrices), [data]);
 
   return (
@@ -254,6 +276,22 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
       <instancedMesh ref={mirrorRef} args={[undefined, undefined, carCount * 2]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshPhongMaterial color="#0e1114" specular="#2a3038" shininess={50} fog={false} />
+      </instancedMesh>
+
+      {/* Dim parking-marker glow on each car's tail — see the comment
+          at markerMatrices above. Deliberately faint (low opacity,
+          small) so it reads as a parked courtesy light rather than an
+          active brake light. */}
+      <instancedMesh ref={markerRef} args={[undefined, undefined, carCount]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshBasicMaterial
+          color="#ffb570"
+          transparent
+          opacity={0.5}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          fog={false}
+        />
       </instancedMesh>
 
       <instancedMesh ref={shadowRef} args={[undefined, undefined, carCount]}>

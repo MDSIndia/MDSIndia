@@ -22,6 +22,7 @@ interface BannerPlacement {
   width: number;
   height: number;
   textureIndex: number;
+  phase: number;
 }
 
 /** Recomputes the same box-tower placements CityScape generates (same
@@ -50,20 +51,37 @@ function buildPlacements(count: number, isMobile: boolean): BannerPlacement[] {
     const height = 4 + seeded(i, 3) * 50;
     const heightFactor = clamp01((height - 4) / 50);
     const width = (1.6 + seeded(i, 4) * 5) * (1.18 - heightFactor * 0.4);
-    const isRound = seeded(i, 55) > 0.78;
+    // Must match CityScape's own archetype roll exactly (same salt,
+    // same thresholds) — this function's whole job is figuring out
+    // which of CityScape's buildings actually got a flat box facade to
+    // hang a banner on. It previously only excluded round towers (and
+    // with a threshold, 0.78, that didn't even match CityScape's 0.8),
+    // silently missing the faceted and twisted archetypes entirely —
+    // those are tapered/curved silhouettes with no flat vertical wall
+    // at the box-facade offset a banner assumes, so a banner "hung" on
+    // one clipped straight through the tapered geometry instead of
+    // sitting flush against it. Raising the banner rate made an
+    // existing but rare bug into a frequent, obvious one.
+    const archetypeRoll = seeded(i, 55);
+    const isRound = archetypeRoll > 0.8;
+    const isFaceted = !isRound && archetypeRoll > 0.68;
+    const isTwisted = !isRound && !isFaceted && archetypeRoll > 0.58;
 
-    // Only tall box towers get a banner — round towers have no flat
-    // facade to hang one on, and short mid-rises aren't tall enough
-    // for a vertical banner to read as anything but oversized. ~10%
-    // of the eligible buildings get one on desktop, so they read as
-    // occasional building-wrap advertising rather than wallpapering the
-    // skyline. Each banner is its own non-instanced mesh with its own
-    // unique full-size image texture — unlike everything else in this
-    // scene, that cost doesn't shrink just because the instance count
-    // did, so mobile gets a much higher bar (~3%) specifically to keep
-    // the number of separate textures/draw calls down.
-    const threshold = isMobile ? 0.97 : 0.9;
-    const isCandidate = !isRound && height > 20 && seeded(i, 70) > threshold;
+    // Only tall plain-box towers get a banner — round/faceted/twisted
+    // towers have no flat facade to hang one on, and short mid-rises
+    // aren't tall enough for a vertical banner to read as anything but
+    // oversized. ~13% of the eligible buildings get one on desktop —
+    // an 18% pass (tried briefly) combined with Billboards' own denser
+    // pass read as a wall of screens rather than occasional building-
+    // wrap advertising, so this landed closer to the original ~10%.
+    // Each banner is its own non-instanced mesh with its own unique
+    // full-size image texture — unlike everything else in this scene,
+    // that cost doesn't shrink just because the instance count did, so
+    // mobile gets a much higher bar (~5%) specifically to keep the
+    // number of separate textures/draw calls down.
+    const threshold = isMobile ? 0.95 : 0.87;
+    const isCandidate =
+      !isRound && !isFaceted && !isTwisted && height > 20 && seeded(i, 70) > threshold;
     if (!isCandidate) continue;
 
     const bannerWidth = width * 0.62;
@@ -84,6 +102,7 @@ function buildPlacements(count: number, isMobile: boolean): BannerPlacement[] {
       width: bannerWidth,
       height: bannerHeight,
       textureIndex: i % AD_IMAGES.length,
+      phase: seeded(i, 73) * Math.PI * 2,
     });
   }
   return placements;
@@ -97,6 +116,8 @@ function Banner({
   texture: THREE.Texture;
 }) {
   const groupRef = useRef<THREE.Group>(null);
+  const scanRef = useRef<THREE.Mesh>(null);
+  const scanMatRef = useRef<THREE.MeshBasicMaterial>(null);
 
   // Billboarded toward the camera every frame (yaw only — it's mounted
   // on a vertical wall, so it shouldn't pitch) rather than a fixed
@@ -106,12 +127,23 @@ function Banner({
   // the road, where a wall-perpendicular banner is seen at an
   // increasingly glancing, unreadable angle. Billboarding keeps the
   // printed face pointed at the camera throughout.
-  useFrame(({ camera }) => {
+  useFrame(({ camera, clock }) => {
     const group = groupRef.current;
     if (!group) return;
     const dx = camera.position.x - placement.position[0];
     const dz = camera.position.z - placement.position[2];
     group.rotation.y = Math.atan2(dx, dz);
+
+    // Same sweeping scan-line cue Billboards uses (slowed and dimmed
+    // to match — a calm, steady display reads as premium, a fast
+    // flickery one reads as cheap), own phase offset so a run of
+    // banners up one facade doesn't scan in lockstep.
+    if (scanRef.current && scanMatRef.current) {
+      const t = clock.getElapsedTime();
+      const cycle = ((t * 0.2 + placement.phase) % (Math.PI * 2)) / (Math.PI * 2);
+      scanRef.current.position.y = (0.5 - cycle) * placement.height;
+      scanMatRef.current.opacity = 0.12;
+    }
   });
 
   return (
@@ -126,6 +158,21 @@ function Banner({
       <mesh scale={[placement.width, placement.height, 1]} position={[0, 0, 0.01]}>
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial map={texture} toneMapped={false} fog={false} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* Sweeping scan-line, same digital-display cue Billboards uses. */}
+      <mesh ref={scanRef} scale={[placement.width * 0.98, placement.height * 0.05, 1]} position={[0, 0, 0.02]}>
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial
+          ref={scanMatRef}
+          color="#eaf6ff"
+          transparent
+          opacity={0}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          fog={false}
+          side={THREE.DoubleSide}
+        />
       </mesh>
     </group>
   );

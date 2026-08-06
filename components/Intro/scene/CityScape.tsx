@@ -90,26 +90,32 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
   // buildings each into roughly the right ballpark.
   const windowMaps = useMemo(() => {
     const base = getWindowGridTexture();
+    // Vertical repeats scaled down from the original 11-row-tile
+    // values by 11/60 now that the base grid itself carries 60 unique
+    // rows (see getWindowGridTexture) — same on-screen window density
+    // as before, but each bucket now tiles under 4x instead of up to
+    // 20x, which is what was reading as an obviously-repeated printed
+    // pattern rather than distinct floors.
     const towerShort = base.clone();
-    towerShort.repeat.set(3, 5);
+    towerShort.repeat.set(3, 0.92);
     towerShort.needsUpdate = true;
     const towerMed = base.clone();
-    towerMed.repeat.set(3, 11);
+    towerMed.repeat.set(3, 2.02);
     towerMed.needsUpdate = true;
     const towerTall = base.clone();
-    towerTall.repeat.set(3, 20);
+    towerTall.repeat.set(3, 3.67);
     towerTall.needsUpdate = true;
     const round = base.clone();
-    round.repeat.set(5, 9);
+    round.repeat.set(5, 1.65);
     round.needsUpdate = true;
     const faceted = base.clone();
-    faceted.repeat.set(4, 9);
+    faceted.repeat.set(4, 1.65);
     faceted.needsUpdate = true;
     const twisted = base.clone();
-    twisted.repeat.set(3, 10);
+    twisted.repeat.set(3, 1.83);
     twisted.needsUpdate = true;
     const podium = base.clone();
-    podium.repeat.set(4, 2.5);
+    podium.repeat.set(4, 0.46);
     podium.needsUpdate = true;
     return { towerShort, towerMed, towerTall, round, faceted, twisted, podium };
   }, []);
@@ -118,26 +124,32 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
   // lines up pane-for-pane with the diffuse grid it's layered under.
   const windowEmissiveMaps = useMemo(() => {
     const base = getWindowEmissiveTexture();
+    // Vertical repeats scaled down from the original 11-row-tile
+    // values by 11/60 now that the base grid itself carries 60 unique
+    // rows (see getWindowGridTexture) — same on-screen window density
+    // as before, but each bucket now tiles under 4x instead of up to
+    // 20x, which is what was reading as an obviously-repeated printed
+    // pattern rather than distinct floors.
     const towerShort = base.clone();
-    towerShort.repeat.set(3, 5);
+    towerShort.repeat.set(3, 0.92);
     towerShort.needsUpdate = true;
     const towerMed = base.clone();
-    towerMed.repeat.set(3, 11);
+    towerMed.repeat.set(3, 2.02);
     towerMed.needsUpdate = true;
     const towerTall = base.clone();
-    towerTall.repeat.set(3, 20);
+    towerTall.repeat.set(3, 3.67);
     towerTall.needsUpdate = true;
     const round = base.clone();
-    round.repeat.set(5, 9);
+    round.repeat.set(5, 1.65);
     round.needsUpdate = true;
     const faceted = base.clone();
-    faceted.repeat.set(4, 9);
+    faceted.repeat.set(4, 1.65);
     faceted.needsUpdate = true;
     const twisted = base.clone();
-    twisted.repeat.set(3, 10);
+    twisted.repeat.set(3, 1.83);
     twisted.needsUpdate = true;
     const podium = base.clone();
-    podium.repeat.set(4, 2.5);
+    podium.repeat.set(4, 0.46);
     podium.needsUpdate = true;
     return { towerShort, towerMed, towerTall, round, faceted, twisted, podium };
   }, []);
@@ -151,26 +163,32 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
   // untextured box regardless of what's painted on it.
   const windowNormalMaps = useMemo(() => {
     const base = getWindowNormalTexture();
+    // Vertical repeats scaled down from the original 11-row-tile
+    // values by 11/60 now that the base grid itself carries 60 unique
+    // rows (see getWindowGridTexture) — same on-screen window density
+    // as before, but each bucket now tiles under 4x instead of up to
+    // 20x, which is what was reading as an obviously-repeated printed
+    // pattern rather than distinct floors.
     const towerShort = base.clone();
-    towerShort.repeat.set(3, 5);
+    towerShort.repeat.set(3, 0.92);
     towerShort.needsUpdate = true;
     const towerMed = base.clone();
-    towerMed.repeat.set(3, 11);
+    towerMed.repeat.set(3, 2.02);
     towerMed.needsUpdate = true;
     const towerTall = base.clone();
-    towerTall.repeat.set(3, 20);
+    towerTall.repeat.set(3, 3.67);
     towerTall.needsUpdate = true;
     const round = base.clone();
-    round.repeat.set(5, 9);
+    round.repeat.set(5, 1.65);
     round.needsUpdate = true;
     const faceted = base.clone();
-    faceted.repeat.set(4, 9);
+    faceted.repeat.set(4, 1.65);
     faceted.needsUpdate = true;
     const twisted = base.clone();
-    twisted.repeat.set(3, 10);
+    twisted.repeat.set(3, 1.83);
     twisted.needsUpdate = true;
     const podium = base.clone();
-    podium.repeat.set(4, 2.5);
+    podium.repeat.set(4, 0.46);
     podium.needsUpdate = true;
     return { towerShort, towerMed, towerTall, round, faceted, twisted, podium };
   }, []);

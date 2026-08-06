@@ -21,11 +21,16 @@ function seeded(i: number, salt: number) {
   return v - Math.floor(v);
 }
 
-// A premium, near-monochrome palette (pearl, graphite, gunmetal,
+// A premium, near-monochrome palette (pearl, silver, gunmetal,
 // titanium, deep blue) rather than an ordinary-sedan color mix — cars
 // that look like they belong in the same "future" as the skyline
-// around them.
-const CAR_COLORS = ["#eef1f3", "#15171b", "#7d838c", "#2a3550", "#3a3f45", "#5a6572"];
+// around them. Skewed lighter than a first pass (that one leaned 5:1
+// toward near-black tones): against unlit black asphalt at night, a
+// mostly-dark palette left most cars reading as flat dark silhouettes
+// with no visible form, rather than distinct painted vehicles — these
+// still read as premium/monochrome, just bright enough to actually
+// catch the rig light and the paint gradient's own highlight.
+const CAR_COLORS = ["#eef1f3", "#c9cdd3", "#7d838c", "#3a4568", "#5a6270", "#8b93a0"];
 
 const WHEEL_RADIUS = 0.16;
 

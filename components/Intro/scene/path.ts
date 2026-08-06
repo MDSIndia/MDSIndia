@@ -49,37 +49,65 @@ export function createFlightCurve() {
   );
 }
 
+// Three-phase velocity shape for the flight's progress-over-time curve:
+// a quick launch ramp, a steady cruise, then an accelerating final
+// surge into the star. Replaced a single x^1.4 power curve that
+// accelerated continuously for the *entire* 9s — mathematically
+// smooth, but nothing that actually moves (a car, a drone, a dolly)
+// keeps building speed for that long without ever settling into a
+// pace; by the 4s mark that curve had only covered ~32% of the
+// distance, which read as a sluggish, still-launching glide well past
+// the point a real shot would already be cruising. Same standing-start
+// guarantee as before (zero velocity at t=0, no snap) and the same
+// still-accelerating finish into the star, but now with an actual
+// cruise in between so the middle of the flight reads as *travelling*
+// rather than perpetually winding up.
+const LAUNCH_FRAC = 0.15; // ramp to cruise speed by ~1.35s
+const SURGE_START_FRAC = 0.82; // final push begins ~7.4s in
+const FINAL_SPEED_RATIO = 1.7; // surge peaks at 1.7x cruise speed
+
+// Cruise speed solved so the three phases' areas (launch ramp +
+// constant cruise + accelerating surge) sum to exactly 1 — i.e. u(1)
+// lands on 1 by construction, not by clamping a mismatched curve.
+const CRUISE_SPEED =
+  1 /
+  (1 -
+    0.5 * LAUNCH_FRAC +
+    ((1 - SURGE_START_FRAC) * (FINAL_SPEED_RATIO - 1)) / 3);
+const FINAL_SPEED = FINAL_SPEED_RATIO * CRUISE_SPEED;
+
+// Antiderivative of the smoothstep curve 3s^2 - 2s^3, used so the
+// launch ramp's velocity (and therefore acceleration) joins both its
+// neighbors — zero at x=0, cruise speed at x=LAUNCH_FRAC — with no
+// kink at either end.
+function smoothstepIntegral(s: number): number {
+  return s * s * s - 0.5 * s * s * s * s;
+}
+
 /** Normalized [0,1] position along the flight curve for a given elapsed
- * time. Uses an ease-*in* curve (not ease-in-out): the camera never
- * decelerates as it approaches u=1 — it's still accelerating right up
- * to the moment it reaches the star, matching "races toward it at full
- * velocity" rather than gliding to a stop before entering the light.
- *
- * A single power curve (x^1.4), not a blend of two eases. Two failed
- * attempts along the way are worth recording:
- *  - Pure cubic ease-in (x^3) has zero velocity at x=0, which read as
- *    an almost-motionless crawl for the first couple of seconds once
- *    the flight starts already at street level.
- *  - Blending in a linear term fixed the crawl but put the camera at
- *    full linear velocity in the very first rendered frame — no real
- *    rig already has momentum the instant it starts, so this read as
- *    the shot snapping straight into motion instead of launching.
- *    Fading that linear term in over a short window fixed *that*, but
- *    a weighted-sum-of-two-curves ramp isn't itself monotonic — the
- *    two terms briefly out-accelerate their own settled cruise speed
- *    before easing back down, i.e. a velocity overshoot/bump right as
- *    the ramp hands off.
- * x^1.4 sidesteps both: for any exponent n>1, d/dx[x^n] = n*x^(n-1) is
- * exactly 0 at x=0 (genuine standing start, no snap) and itself
- * monotonically non-decreasing over [0,1] (guaranteed — a single power
- * of x has no seam where two pieces could fight each other), so
- * velocity rises smoothly with no bump anywhere in the flight. 1.4 is
- * chosen empirically to closely track the old blended curve's pacing
- * from ~1s onward (so the bulk of the flight — and everything else
- * keyed to absolute time, like the FOV pushes and fog below — reads
- * the same as before), while giving the first ~second a genuine,
- * gradual liftoff instead of either extreme. */
+ * time. See the phase constants above: launch ramp (ease-out from a
+ * genuine standstill to cruise speed) -> flat cruise -> ease-in surge
+ * that's still accelerating at u=1, so the camera races into the star
+ * rather than gliding to a stop before it. */
 export function flightU(t: number): number {
   const x = clamp01(t / INTRO_DURATION);
-  return clamp01(Math.pow(x, 1.4));
+
+  if (x <= LAUNCH_FRAC) {
+    const s = x / LAUNCH_FRAC;
+    return clamp01(CRUISE_SPEED * LAUNCH_FRAC * smoothstepIntegral(s));
+  }
+
+  const uAtLaunchEnd = CRUISE_SPEED * LAUNCH_FRAC * 0.5;
+  if (x <= SURGE_START_FRAC) {
+    return clamp01(uAtLaunchEnd + CRUISE_SPEED * (x - LAUNCH_FRAC));
+  }
+
+  const uAtSurgeStart =
+    uAtLaunchEnd + CRUISE_SPEED * (SURGE_START_FRAC - LAUNCH_FRAC);
+  const s = (x - SURGE_START_FRAC) / (1 - SURGE_START_FRAC);
+  const surgeSpan = 1 - SURGE_START_FRAC;
+  return clamp01(
+    uAtSurgeStart +
+      surgeSpan * (CRUISE_SPEED * s + ((FINAL_SPEED - CRUISE_SPEED) * s ** 3) / 3)
+  );
 }
