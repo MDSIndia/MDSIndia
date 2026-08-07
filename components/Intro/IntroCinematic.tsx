@@ -1,8 +1,6 @@
 "use client";
 
 import { Canvas, useThree } from "@react-three/fiber";
-import { EffectComposer, Bloom } from "@react-three/postprocessing";
-import { KernelSize } from "postprocessing";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { useMobile } from "@/hooks/useMobile";
@@ -22,6 +20,7 @@ import { StreetLights } from "./scene/StreetLights";
 import { FlyingCars } from "./scene/FlyingCars";
 import { StreetCars } from "./scene/StreetCars";
 import { ParkingLot } from "./scene/ParkingLot";
+import { StreetTrees } from "./scene/StreetTrees";
 import { FloatingLogo } from "./scene/FloatingLogo";
 import { Landmark } from "./scene/Landmark";
 import { Star } from "./scene/Star";
@@ -232,6 +231,7 @@ export function IntroCinematic({
               <DistantSkyline isMobile={isMobile} />
               <SkyBridges isMobile={isMobile} />
               <StreetLights isMobile={isMobile} />
+              <StreetTrees isMobile={isMobile} />
               <ParticleField isMobile={isMobile} />
               <Star isMobile={isMobile} />
               <CosmicBlast isMobile={isMobile} />
@@ -251,39 +251,6 @@ export function IntroCinematic({
               </Suspense>
             </Suspense>
 
-            {/* Real light bloom rather than relying purely on additive-
-                blended glow sprites — those fake a light source's own
-                brightness but never actually bleed onto neighboring
-                pixels, which reads as a flat sticker under it rather
-                than something genuinely luminous.
-                A first pass here used a much lower threshold (0.32)
-                tuned as if this were a mostly-dark scene with a few hot
-                highlights — but this city has hundreds of small
-                always-on emissive points at once (a lit window pane on
-                every one of 200 buildings, roof glow, antenna blinks,
-                headlights/taillights, every scan-line sweep, every holo
-                beam), so a threshold that low bloomed nearly the whole
-                frame simultaneously: thin bright elements like a car's
-                light bar ballooned into a soft halo far larger than the
-                car itself, reading as a rendering glitch rather than a
-                light. Pulled the threshold up hard so bloom only
-                catches genuinely standout sources (the finale star, a
-                close headlight/taillight) — the general window-glow
-                texture across the skyline stays crisp instead of
-                turning the whole city hazy. Desktop only: a full-screen
-                blur pass every frame is real GPU cost this scene can't
-                spare on top of everything else once mobile is also
-                juggling a lower dpr cap and simplified materials. */}
-            {!isMobile && (
-              <EffectComposer multisampling={0}>
-                <Bloom
-                  intensity={0.35}
-                  luminanceThreshold={0.62}
-                  luminanceSmoothing={0.12}
-                  kernelSize={KernelSize.SMALL}
-                />
-              </EffectComposer>
-            )}
           </Canvas>
         </div>
       )}

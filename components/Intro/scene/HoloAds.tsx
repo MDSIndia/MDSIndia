@@ -86,23 +86,30 @@ function HoloAd({
     [placement.baseY, placement.height]
   );
 
-  useFrame(({ clock }) => {
+  useFrame(({ camera, clock }) => {
     const group = groupRef.current;
     const panel = panelRef.current;
     if (!group || !panel) return;
 
     const t = clock.getElapsedTime();
 
-    // Slow independent spin plus a gentle bob — a physically anchored
-    // sign doesn't do this, which is exactly what sells "projected
-    // light" rather than "mounted object".
-    panel.rotation.y = t * 0.25 + placement.phase;
+    // A continuous independent spin used to sit here (no billboarding
+    // at all — the idea was that a freely-rotating hologram reads as
+    // more "alive" than one that always faces the camera). In practice
+    // that meant the panel spent most of the flight facing some
+    // direction other than the camera, at which point all that's
+    // visible is the glow bloom behind it — a flat, illegible smear of
+    // color instead of the actual ad — exactly the "not clear"
+    // complaint. Billboarded toward the camera now, same as
+    // Billboards/BuildingBanners, with a small sway layered on top of
+    // that base angle (not a free spin) so it still reads as a
+    // projection gently drifting rather than a rigidly mounted sign,
+    // without ever turning fully away from view.
+    const dx = camera.position.x - placement.position[0];
+    const dz = camera.position.z - placement.position[2];
+    const faceAngle = Math.atan2(dx, dz);
+    panel.rotation.y = faceAngle + Math.sin(t * 0.4 + placement.phase) * 0.22;
     panel.position.y = panelY + Math.sin(t * 0.5 + placement.phase) * placement.bob * 0.15;
-
-    // Billboarding is deliberately skipped here (unlike Banner) — a
-    // slowly self-rotating hologram reads as more alive than one that
-    // always faces the camera, and at this size/distance legibility
-    // isn't the point the way a text ad's is.
 
     if (scanRef.current && scanMatRef.current) {
       const cycle = ((t * 0.4 + placement.phase) % (Math.PI * 2)) / (Math.PI * 2);
@@ -165,13 +172,19 @@ function HoloAd({
           />
         </mesh>
 
+        {/* The image itself stays near-white (no tint multiply) and
+            mostly opaque — the earlier pass tinted this plane with the
+            same cyan/blue as the glow bloom behind it, which crushed
+            the actual picture into a flat blue smear rather than
+            something readable. The color cast now comes entirely from
+            the glow layer surrounding it; the image content itself
+            reads clearly, same as Billboards/BuildingBanners. */}
         <mesh scale={[placement.width, placement.height, 1]}>
           <planeGeometry args={[1, 1]} />
           <meshBasicMaterial
             map={texture}
-            color={placement.tint}
             transparent
-            opacity={0.7}
+            opacity={0.92}
             toneMapped={false}
             depthWrite={false}
             fog={false}

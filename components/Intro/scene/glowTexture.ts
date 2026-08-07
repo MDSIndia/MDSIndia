@@ -2,11 +2,19 @@ import * as THREE from "three";
 
 let cached: THREE.Texture | null = null;
 let cachedRay: THREE.Texture | null = null;
-let cachedWindowGrid: THREE.Texture | null = null;
+const cachedWindowGrid = new Map<number, THREE.Texture>();
 
 function seeded(i: number, salt: number) {
   const v = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453;
   return v - Math.floor(v);
+}
+
+// A large, odd per-variant offset folded into every seed index below —
+// odd and far outside the row/col index range so it never collides
+// with a real (r, c) pair, decorrelating one variant's lit/unlit
+// pattern from another's without needing a second seeded() input.
+function variantSeed(idx: number, variant: number) {
+  return idx + variant * 977;
 }
 
 /** A soft white radial-gradient sprite (opaque center fading to fully
@@ -88,9 +96,21 @@ export function getRayTexture(): THREE.Texture {
  * `.repeat` per consumer (box towers vs. round towers vs. podiums)
  * reuses the same canvas without redrawing it. Multiplies against each
  * building's own per-instance tint/albedo, so windows still end up
- * colored per-building rather than one fixed hue. */
-export function getWindowGridTexture(): THREE.Texture {
-  if (cachedWindowGrid) return cachedWindowGrid;
+ * colored per-building rather than one fixed hue.
+ *
+ * Takes a `variant` (default 0): every building in a given height
+ * bucket used to clone the exact same single canvas, which fixed the
+ * *within*-one-tower repeat (see the 60-row note below) but not the
+ * fact that every "tall" building in the whole skyline — dozens of
+ * them — showed the literal same lit/unlit arrangement, just at a
+ * different real-world scale. Two adjacent same-height towers with
+ * pixel-identical windows is what actually read as artificial up
+ * close; CityScape now builds a couple of independently-seeded
+ * variants per bucket and alternates which building gets which, so
+ * neighboring towers stop being visibly identical twins. */
+export function getWindowGridTexture(variant = 0): THREE.Texture {
+  const existing = cachedWindowGrid.get(variant);
+  if (existing) return existing;
   // Landed between the original 4x10 (panes read as chunky flat
   // blocks) and a since-tried 7x14 (so many small panes at once that
   // it stopped reading as individual windows and became a speckled
@@ -150,9 +170,9 @@ export function getWindowGridTexture(): THREE.Texture {
     // static" look), no matter how the per-pane rate is tuned, because
     // there's never a large lit or dark region for the eye to latch
     // onto. +-0.3 swing around the base 0.46 threshold below.
-    const floorBias = (seeded(r, 141) - 0.5) * 0.6;
+    const floorBias = (seeded(variantSeed(r, variant), 141) - 0.5) * 0.6;
     for (let c = 0; c < cols; c++) {
-      const idx = r * cols + c;
+      const idx = variantSeed(r * cols + c, variant);
       const x = c * cell;
       const y = r * cell;
       const pad = cell * 0.2;
@@ -173,13 +193,14 @@ export function getWindowGridTexture(): THREE.Texture {
       // into whole lit/dark floors rather than independent noise.
       const lit = seeded(idx, 41) > 0.46 - floorBias;
       if (lit) {
-        // Blue-dominant, techie-cyberpunk mix rather than a realistic
-        // warm-incandescent skyline — most panes read as cool
-        // fluorescent/LED office blue, with a warm exception (an
-        // incandescent lamp, a branded sign) kept in the minority so
-        // the facade still reads as lit variety rather than monotone.
+        // A more even warm/cool split than a first pass (30% warm) —
+        // a real skyline at night is a genuine mix of cool office
+        // LED/fluorescent and warm incandescent/residential light, and
+        // a heavy blue skew read as a single uniform color-graded
+        // filter over the whole city rather than hundreds of
+        // independently-lit rooms.
         const bright = seeded(idx, 42) > 0.5;
-        const warm = seeded(idx, 90) > 0.7;
+        const warm = seeded(idx, 90) > 0.55;
         if (warm) {
           // Pale warm white rather than a saturated orange — a real
           // incandescent/warm-LED window at night reads as off-white
@@ -246,10 +267,10 @@ export function getWindowGridTexture(): THREE.Texture {
   ctx.drawImage(grainCanvas, 0, 0);
   ctx.globalAlpha = 1;
 
-  cachedWindowGrid = new THREE.CanvasTexture(canvas);
-  cachedWindowGrid.wrapS = THREE.RepeatWrapping;
-  cachedWindowGrid.wrapT = THREE.RepeatWrapping;
-  cachedWindowGrid.colorSpace = THREE.SRGBColorSpace;
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.colorSpace = THREE.SRGBColorSpace;
   // Without this, a tiled texture viewed at a grazing angle (a tower
   // facade seen nearly edge-on, or a sharply tapered surface like the
   // faceted archetype) blurs heavily in one direction under Three's
@@ -258,11 +279,12 @@ export function getWindowGridTexture(): THREE.Texture {
   // than reading the renderer's actual capability: this module has no
   // renderer reference, and any hardware exceeding this just clamps
   // to its own max, so it's a safe upper bound either way.
-  cachedWindowGrid.anisotropy = 16;
-  return cachedWindowGrid;
+  texture.anisotropy = 16;
+  cachedWindowGrid.set(variant, texture);
+  return texture;
 }
 
-let cachedWindowEmissive: THREE.Texture | null = null;
+const cachedWindowEmissive = new Map<number, THREE.Texture>();
 
 /** Same grid, same lit/unlit seed as getWindowGridTexture (so the two
  * stay pixel-aligned when applied to the same UVs at the same
@@ -274,8 +296,9 @@ let cachedWindowEmissive: THREE.Texture | null = null;
  * dark that particular building's own body tint is, the way an actual
  * light behind glass would outshine the concrete around it instead of
  * being dimmed by it. */
-export function getWindowEmissiveTexture(): THREE.Texture {
-  if (cachedWindowEmissive) return cachedWindowEmissive;
+export function getWindowEmissiveTexture(variant = 0): THREE.Texture {
+  const existing = cachedWindowEmissive.get(variant);
+  if (existing) return existing;
   const cols = 5;
   const rows = 60;
   const cell = 40;
@@ -292,9 +315,9 @@ export function getWindowEmissiveTexture(): THREE.Texture {
     // Same per-floor bias as getWindowGridTexture, same salt, so the
     // emissive mask stays pixel-aligned with which panes the diffuse
     // map actually drew as lit.
-    const floorBias = (seeded(r, 141) - 0.5) * 0.6;
+    const floorBias = (seeded(variantSeed(r, variant), 141) - 0.5) * 0.6;
     for (let c = 0; c < cols; c++) {
-      const idx = r * cols + c;
+      const idx = variantSeed(r * cols + c, variant);
       const lit = seeded(idx, 41) > 0.46 - floorBias;
       if (!lit) continue;
       const x = c * cell;
@@ -308,21 +331,22 @@ export function getWindowEmissiveTexture(): THREE.Texture {
       // survives the emissiveIntensity multiply below as a real lamp
       // color rather than clipping to flat white.
       const bright = seeded(idx, 42) > 0.5;
-      const warm = seeded(idx, 90) > 0.7;
+      const warm = seeded(idx, 90) > 0.55;
       ctx.fillStyle = warm ? (bright ? "#ffedc7" : "#ffdb9e") : bright ? "#bfe4ff" : "#7fb8e8";
       ctx.fillRect(x + pad, y + pad, w, h);
     }
   }
 
-  cachedWindowEmissive = new THREE.CanvasTexture(canvas);
-  cachedWindowEmissive.wrapS = THREE.RepeatWrapping;
-  cachedWindowEmissive.wrapT = THREE.RepeatWrapping;
-  cachedWindowEmissive.colorSpace = THREE.SRGBColorSpace;
-  cachedWindowEmissive.anisotropy = 16;
-  return cachedWindowEmissive;
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 16;
+  cachedWindowEmissive.set(variant, texture);
+  return texture;
 }
 
-let cachedWindowNormal: THREE.Texture | null = null;
+const cachedWindowNormal = new Map<number, THREE.Texture>();
 
 /** The single biggest reason the facade still read as a printed decal
  * rather than a real surface, no matter how correct its colors were: a
@@ -336,9 +360,17 @@ let cachedWindowNormal: THREE.Texture | null = null;
  * per-pixel Sobel-style finite-difference pass over that heightmap to
  * derive the actual tangent-space normal at each texel. Same
  * cols/rows/cell as getWindowGridTexture so it lines up pane-for-pane
- * when applied at the same `.repeat`. */
-export function getWindowNormalTexture(): THREE.Texture {
-  if (cachedWindowNormal) return cachedWindowNormal;
+ * when applied at the same `.repeat`.
+ *
+ * Every pane gets the same raised bevel regardless of which are lit —
+ * this doesn't depend on the per-pane random roll the diffuse/emissive
+ * maps do, so unlike those two there's nothing for a `variant` to
+ * actually vary; the parameter exists purely so callers can pass the
+ * same variant index to all three window-texture functions uniformly
+ * without a special case for this one. */
+export function getWindowNormalTexture(_variant = 0): THREE.Texture {
+  const existing = cachedWindowNormal.get(0);
+  if (existing) return existing;
   const cols = 5;
   const rows = 60;
   const cell = 40;
@@ -406,11 +438,12 @@ export function getWindowNormalTexture(): THREE.Texture {
   }
   nctx.putImageData(normalImage, 0, 0);
 
-  cachedWindowNormal = new THREE.CanvasTexture(normalCanvas);
-  cachedWindowNormal.wrapS = THREE.RepeatWrapping;
-  cachedWindowNormal.wrapT = THREE.RepeatWrapping;
-  cachedWindowNormal.anisotropy = 16;
-  return cachedWindowNormal;
+  const texture = new THREE.CanvasTexture(normalCanvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.anisotropy = 16;
+  cachedWindowNormal.set(0, texture);
+  return texture;
 }
 
 /** A small solid circular sprite (hard-edged), used as the alpha mask
