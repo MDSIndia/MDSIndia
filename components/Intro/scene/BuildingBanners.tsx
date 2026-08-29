@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { clamp01 } from "./timeline";
 import { AD_IMAGES } from "./adImages";
 import { keepClearOfCrossStreets } from "./crossStreetPositions";
+import { keepClearOfLandmarks } from "./landmarkClearance";
 
 // Loaded eagerly alongside Billboards' own preload — same asset set,
 // so there's nothing extra to warm up here.
@@ -36,11 +37,11 @@ function buildPlacements(count: number, isMobile: boolean): BannerPlacement[] {
   const placements: BannerPlacement[] = [];
   for (let i = 0; i < count; i++) {
     const side = i % 2 === 0 ? -1 : 1;
-    // Nudged clear of cross streets exactly like CityScape does to the
-    // same raw value — has to match precisely, since this whole
-    // function exists purely to recompute where CityScape's own
-    // buildings actually ended up.
-    const z = keepClearOfCrossStreets(55 - seeded(i, 2) * 165);
+    // Nudged clear of cross streets and fixed landmark set-pieces
+    // exactly like CityScape does to the same raw value — has to match
+    // precisely, since this whole function exists purely to recompute
+    // where CityScape's own buildings actually ended up.
+    const z = keepClearOfLandmarks(keepClearOfCrossStreets(55 - seeded(i, 2) * 165), side);
     const startBias = clamp01((z - 15) / 40);
     // Matches CityScape's own (now tightened) spread exactly — this
     // previously used a slightly different formula than CityScape's
@@ -50,22 +51,25 @@ function buildPlacements(count: number, isMobile: boolean): BannerPlacement[] {
     const x = side * (11 + seeded(i, 1) * (11 - startBias * 6));
     const height = 4 + seeded(i, 3) * 50;
     const heightFactor = clamp01((height - 4) / 50);
-    const width = (1.6 + seeded(i, 4) * 5) * (1.18 - heightFactor * 0.4);
+    // Must match CityScape's own (now slimmer) width formula exactly —
+    // any drift here means a banner sized for a wider tower than the
+    // one actually rendered, which is what was reading as a banner
+    // floating past the edge of its own building's facade.
+    const width = (1.5 + seeded(i, 4) * 4.6) * (1.15 - heightFactor * 0.58);
     // Must match CityScape's own archetype roll exactly (same salt,
     // same thresholds) — this function's whole job is figuring out
     // which of CityScape's buildings actually got a flat box facade to
-    // hang a banner on. It previously only excluded round towers (and
-    // with a threshold, 0.78, that didn't even match CityScape's 0.8),
-    // silently missing the faceted and twisted archetypes entirely —
-    // those are tapered/curved silhouettes with no flat vertical wall
-    // at the box-facade offset a banner assumes, so a banner "hung" on
-    // one clipped straight through the tapered geometry instead of
-    // sitting flush against it. Raising the banner rate made an
-    // existing but rare bug into a frequent, obvious one.
+    // hang a banner on. Now includes the pyramid archetype CityScape
+    // added alongside round/faceted/twisted — missing it here meant
+    // banners could get hung on a pyramid's own pointed, windowless
+    // facade, which has nowhere for a flat rectangular banner to sit
+    // flush.
     const archetypeRoll = seeded(i, 55);
-    const isRound = archetypeRoll > 0.8;
-    const isFaceted = !isRound && archetypeRoll > 0.68;
-    const isTwisted = !isRound && !isFaceted && archetypeRoll > 0.58;
+    const isRound = archetypeRoll > 0.72;
+    const isFaceted = !isRound && archetypeRoll > 0.53;
+    const isPyramid = !isRound && !isFaceted && archetypeRoll > 0.4;
+    const isTwisted =
+      !isRound && !isFaceted && !isPyramid && archetypeRoll > 0.2 && startBias < 0.5;
 
     // Only tall plain-box towers get a banner — round/faceted/twisted
     // towers have no flat facade to hang one on, and short mid-rises
@@ -81,7 +85,7 @@ function buildPlacements(count: number, isMobile: boolean): BannerPlacement[] {
     // number of separate textures/draw calls down.
     const threshold = isMobile ? 0.95 : 0.87;
     const isCandidate =
-      !isRound && !isFaceted && !isTwisted && height > 20 && seeded(i, 70) > threshold;
+      !isRound && !isFaceted && !isPyramid && !isTwisted && height > 20 && seeded(i, 70) > threshold;
     if (!isCandidate) continue;
 
     const bannerWidth = width * 0.62;
@@ -179,7 +183,13 @@ function Banner({
 }
 
 export function BuildingBanners({ isMobile }: { isMobile: boolean }) {
-  const count = isMobile ? 110 : 200;
+  // Must match CityScape's own building count exactly — this function
+  // only exists to recompute where CityScape's real buildings ended up,
+  // and iterating past its actual count means placing banners on
+  // buildings CityScape never generates at all (a stale value here,
+  // left over from before CityScape's density was cut, was producing
+  // banners floating with no host building anywhere near them).
+  const count = isMobile ? 38 : 68;
   const placements = useMemo(
     () => buildPlacements(count, isMobile),
     [count, isMobile]

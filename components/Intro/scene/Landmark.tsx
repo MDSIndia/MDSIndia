@@ -30,11 +30,18 @@ export function Landmark() {
   const texture = useTexture(BRAND_LOGO) as THREE.Texture;
   const wireRef = useRef<THREE.Mesh>(null);
   const haloMatRef = useRef<THREE.MeshBasicMaterial>(null);
+  const ringRef = useRef<THREE.Group>(null);
+  const ringGlowRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
     if (wireRef.current) wireRef.current.rotation.y = t * 0.045;
     if (haloMatRef.current) haloMatRef.current.opacity = 0.28 + Math.sin(t * 0.6) * 0.08;
+    // The ring spins around its own tilted axis (its local Y, already
+    // rotated off-plane by the group below) rather than orbiting the
+    // sphere bodily — reads as "a structure rotating in place" the way
+    // a real orbital-ring landmark would, not a satellite circling it.
+    if (ringRef.current) ringRef.current.rotation.z = t * 0.08;
   });
 
   return (
@@ -83,6 +90,52 @@ export function Landmark() {
           side={THREE.BackSide}
         />
       </mesh>
+
+      {/* A dramatic tilted orbital ring encircling the sphere — the
+          single most distinctive silhouette element a landmark like
+          this can have (rotational symmetry a plain sphere/spire alone
+          doesn't have), rather than another concentric halo. Tilted at
+          a compound angle (both X and Z) instead of flat/Saturn-style
+          so it reads as a ring cutting diagonally across the sphere
+          from most viewing angles along the flight, not just a disc
+          that goes edge-on and disappears from some approach angles.
+          The group only carries the tilt; the ring's own local Z spin
+          (see useFrame above) is what animates. */}
+      <group rotation={[Math.PI / 2.3, 0.4, 0.3]}>
+        <group ref={ringRef}>
+          {/* The ring itself — real geometry with Phong shading so it
+              actually reads as a solid structure catching the rig
+              light, not just another flat glow plane. */}
+          <mesh>
+            <torusGeometry args={[RADIUS * 1.7, RADIUS * 0.045, 12, 64]} />
+            <meshPhongMaterial
+              color="#0e2440"
+              specular="#8fe0ff"
+              shininess={90}
+              emissive="#2a8fc7"
+              emissiveIntensity={0.5}
+              fog
+            />
+          </mesh>
+
+          {/* Soft additive glow tracing the same ring, slightly larger
+              — the same "structure + halo" layering the sphere itself
+              uses, so the ring reads as lit rather than a bare grey
+              band. */}
+          <mesh ref={ringGlowRef}>
+            <torusGeometry args={[RADIUS * 1.7, RADIUS * 0.09, 10, 64]} />
+            <meshBasicMaterial
+              color="#4fd6ff"
+              transparent
+              opacity={0.22}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+              fog={false}
+              toneMapped={false}
+            />
+          </mesh>
+        </group>
+      </group>
 
       {/* The MDS mark, mounted on the face pointed back down the
           highway so it's readable as the camera approaches. */}

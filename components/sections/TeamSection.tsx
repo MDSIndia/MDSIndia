@@ -9,7 +9,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 const team = [
   {
     name: "Sumanth Mahadeva",
-    role: "Chief Executive Officer",
+    role: "Founder & Chief Executive Officer",
     short: "CEO",
     tagline: "Visionary. Builder. Dreamer.",
     description:
@@ -18,23 +18,17 @@ const team = [
     accent: "#00D4FF",
     glow: "0,212,255",
   },
-
-  {
-    name: "Rakesh Nerella",
-    role: "Chief Technology Officer",
-    short: "CTO",
-    tagline: "Engineer. Architect. Innovator.",
-    description:
-      "The technical force behind Noorva's intelligence — designing AI systems that genuinely understand the complexity of human life. Rakesh builds the future one breakthrough at a time.",
-    photo: "/Rakesh-avatar.jpg",
-    accent: "#A855F7",
-    glow: "168,85,247",
-  },
 ];
 
 export function TeamSection() {
   return (
-    <section id="team" className="section-padding relative overflow-hidden">
+    // scroll-mt-24 — the fixed navbar (see Navbar.tsx's `fixed top-0`)
+    // sits above everything at a height taller than this section's own
+    // top padding accounts for; without an explicit scroll offset,
+    // clicking "Team" in the nav scrolls this section's top edge flush
+    // with the viewport top, leaving the heading partially hidden
+    // behind the navbar instead of clearing it.
+    <section id="team" className="section-padding relative overflow-hidden scroll-mt-24">
       <div className="scene-top-fade" />
       <div className="scene-bottom-fade" />
 
@@ -88,9 +82,16 @@ export function TeamSection() {
           </p>
         </motion.div>
 
-        {/* Cards — a quiet glass card at rest; the member's accent
-            color only shows up as a border tint + soft glow on hover. */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-[300px] sm:max-w-2xl mx-auto">
+        {/* Card — a quiet glass card at rest; the member's accent
+            color only shows up as a border tint + soft glow on hover.
+            Single centered "founder spotlight" card now that only
+            Sumanth is listed — sized for its own presence rather than
+            the narrower width the old 2-up grid used, but still capped
+            so it doesn't stretch into an oddly wide single column on
+            large screens. Full-bleed on the smallest phones (px-4 from
+            the section's own side padding does the clamping there),
+            up through a fixed comfortable width from sm and up. */}
+        <div className="w-full sm:w-auto sm:max-w-sm mx-auto">
           {team.map((member, i) => (
             <motion.div
               key={member.name}

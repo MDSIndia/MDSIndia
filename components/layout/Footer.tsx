@@ -49,7 +49,7 @@ export function Footer() {
               {["Noorva", "Future AI", "Careers"].map((item) => (
                 <li key={item}>
                   <a
-                    href={`#${item.toLowerCase().replace(" ", "-")}`}
+                    href={`/#${item.toLowerCase().replace(" ", "-")}`}
                     className="text-white/35 hover:text-white/80 text-sm transition-colors duration-300"
                   >
                     {item}
@@ -70,7 +70,7 @@ export function Footer() {
               <li>services@mdsindia.in</li>
               <li>Hyderabad, Telangana, India</li>
               <li className="pt-2">
-                <a href="#contact" className="text-cyan-400/70 hover:text-cyan-400 transition-colors">
+                <a href="/#contact" className="text-cyan-400/70 hover:text-cyan-400 transition-colors">
                   Get in touch →
                 </a>
               </li>

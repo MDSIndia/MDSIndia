@@ -1,6 +1,8 @@
 "use client";
 
 import { Canvas, useThree } from "@react-three/fiber";
+import { EffectComposer, Bloom } from "@react-three/postprocessing";
+import { KernelSize } from "postprocessing";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { useMobile } from "@/hooks/useMobile";
@@ -16,6 +18,8 @@ import { Billboards } from "./scene/Billboards";
 import { BuildingBanners } from "./scene/BuildingBanners";
 import { HoloAds } from "./scene/HoloAds";
 import { SkyBridges } from "./scene/SkyBridges";
+import { LightShafts } from "./scene/LightShafts";
+import { ElevatedTrain } from "./scene/ElevatedTrain";
 import { StreetLights } from "./scene/StreetLights";
 import { FlyingCars } from "./scene/FlyingCars";
 import { StreetCars } from "./scene/StreetCars";
@@ -23,6 +27,14 @@ import { ParkingLot } from "./scene/ParkingLot";
 import { StreetTrees } from "./scene/StreetTrees";
 import { FloatingLogo } from "./scene/FloatingLogo";
 import { Landmark } from "./scene/Landmark";
+import { NoorvaTower } from "./scene/NoorvaTower";
+import { Waterfall } from "./scene/Waterfall";
+import { Biodome } from "./scene/Biodome";
+import { SkyPlaza } from "./scene/SkyPlaza";
+import { Pedestrians } from "./scene/Pedestrians";
+import { BusStop } from "./scene/BusStop";
+import { HolographicMonument } from "./scene/HolographicMonument";
+import { FuturisticPark } from "./scene/FuturisticPark";
 import { Star } from "./scene/Star";
 import { CosmicBlast } from "./scene/CosmicBlast";
 import { INTRO_DURATION } from "./scene/timeline";
@@ -165,10 +177,12 @@ export function IntroCinematic({
             // A cheap, GPU-composited CSS grade on top of the raw
             // WebGL output — real footage is always color-graded, and
             // a flat unlit scene otherwise reads as a video-game
-            // viewport rather than a shot. Slightly higher contrast and
-            // pulled-back saturation reads as a graded night exterior
-            // rather than an oversaturated render.
-            filter: "contrast(1.1) saturate(1.08) brightness(1.0)",
+            // viewport rather than a shot. Pulled saturation back down
+            // (was 1.22) and dropped the hue-rotate at explicit
+            // direction — a "luxury tech" grade stays controlled rather
+            // than punchy/neon; contrast alone still keeps blacks rich
+            // enough for the additive accents to read as lit.
+            filter: "contrast(1.1) saturate(1.02) brightness(1.0)",
           }}
         >
           <Canvas
@@ -216,11 +230,22 @@ export function IntroCinematic({
                   tuned for a desktop monitor as noticeably dimmer, so
                   mobile gets its own boosted intensity rather than
                   sharing the desktop tuning as-is. */}
-              <hemisphereLight args={["#3f5a8c", "#02030a", isMobile ? 2.6 : 1.8]} />
+              <hemisphereLight args={["#33455f", "#141824", isMobile ? 2.6 : 1.8]} />
               <directionalLight
                 position={[40, 70, 24]}
                 intensity={isMobile ? 3.5 : 2.4}
-                color="#7fabf5"
+                color="#8fa8c8"
+              />
+              {/* A cool, restrained rim/fill from the opposite side —
+                  desaturated toward graphite-blue rather than a
+                  saturated violet, per explicit "restrained violet
+                  accents, avoid excessive neon" direction. Low
+                  intensity, pure fill — doesn't compete with the
+                  directional key for which side reads as "lit". */}
+              <directionalLight
+                position={[-30, 40, -20]}
+                intensity={isMobile ? 0.8 : 0.5}
+                color="#6a72a0"
               />
               <CameraRig isMobile={isMobile} />
               <Ground />
@@ -230,8 +255,12 @@ export function IntroCinematic({
               <CityScape isMobile={isMobile} />
               <DistantSkyline isMobile={isMobile} />
               <SkyBridges isMobile={isMobile} />
+              <LightShafts isMobile={isMobile} />
+              <ElevatedTrain isMobile={isMobile} />
               <StreetLights isMobile={isMobile} />
               <StreetTrees isMobile={isMobile} />
+              <Pedestrians isMobile={isMobile} />
+              <BusStop isMobile={isMobile} />
               <ParticleField isMobile={isMobile} />
               <Star isMobile={isMobile} />
               <CosmicBlast isMobile={isMobile} />
@@ -248,9 +277,48 @@ export function IntroCinematic({
                 <HoloAds isMobile={isMobile} />
                 <FloatingLogo />
                 <Landmark />
+                <NoorvaTower />
+                <Waterfall isMobile={isMobile} />
+                <Biodome />
+                <SkyPlaza />
+                <HolographicMonument />
+                <FuturisticPark />
               </Suspense>
             </Suspense>
 
+            {/* Real bloom rather than relying on additive-blended
+                planes alone to look "lit" — every neon accent, window
+                glow, and holographic panel in this scene renders with
+                toneMapped={false} specifically so it can blow past 1.0
+                and actually trip this threshold, which is what gives
+                bright elements genuine soft light bleed into their
+                surroundings instead of a flat, crisply-edged colored
+                shape. This was the single biggest thing separating the
+                raw WebGL output from a graded cinematic shot. Skipped
+                entirely on mobile — a second full-resolution blur pass
+                on top of an already-heavy instanced scene is real GPU
+                cost weaker/thermally-limited mobile GPUs can't
+                absorb, and mobile already gets its own brighter base
+                lighting/material tuning throughout this scene as a
+                cheaper substitute. */}
+            {!isMobile && (
+              <EffectComposer multisampling={0}>
+                <Bloom
+                  intensity={0.35}
+                  // 0.22 was catching almost the entire midtone scene —
+                  // dim building facades, the sky gradient — and
+                  // blooming all of it into a solid white wash rather
+                  // than picking out just the genuinely bright neon/
+                  // glow elements. Pushed close to 1.0 so only pixels
+                  // actually near full brightness (the toneMapped=false
+                  // accents/signage this was built for) trigger it.
+                  luminanceThreshold={0.92}
+                  luminanceSmoothing={0.15}
+                  mipmapBlur
+                  kernelSize={KernelSize.SMALL}
+                />
+              </EffectComposer>
+            )}
           </Canvas>
         </div>
       )}

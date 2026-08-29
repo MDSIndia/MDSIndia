@@ -45,7 +45,10 @@ export function CameraRig({ isMobile }: { isMobile: boolean }) {
   const baseFov = isMobile ? 64 : 46;
   const curve = useMemo(() => createFlightCurve(), []);
   const fog = useMemo(() => new THREE.FogExp2("#020208", 0.05), []);
-  const baseColor = useMemo(() => new THREE.Color("#020208"), []);
+  // Deep midnight navy/graphite rather than violet — restrained,
+  // luxury-tech atmosphere per explicit direction rather than a
+  // purple-leaning haze.
+  const baseColor = useMemo(() => new THREE.Color("#060810"), []);
   const portalColor = useMemo(() => new THREE.Color("#7fd8ff"), []);
   const engulfColor = useMemo(() => new THREE.Color("#f4fbff"), []);
   const tangent = useMemo(() => new THREE.Vector3(), []);
@@ -63,13 +66,20 @@ export function CameraRig({ isMobile }: { isMobile: boolean }) {
     canvas.width = 8;
     canvas.height = 256;
     const ctx = canvas.getContext("2d")!;
+    // Deep midnight blue and graphite rather than the earlier violet/
+    // magenta-leaning dusk band — a restrained, "controlled luxury"
+    // night sky per explicit direction (avoid excessive neon/purple),
+    // fading from near-black through midnight blue into a cool
+    // graphite-blue horizon glow (real light pollution reflecting off
+    // low haze), then back to near-black.
     const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    grad.addColorStop(0, "#01020a");
-    grad.addColorStop(0.42, "#050a1a");
-    grad.addColorStop(0.58, "#0d1c38");
-    grad.addColorStop(0.66, "#122544");
-    grad.addColorStop(0.76, "#081428");
-    grad.addColorStop(1, "#020208");
+    grad.addColorStop(0, "#030308");
+    grad.addColorStop(0.34, "#060a1a");
+    grad.addColorStop(0.5, "#0a1428");
+    grad.addColorStop(0.62, "#0d1e34");
+    grad.addColorStop(0.72, "#0e2038");
+    grad.addColorStop(0.82, "#0a1830");
+    grad.addColorStop(1, "#020204");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     const texture = new THREE.CanvasTexture(canvas);
@@ -159,8 +169,15 @@ export function CameraRig({ isMobile }: { isMobile: boolean }) {
     // glowing finale without erasing the buildings around it — the
     // glow now peaks mid-approach (portalApproach) rather than growing
     // even further at the very end.
+    // Baseline nudged up from 0.012 — the old value read as clean,
+    // near-vacuum air with essentially no depth cueing between a near
+    // and a far building; a touch more haze is what makes distant
+    // towers actually recede/desaturate into the skyline the way a
+    // real hazy night city does, without yet approaching the density
+    // that would start hiding the road-level detail this scene relies
+    // on being readable.
     fog.density =
-      0.02 * establishFog + 0.012 + portalApproach * 0.05 + engulf * 0.06;
+      0.02 * establishFog + 0.019 + portalApproach * 0.05 + engulf * 0.06;
     fog.color
       .copy(baseColor)
       .lerp(portalColor, portalApproach)

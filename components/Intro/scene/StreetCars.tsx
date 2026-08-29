@@ -33,6 +33,11 @@ function seeded(i: number, salt: number) {
 const CAR_COLORS = ["#eef1f3", "#c9cdd3", "#7d838c", "#3a4568", "#5a6270", "#8b93a0"];
 
 const WHEEL_RADIUS = 0.16;
+// How many fading segments make up one car's light trail — a real
+// motion-blur streak rather than a single semi-transparent smear, and
+// cheap enough (a handful of extra instanced boxes per car) not to
+// worry about relative to everything else already instanced here.
+const TRAIL_SEGMENTS = 5;
 
 interface CarState {
   laneX: number;
@@ -69,7 +74,9 @@ export function StreetCars({ isMobile }: { isMobile: boolean }) {
   const mirrorRef = useRef<THREE.InstancedMesh>(null);
   const headlightRef = useRef<THREE.InstancedMesh>(null);
   const taillightRef = useRef<THREE.InstancedMesh>(null);
+  const trailRef = useRef<THREE.InstancedMesh>(null);
   const shadowRef = useRef<THREE.InstancedMesh>(null);
+  const reflectionRef = useRef<THREE.InstancedMesh>(null);
 
   const shellGeometry = useMemo(() => createAeroCarBodyGeometry(), []);
   const paintTexture = useMemo(() => getCarPaintTexture(), []);
@@ -77,6 +84,17 @@ export function StreetCars({ isMobile }: { isMobile: boolean }) {
   const LANES = useMemo(() => [-3.4, -1.5, 1.5, 3.4] as const, []);
   const bodyColors = useMemo(
     () => Array.from({ length: count }, () => new THREE.Color()),
+    [count]
+  );
+  const trailColors = useMemo(
+    () => Array.from({ length: count * TRAIL_SEGMENTS }, () => new THREE.Color()),
+    [count]
+  );
+  // Two per car — a warm headlight pool and a red taillight pool, the
+  // "wet road catching light" cue real night traffic footage always
+  // has, matching the reference's own "Realistic Reflections" callout.
+  const reflectionColors = useMemo(
+    () => Array.from({ length: count * 2 }, () => new THREE.Color()),
     [count]
   );
 
@@ -120,7 +138,9 @@ export function StreetCars({ isMobile }: { isMobile: boolean }) {
     const mirrorMatrices: THREE.Matrix4[] = [];
     const headlightMatrices: THREE.Matrix4[] = [];
     const taillightMatrices: THREE.Matrix4[] = [];
+    const trailMatrices: THREE.Matrix4[] = [];
     const shadowMatrices: THREE.Matrix4[] = [];
+    const reflectionMatrices: THREE.Matrix4[] = [];
 
     cars.current.forEach((car, i) => {
       const facing = car.dir < 0 ? 0 : Math.PI;
@@ -209,6 +229,28 @@ export function StreetCars({ isMobile }: { isMobile: boolean }) {
       dummy.updateMatrix();
       taillightMatrices.push(dummy.matrix.clone());
 
+      // A light-motion-blur streak trailing from the taillight — a
+      // string of abutting segments fading toward zero brightness
+      // rather than one flat translucent smear, so it reads as a real
+      // streak of light thinning out with distance rather than a
+      // static translucent bar glued to the bumper. Gap between
+      // segments scales with the car's own speed: a faster car leaves
+      // a visibly longer trail, the same relationship a real long-
+      // exposure photo of traffic shows.
+      const trailGap = 0.16 + car.speed * 0.028;
+      for (let k = 0; k < TRAIL_SEGMENTS; k++) {
+        const segCenter = (k + 0.5) * trailGap;
+        const segZ = backZ - car.dir * segCenter;
+        dummy.position.set(car.laneX, 0.22, segZ);
+        dummy.rotation.set(0, facing, 0);
+        dummy.scale.set(car.width * 0.6, 0.035, trailGap * 0.98);
+        dummy.updateMatrix();
+        trailMatrices.push(dummy.matrix.clone());
+
+        const brightness = 1 - (k + 1) / (TRAIL_SEGMENTS + 1);
+        trailColors[i * TRAIL_SEGMENTS + k]?.set("#ff2a2a").multiplyScalar(brightness);
+      }
+
       // Ground contact shadow — without it a car's wheels meet the
       // road in a hard, evenly-lit line with no sense of it actually
       // resting on the asphalt, the same cue CityScape uses under
@@ -218,6 +260,29 @@ export function StreetCars({ isMobile }: { isMobile: boolean }) {
       dummy.scale.set(car.width * 1.3, car.length * 1.15, 1);
       dummy.updateMatrix();
       shadowMatrices.push(dummy.matrix.clone());
+
+      // Colored ground-glow pools — the wet-road reflection cue,
+      // stretched toward each light's own direction (headlight glow
+      // reaches forward, taillight glow trails back) rather than a
+      // perfectly round puddle. Kept small and dim (this used to be
+      // sized closer to the shadow disc, bright red, additive — at the
+      // very close range a car can legitimately pass the camera at
+      // during a normal overtake, that combination bloomed into a huge
+      // dominant red mass filling the frame, not a subtle wet-road
+      // cue).
+      dummy.position.set(car.laneX, 0.018, frontZ + car.dir * 0.15);
+      dummy.rotation.set(-Math.PI / 2, 0, 0);
+      dummy.scale.set(car.width * 0.6, car.length * 0.28, 1);
+      dummy.updateMatrix();
+      reflectionMatrices.push(dummy.matrix.clone());
+      reflectionColors[i * 2]?.set("#fff3d6").multiplyScalar(0.22);
+
+      dummy.position.set(car.laneX, 0.018, backZ - car.dir * 0.25);
+      dummy.rotation.set(-Math.PI / 2, 0, 0);
+      dummy.scale.set(car.width * 0.55, car.length * 0.38, 1);
+      dummy.updateMatrix();
+      reflectionMatrices.push(dummy.matrix.clone());
+      reflectionColors[i * 2 + 1]?.set("#ff2a2a").multiplyScalar(0.18);
     });
 
     applyInstances(shellRef.current, shellMatrices, bodyColors);
@@ -227,7 +292,9 @@ export function StreetCars({ isMobile }: { isMobile: boolean }) {
     applyInstances(mirrorRef.current, mirrorMatrices);
     applyInstances(headlightRef.current, headlightMatrices);
     applyInstances(taillightRef.current, taillightMatrices);
+    applyInstances(trailRef.current, trailMatrices, trailColors);
     applyInstances(shadowRef.current, shadowMatrices);
+    applyInstances(reflectionRef.current, reflectionMatrices, reflectionColors);
   };
 
   useLayoutEffect(layout, []);
@@ -318,6 +385,21 @@ export function StreetCars({ isMobile }: { isMobile: boolean }) {
         />
       </instancedMesh>
 
+      {/* Light-trail segments — brightness comes entirely from
+          instanceColor (see trailColors above), so the base material
+          color stays plain white here. */}
+      <instancedMesh ref={trailRef} args={[undefined, undefined, count * TRAIL_SEGMENTS]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshBasicMaterial
+          transparent
+          opacity={0.55}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          fog={false}
+          toneMapped={false}
+        />
+      </instancedMesh>
+
       {/* Ground contact shadow beneath each car. */}
       <instancedMesh ref={shadowRef} args={[undefined, undefined, count]}>
         <circleGeometry args={[1, 16]} />
@@ -328,6 +410,21 @@ export function StreetCars({ isMobile }: { isMobile: boolean }) {
           blending={THREE.MultiplyBlending}
           depthWrite={false}
           fog={false}
+        />
+      </instancedMesh>
+
+      {/* Colored wet-road reflection pools — brightness/color comes
+          entirely from instanceColor (see reflectionColors above),
+          same pattern the trail segments use. */}
+      <instancedMesh ref={reflectionRef} args={[undefined, undefined, count * 2]}>
+        <circleGeometry args={[1, 16]} />
+        <meshBasicMaterial
+          transparent
+          opacity={0.28}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          fog={false}
+          toneMapped={false}
         />
       </instancedMesh>
     </group>

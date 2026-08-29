@@ -30,6 +30,10 @@ const CAR_COLORS = ["#eef1f3", "#15171b", "#7d838c", "#2a3550", "#3a3f45", "#5a6
 // buildings already use, just pulled back from full saturation so
 // they read as lit hardware rather than a solid glowing toy block.
 const DRONE_COLORS = ["#2fa8cc", "#3f7ab8"];
+// Same reasoning as StreetCars' own TRAIL_SEGMENTS — a fading string
+// of segments behind each vehicle's taillight rather than one flat
+// translucent smear.
+const TRAIL_SEGMENTS = 5;
 
 interface FlyingCar {
   x: number;
@@ -73,6 +77,7 @@ export function FlyingCars({ isMobile }: { isMobile: boolean }) {
   const mirrorRef = useRef<THREE.InstancedMesh>(null);
   const headlightRef = useRef<THREE.InstancedMesh>(null);
   const taillightRef = useRef<THREE.InstancedMesh>(null);
+  const trailRef = useRef<THREE.InstancedMesh>(null);
 
   const droneBodyRef = useRef<THREE.InstancedMesh>(null);
   const droneGlowRef = useRef<THREE.InstancedMesh>(null);
@@ -82,6 +87,10 @@ export function FlyingCars({ isMobile }: { isMobile: boolean }) {
   const glassTexture = useTexture(CAR_GLASS) as THREE.Texture;
   const bodyColors = useMemo(
     () => Array.from({ length: carCount }, () => new THREE.Color()),
+    [carCount]
+  );
+  const trailColors = useMemo(
+    () => Array.from({ length: carCount * TRAIL_SEGMENTS }, () => new THREE.Color()),
     [carCount]
   );
 
@@ -143,6 +152,7 @@ export function FlyingCars({ isMobile }: { isMobile: boolean }) {
     const mirrorMatrices: THREE.Matrix4[] = [];
     const headlightMatrices: THREE.Matrix4[] = [];
     const taillightMatrices: THREE.Matrix4[] = [];
+    const trailMatrices: THREE.Matrix4[] = [];
 
     cars.current.forEach((car, i) => {
       const facing = car.dir < 0 ? 0 : Math.PI;
@@ -207,6 +217,23 @@ export function FlyingCars({ isMobile }: { isMobile: boolean }) {
       dummy.scale.set(car.width * 0.7, 0.045, 0.03);
       dummy.updateMatrix();
       taillightMatrices.push(dummy.matrix.clone());
+
+      // Light-motion-blur streak trailing from the taillight — same
+      // fading-segment trick StreetCars uses on the ground, scaled by
+      // this vehicle's own (generally higher) flight speed.
+      const trailGap = 0.16 + car.speed * 0.028;
+      for (let k = 0; k < TRAIL_SEGMENTS; k++) {
+        const segCenter = (k + 0.5) * trailGap;
+        const segZ = backZ - car.dir * segCenter;
+        dummy.position.set(car.x, bobY - CAR_SHELL_HEIGHT * 0.28, segZ);
+        dummy.rotation.set(0, facing, 0);
+        dummy.scale.set(car.width * 0.55, 0.035, trailGap * 0.98);
+        dummy.updateMatrix();
+        trailMatrices.push(dummy.matrix.clone());
+
+        const brightness = 1 - (k + 1) / (TRAIL_SEGMENTS + 1);
+        trailColors[i * TRAIL_SEGMENTS + k]?.set("#ff2a2a").multiplyScalar(brightness);
+      }
     });
 
     applyInstances(shellRef.current, shellMatrices, bodyColors);
@@ -215,6 +242,7 @@ export function FlyingCars({ isMobile }: { isMobile: boolean }) {
     applyInstances(mirrorRef.current, mirrorMatrices);
     applyInstances(headlightRef.current, headlightMatrices);
     applyInstances(taillightRef.current, taillightMatrices);
+    applyInstances(trailRef.current, trailMatrices, trailColors);
   };
 
   const layoutDrones = () => {
@@ -341,6 +369,20 @@ export function FlyingCars({ isMobile }: { isMobile: boolean }) {
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           fog={false}
+        />
+      </instancedMesh>
+
+      {/* Light-trail segments — brightness comes entirely from
+          instanceColor (see trailColors above). */}
+      <instancedMesh ref={trailRef} args={[undefined, undefined, carCount * TRAIL_SEGMENTS]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshBasicMaterial
+          transparent
+          opacity={0.55}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          fog={false}
+          toneMapped={false}
         />
       </instancedMesh>
 

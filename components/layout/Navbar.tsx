@@ -6,13 +6,21 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import { useScrollProgress } from "@/hooks/useScrollProgress";
 
+// Every href is home-anchored ("/#id") rather than a bare "#id" — a
+// bare hash link only scrolls within whatever page you're currently
+// on, so from /about-mds or /market-opportunity (which don't have
+// these section ids at all) clicking one silently did nothing. "/#id"
+// always lands on the homepage first (home/page.tsx's own hash-scroll
+// effect — see the comment there — hands the actual scroll off to
+// Lenis once that section has mounted), so every link works no matter
+// which page you're currently on.
 const navLinks = [
-  { label: "Home",       href: "#hero",       id: "hero" },
-  { label: "About MDS",  href: "#about-mds",  id: "about-mds" },
-  { label: "Noorva",     href: "#noorva",     id: "noorva" },
-  { label: "Invest",     href: "#invest",     id: "invest" },
-  { label: "Team",       href: "#team",       id: "team" },
-  { label: "Contact",    href: "#contact",    id: "contact" },
+  { label: "Home",       href: "/#hero",       id: "hero" },
+  { label: "About MDS",  href: "/#about-mds",  id: "about-mds" },
+  { label: "Noorva",     href: "/#noorva",     id: "noorva" },
+  { label: "Invest",     href: "/#invest",     id: "invest" },
+  { label: "Team",       href: "/#team",       id: "team" },
+  { label: "Contact",    href: "/#contact",    id: "contact" },
 ];
 
 export function Navbar() {
@@ -71,7 +79,7 @@ export function Navbar() {
 
         <div className="relative max-w-7xl mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
-          <a href="#" className="flex items-center gap-2.5 group">
+          <a href="/" className="flex items-center gap-2.5 group">
             <Image
               src="/fevicon.png"
               alt="MDS"

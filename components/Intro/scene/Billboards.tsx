@@ -16,7 +16,13 @@ function seeded(i: number, salt: number) {
   return v - Math.floor(v);
 }
 
-const GLOW_COLORS = ["#f4f2e8", "#ffcf8a", "#dce6f2", "#ffdca8"];
+// Restrained, desaturated palette at explicit request — cool white and
+// pale silver-blue as the dominant tones, with only a whisper of cyan
+// or violet rather than a saturated neon hue. This is what actually
+// reads as "premium display" instead of "arcade sign": real luxury
+// tech products light up in near-white with a faint color temperature,
+// not a fully saturated primary.
+const ACCENT_COLORS = ["#eef2f6", "#d6e2ea", "#d8d2e8", "#dce8e6"];
 
 type Tier = "street" | "sky";
 
@@ -25,8 +31,9 @@ interface AdPlacement {
   width: number;
   height: number;
   textureIndex: number;
-  glowColor: string;
+  accent: string;
   phase: number;
+  baseY: number;
 }
 
 function buildPlacements(count: number, imageCount: number): AdPlacement[] {
@@ -43,33 +50,14 @@ function buildPlacements(count: number, imageCount: number): AdPlacement[] {
     // Both tiers are kept inside the same road-shoulder corridor
     // ParkingLot/HoloAds use (road plane ends at x=8, building line
     // starts at x=11 — see Ground.tsx/CityScape's own x >= 11
-    // invariant): these used to reach out to x=13 (street) and x=28
-    // (sky), landing squarely inside the actual building footprints —
-    // since this placement is entirely independent of where CityScape
-    // put its buildings, that meant panels routinely spawned
-    // clipped/embedded into tower geometry instead of standing clear
-    // of it. Freestanding pylon signage rising up in front of the
-    // skyline (rather than pretending to be mounted on a specific
-    // tower face) also reads as more plausible signage anyway.
-    //
-    // Sizes are scaled down from an earlier pass: pulling both tiers
-    // in from x~20-28 to this much closer shoulder corridor roughly
-    // doubled how large the same physical width reads on screen (twice
-    // as close = twice the apparent size), so the old width values —
-    // tuned for the old, further-out distance — were now looming over
-    // the frame like a wall of jumbotrons instead of roadside signage.
+    // invariant) so panels never spawn embedded in tower geometry.
     if (tier === "street") {
-      // Close to the road, roughly billboard-height — the ones that
-      // flash past quickly as the camera passes them.
       const x = side * (8.4 + seeded(i, 12) * 1.8);
       const y = 3 + seeded(i, 13) * 5;
       position = [x, y, z];
       width = 1.7 + seeded(i, 14) * 1.1;
       height = width * (0.55 + seeded(i, 15) * 0.3);
     } else {
-      // A taller freestanding jumbotron pylon rather than something
-      // wall-mounted — reads from further away as part of the skyline
-      // without needing to actually touch a tower's facade.
       const x = side * (8.8 + seeded(i, 16) * 2.0);
       const y = 14 + seeded(i, 17) * 26;
       position = [x, y, z];
@@ -82,20 +70,25 @@ function buildPlacements(count: number, imageCount: number): AdPlacement[] {
       width,
       height,
       textureIndex: i % imageCount,
-      glowColor: GLOW_COLORS[i % GLOW_COLORS.length],
+      accent: ACCENT_COLORS[i % ACCENT_COLORS.length],
       phase: seeded(i, 20) * Math.PI * 2,
+      baseY: 0,
     });
   }
   return placements;
 }
 
-/** A single digital ad panel: dark bezel, soft glow bloom, the brand
- * image, and a sweeping scan-line + occasional signal-glitch flicker on
- * top — the two cues that read as an actively-driven digital display
- * rather than a static printed poster, which is what a flat unmoving
- * image (however bright) still reads as no matter how much glow
- * surrounds it. Double-sided so it reads correctly regardless of which
- * way the camera approaches. */
+/** A single next-generation advertising display — a frameless glass
+ * panel rather than a bezeled screen: an ultra-thin metallic edge trim
+ * (not a glowing plasma bar), a translucent "transparent OLED" image
+ * layer, a slow diagonal glass-reflection sweep standing in for a real
+ * specular highlight, a second offset panel floating slightly in front
+ * for parallax depth, and a handful of fine drifting particles — no
+ * scan-line flicker or HUD brackets (both read as gaming/cyberpunk
+ * rather than luxury tech). A slim metal strut anchors it to the
+ * ground so it reads as mounted hardware rather than an image floating
+ * disconnected in mid-air. Billboarded toward the camera (yaw only)
+ * every frame. */
 function AdPanel({
   placement,
   texture,
@@ -105,23 +98,27 @@ function AdPanel({
 }) {
   const groupRef = useRef<THREE.Group>(null);
   const glowRef = useRef<THREE.Mesh>(null);
-  const imageMatRef = useRef<THREE.MeshBasicMaterial>(null);
-  const scanRef = useRef<THREE.Mesh>(null);
-  const scanMatRef = useRef<THREE.MeshBasicMaterial>(null);
+  const sweepRef = useRef<THREE.Mesh>(null);
+  const sweepMatRef = useRef<THREE.MeshBasicMaterial>(null);
+  const depthLayerRef = useRef<THREE.Mesh>(null);
+  const particlesRef = useRef<THREE.Points>(null);
+
+  const particleGeometry = useMemo(() => {
+    const n = 10;
+    const positions = new Float32Array(n * 3);
+    for (let p = 0; p < n; p++) {
+      positions[p * 3] = (seeded(p, placement.phase) - 0.5) * placement.width * 1.4;
+      positions[p * 3 + 1] = (seeded(p, placement.phase + 1) - 0.5) * placement.height * 1.4;
+      positions[p * 3 + 2] = 0.05 + seeded(p, placement.phase + 2) * 0.15;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    return geo;
+  }, [placement.width, placement.height, placement.phase]);
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
 
-    // Billboarded toward the camera every frame (yaw only) rather than
-    // a fixed rotation baked in at placement time — matches
-    // BuildingBanners' own Banner component, and for the same reason:
-    // a static rotation is only ever face-on for the instant the
-    // camera is directly alongside it, and for the rest of the flight
-    // the panel is seen at an increasingly glancing angle where its
-    // actual image content foreshortens down to a near-invisible
-    // sliver — all that's left visible at that angle is the larger,
-    // duller backing bezel/glow planes behind it, which is what read
-    // as an unlabeled dark card rather than a readable ad.
     const group = groupRef.current;
     if (group) {
       const dx = state.camera.position.x - placement.position[0];
@@ -129,44 +126,66 @@ function AdPanel({
       group.rotation.y = Math.atan2(dx, dz);
     }
 
+    // A slow, restrained breathing glow — subtle atmospheric spill
+    // rather than a pulsing neon sign.
     if (glowRef.current) {
       const mat = glowRef.current.material as THREE.MeshBasicMaterial;
-      mat.opacity = 0.14;
+      mat.opacity = 0.09 + Math.sin(t * 0.4 + placement.phase) * 0.02;
     }
 
-    // A thin, slow bright bar sweeping top-to-bottom on a loop, offset
-    // per panel (placement.phase) so a whole row of billboards doesn't
-    // scan in visible lockstep — reads as a large calibrated display
-    // gently animating, not a glitch. A signal-dropout flicker used to
-    // sit here too (a brief opacity dip every few seconds); pulled it
-    // for a steadier, more premium display rather than a "broken sign"
-    // cyberpunk cue.
-    if (scanRef.current && scanMatRef.current) {
-      const cycle = ((t * 0.22 + placement.phase) % (Math.PI * 2)) / (Math.PI * 2);
-      scanRef.current.position.y = (0.5 - cycle) * placement.height;
-      scanMatRef.current.opacity = 0.14;
+    // A slow diagonal highlight sweep standing in for a real glass
+    // specular reflection catching ambient light as it "moves" across
+    // the surface — far slower and dimmer than the old scan-line, so
+    // it reads as a glass sheen rather than a refreshing display.
+    if (sweepRef.current && sweepMatRef.current) {
+      const cycle = ((t * 0.09 + placement.phase) % (Math.PI * 2)) / (Math.PI * 2);
+      sweepRef.current.position.x = (cycle - 0.5) * placement.width * 1.6;
+      sweepMatRef.current.opacity = 0.1;
     }
 
-    if (imageMatRef.current) imageMatRef.current.opacity = 1;
+    // The floating depth layer drifts a hair independently — a slow
+    // parallax-like sway that sells it as a separate holographic layer
+    // hovering just in front of the main panel, not a stuck decal.
+    if (depthLayerRef.current) {
+      depthLayerRef.current.position.z = 0.14 + Math.sin(t * 0.3 + placement.phase) * 0.02;
+    }
+
+    if (particlesRef.current) {
+      particlesRef.current.rotation.z = t * 0.02;
+      const mat = particlesRef.current.material as THREE.PointsMaterial;
+      mat.opacity = 0.35 + Math.sin(t * 0.6 + placement.phase) * 0.15;
+    }
   });
+
+  const halfW = placement.width / 2;
+  const halfH = placement.height / 2;
 
   return (
     <group ref={groupRef} position={placement.position}>
-      <mesh scale={[placement.width * 1.08, placement.height * 1.1, 1]}>
-        <planeGeometry args={[1, 1]} />
-        <meshBasicMaterial color="#050810" fog={false} side={THREE.DoubleSide} />
+      {/* Slim metal support strut — brushed-steel Phong rather than
+          flat dark plastic, so it reads as premium hardware. */}
+      <mesh position={[0, -(placement.position[1] - placement.baseY) / 2, -0.06]}>
+        <cylinderGeometry args={[0.03, 0.045, placement.position[1] - placement.baseY, 8]} />
+        <meshPhongMaterial color="#2a2d33" specular="#9aa4b0" shininess={90} fog />
+      </mesh>
+      <mesh position={[0, -(placement.position[1] - placement.baseY) + 0.01, -0.06]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.32, 16]} />
+        <meshBasicMaterial color="#c9d6e0" transparent opacity={0.16} blending={THREE.AdditiveBlending} depthWrite={false} fog={false} toneMapped={false} />
       </mesh>
 
+      {/* Soft atmospheric glow spill behind the panel — dim and
+          desaturated, a whisper of light bleeding into the fog rather
+          than a bright bloom. */}
       <mesh
         ref={glowRef}
-        scale={[placement.width * 1.3, placement.height * 1.3, 1]}
-        position={[0, 0, -0.02]}
+        scale={[placement.width * 1.22, placement.height * 1.22, 1]}
+        position={[0, 0, -0.03]}
       >
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial
-          color={placement.glowColor}
+          color={placement.accent}
           transparent
-          opacity={0.2}
+          opacity={0.09}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           fog={false}
@@ -174,51 +193,119 @@ function AdPanel({
         />
       </mesh>
 
-      <mesh scale={[placement.width, placement.height, 1]} position={[0, 0, 0.01]}>
+      {/* Dark graphite backing pane — a real (if very thin) physical
+          surface behind the image rather than nothing, so the display
+          reads as a solid piece of glass hardware, not a projected
+          picture. */}
+      <mesh scale={[placement.width * 1.015, placement.height * 1.02, 1]} position={[0, 0, -0.008]}>
+        <planeGeometry args={[1, 1]} />
+        <meshPhongMaterial color="#0c0d10" specular="#3a4048" shininess={70} fog={false} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* The image — a translucent "transparent OLED" layer rather
+          than an opaque poster, so ambient light and the backing pane
+          both still read through it. */}
+      <mesh scale={[placement.width, placement.height, 1]} position={[0, 0, 0.006]}>
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial
-          ref={imageMatRef}
           map={texture}
           transparent
-          opacity={1}
+          opacity={0.92}
           toneMapped={false}
           fog={false}
           side={THREE.DoubleSide}
         />
       </mesh>
 
-      {/* Sweeping scan-line — additive so it brightens whatever it
-          crosses rather than masking the image underneath. */}
-      <mesh ref={scanRef} scale={[placement.width * 0.98, placement.height * 0.06, 1]} position={[0, 0, 0.02]}>
+      {/* Diagonal glass-reflection sweep. */}
+      <mesh
+        ref={sweepRef}
+        scale={[placement.width * 0.22, placement.height * 1.4, 1]}
+        rotation={[0, 0, 0.35]}
+        position={[0, 0, 0.014]}
+      >
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial
-          ref={scanMatRef}
-          color="#eaf6ff"
+          ref={sweepMatRef}
+          color="#ffffff"
           transparent
-          opacity={0}
+          opacity={0.1}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           fog={false}
           side={THREE.DoubleSide}
         />
       </mesh>
+
+      {/* Ultra-thin metallic edge trim — a slim, unlit silver line
+          rather than a glowing plasma frame, the "premium bezel-less
+          hardware edge" cue instead of a HUD/neon border. */}
+      {[
+        [0, halfH, placement.width * 1.015, placement.height * 0.006],
+        [0, -halfH, placement.width * 1.015, placement.height * 0.006],
+        [halfW, 0, placement.height * 0.006, placement.height * 1.02],
+        [-halfW, 0, placement.height * 0.006, placement.height * 1.02],
+      ].map(([px, py, w, h], idx) => (
+        <mesh key={idx} position={[px, py, 0.012]}>
+          <planeGeometry args={[w, h]} />
+          <meshBasicMaterial color="#c4ccd6" transparent opacity={0.55} fog={false} toneMapped={false} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
+
+      {/* A single slim accent fin extending past one corner — a
+          restrained "3D element breaking the frame" cue, not four
+          repeated HUD brackets. */}
+      <mesh position={[halfW + placement.width * 0.06, halfH + placement.height * 0.06, 0.01]} rotation={[0, 0, Math.PI / 4]}>
+        <planeGeometry args={[placement.width * 0.16, placement.height * 0.012]} />
+        <meshBasicMaterial color={placement.accent} transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} fog={false} toneMapped={false} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* Floating holographic depth layer — a faint, slightly larger
+          duplicate hovering just in front of the main panel, the
+          "elegant holographic layer" parallax cue. */}
+      <mesh ref={depthLayerRef} scale={[placement.width * 1.06, placement.height * 1.08, 1]} position={[0, 0, 0.14]}>
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial
+          map={texture}
+          transparent
+          opacity={0.08}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          toneMapped={false}
+          fog={false}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+
+      {/* Fine drifting particles — sparse, dim points rather than a
+          dense sparkle cloud. */}
+      <points ref={particlesRef} geometry={particleGeometry}>
+        <pointsMaterial
+          color={placement.accent}
+          size={0.025}
+          transparent
+          opacity={0.35}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          fog={false}
+          toneMapped={false}
+        />
+      </points>
     </group>
   );
 }
 
-/** Digital billboards flanking the highway, showing brand imagery
- * reused from the previous intro. Isolated in its own Suspense boundary
- * upstream (see IntroCinematic) so slow texture loads never block the
- * rest of the cinematic. */
+/** Next-generation advertising displays flanking the highway — sleek,
+ * frameless, glass-surfaced panels rather than ordinary bezeled
+ * screens, showing brand imagery reused from the previous intro.
+ * Isolated in its own Suspense boundary upstream (see IntroCinematic)
+ * so slow texture loads never block the rest of the cinematic. */
 export function Billboards({ isMobile }: { isMobile: boolean }) {
   // Each panel is a non-instanced mesh with its own unique texture —
   // that per-panel cost (draw calls + decoded image memory) doesn't
   // shrink on its own just because the rest of the scene's instance
   // counts do, so mobile gets a noticeably lower count rather than a
   // proportional one.
-  // Pulled back down from an earlier, denser pass — combined with the
-  // smaller sizes above, the higher count read as a wall-to-wall grid
-  // of screens rather than occasional roadside signage.
   const count = isMobile ? 5 : 14;
   const imagePaths = useMemo(() => AD_IMAGES.slice(0, count), [count]);
   const textures = useTexture(imagePaths) as THREE.Texture[];

@@ -77,7 +77,7 @@ export function HeroSection() {
             style={{
               fontSize: "clamp(1.9rem, 3.8vw, 4.5rem)",
               lineHeight: 1.1,
-              background: "linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 40%, #0055FF 70%, #00D4FF 100%)",
+              background: "linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 40%, #FFFFFF 70%, #FFFFFF 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",

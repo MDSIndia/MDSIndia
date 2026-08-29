@@ -399,11 +399,7 @@ export function AboutMDSFullContent() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, ease: EASE }}
-          className="mb-14 md:mb-18"
-          style={{
-            borderLeft: "2px solid rgba(0,212,255,0.22)",
-            paddingLeft: "1.5rem",
-          }}
+          className="mb-14 md:mb-18 text-center"
         >
           <motion.span
             initial={{ opacity: 0 }}
@@ -464,6 +460,7 @@ export function AboutMDSFullContent() {
               lineHeight: 1.8,
               color: "#FFFFFF",
               maxWidth: 580,
+              margin: "0 auto",
             }}
           >
             We&apos;re driven by one pursuit: transformative, world-class products that solve real

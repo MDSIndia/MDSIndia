@@ -1,7 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useEffect } from "react";
 import type { CSSProperties, ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 
@@ -67,7 +69,33 @@ const GlobalStars = dynamic(
   { ssr: false }
 );
 
+// A hard reload (F5 / the browser's reload button) on a subpage should
+// land back on the homepage's starting point — the intro cinematic —
+// rather than re-rendering whatever subpage the user happened to be
+// on. The Navigation Timing API is what actually distinguishes "this
+// load was a reload" from "this was a normal navigation to this URL"
+// (a plain pathname check alone can't tell those apart); router.replace
+// rather than push so the subpage doesn't linger in browser history
+// as a page you'd land back on with the back button. A no-op on "/"
+// itself — reloading the homepage already re-plays the intro on its
+// own (see useIntro's hasPlayedThisRuntime, which resets on a real
+// reload since it's in-memory, not persisted).
+function useReloadGoesHome() {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (pathname === "/") return;
+    const [entry] = performance.getEntriesByType("navigation") as PerformanceNavigationTiming[];
+    if (entry?.type === "reload") {
+      router.replace("/");
+    }
+  }, [pathname, router]);
+}
+
 export function PageChrome({ children }: { children: ReactNode }) {
+  useReloadGoesHome();
+
   return (
     <>
       <CustomCursor />

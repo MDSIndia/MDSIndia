@@ -11,10 +11,58 @@ import {
 } from "./glowTexture";
 import { STAR_POSITION } from "./path";
 import { keepClearOfCrossStreets } from "./crossStreetPositions";
+import { keepClearOfLandmarks } from "./landmarkClearance";
 
 function seeded(i: number, salt: number) {
   const v = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453;
   return v - Math.floor(v);
+}
+
+// Per-instance "closed-door" description a door leaf/handle pair needs
+// to animate sliding open each frame — everything the automatic-door
+// useFrame loop needs to reconstruct that instance's matrix at any
+// point in its open/close cycle without re-deriving it from the
+// building's own geometry. Only pushed for leaves that actually exist
+// (hasEntrance); the fixed-size instancedMesh slots for buildings
+// without one are left at ZERO_SCALE once by the initial matrices and
+// never touched again per-frame, so this list only needs to cover the
+// active subset, not every instance slot.
+type DoorMaterial = "glass" | "wood" | "iron";
+
+interface DoorLeafAnim {
+  index: number; // this leaf's slot in the count*2 glass/wood/iron/handle/panel arrays
+  material: DoorMaterial;
+  leafX: number; leafY: number; leafZ: number;
+  handleX: number; handleY: number; handleZ: number;
+  panelX: number; panelY: number; panelZ: number;
+  yaw: number;
+  dirX: number; dirZ: number; // unit vector this leaf slides along when opening
+  leafDepth: number; leafHeight: number; leafWidth: number;
+  handleSize: number; handleHeight: number;
+  panelDepth: number; panelHeight: number; panelWidth: number;
+  maxSlide: number;
+  period: number;
+  phase: number;
+}
+
+// Smooth 0->1 ease, used for both the open and close legs of the door
+// cycle so neither snaps to a standing start/stop.
+function smoothstep01(x: number) {
+  const t = Math.min(1, Math.max(0, x));
+  return t * t * (3 - 2 * t);
+}
+
+// Shape of one door's open/close cycle over normalized cycle-time
+// [0,1): ease open, hold open, ease closed, hold closed — a real
+// automatic door doesn't linger mid-travel or snap between states.
+function doorOpenFraction(cycleT: number) {
+  const OPEN_END = 0.16;
+  const HOLD_OPEN_END = 0.52;
+  const CLOSE_END = 0.68;
+  if (cycleT < OPEN_END) return smoothstep01(cycleT / OPEN_END);
+  if (cycleT < HOLD_OPEN_END) return 1;
+  if (cycleT < CLOSE_END) return 1 - smoothstep01((cycleT - HOLD_OPEN_END) / (CLOSE_END - HOLD_OPEN_END));
+  return 0;
 }
 
 /** World-space (x, z) of a point offset (localX, localZ) from a
@@ -34,17 +82,31 @@ function wallAttach(x: number, z: number, yaw: number, localX: number, localZ: n
   return { x: x + localX * cos - localZ * sin, z: z + localX * sin + localZ * cos };
 }
 
-// Blue-dominant, matching the window-lighting mix below — a deliberate
-// techie/cyberpunk color-grade for this skyline's accent lighting
-// (lobby signs, facade washes) rather than a photoreal warm-white mix,
-// with a single warm exception kept so it still reads as varied
-// lighting rather than monotone.
-const ACCENTS = ["#6fc3f0", "#8fd6ff", "#4fa8e0", "#bfe8ff", "#ffe9c7"];
+// Desaturated at explicit direction — a "luxury tech" skyline keeps
+// its accent lighting controlled (cool white, pale silver-blue, pale
+// violet, pale warm) rather than fully saturated neon; matches the
+// same restrained palette Billboards.tsx uses for its own display
+// trim, so signage and facade accents read as one consistent grade.
+const ACCENTS = ["#a8d4e8", "#bcdcec", "#8fa8c8", "#dce4ec", "#e8d8b8", "#c0a8d8", "#e0c8a0"];
 // What every "lerp toward white" below actually lerps toward — a pale
 // blue rather than pure white, so even the brightest, most-washed-out
 // glows (rooftops right next to the finale star) keep a visible blue
 // cast instead of clipping to plain white.
 const GLOW_WHITE = "#dff3ff";
+// Real building entrances aren't all one material — a glass curtain-
+// wall lobby, a stained hardwood door, and a wrought-iron gate read as
+// three completely different kinds of building, not the same door
+// repainted. Every color here needs to stay visibly lighter than an
+// already near-black facade at night, or it just vanishes the way a
+// near-black option tried earlier did.
+// Warm, low-shine hardwoods (mahogany, walnut, oak, cherry) — paired
+// with a dim/matte specular on the material itself (see the JSX) so
+// they read as wood grain catching light, not painted metal.
+const DOOR_WOOD_COLORS = ["#6b3f24", "#4a2f1f", "#7a5230", "#5c2e28"];
+// Cool, high-shine ironwork (wrought iron, blackened steel, gunmetal,
+// oxidized bronze-green) — paired with a bright specular (see the JSX)
+// so they read as worked/polished metal, not flat paint.
+const DOOR_IRON_COLORS = ["#2e3138", "#454b54", "#3a3d44", "#4a5148"];
 const ZERO_SCALE = new THREE.Matrix4().makeScale(0, 0, 0);
 const ZERO_COLOR = new THREE.Color(0, 0, 0);
 // Every box tower gets exactly this many mullion-rib slots (unused
@@ -63,7 +125,15 @@ const MAX_MULLIONS = 9;
  * stays instanced (a fixed number of draw calls regardless of `count`,
  * one per element type) so the extra density is cheap. */
 export function CityScape({ isMobile }: { isMobile: boolean }) {
-  const count = isMobile ? 110 : 200;
+  // Cut again at explicit request, on top of the earlier 200/110 ->
+  // 95/55 pass — a skyline this dense read as wall-to-wall repeated
+  // silhouettes no matter how much per-archetype variety was layered
+  // on top; fewer buildings gives each one more visual room to
+  // actually register as its own distinct shape (and leaves more open
+  // sky for the new set-piece landmarks — Biodome, SkyPlaza,
+  // HolographicMonument — to actually read against, rather than
+  // getting lost in a packed procedural crowd).
+  const count = isMobile ? 38 : 68;
   // Six box-tower slots — [shortA, shortB, medA, medB, tallA, tallB],
   // index = heightBucket*2 + variant (see the `data` useMemo below and
   // BOX_TOWER_BUCKETS further down) — a plain array-of-refs rather than
@@ -74,6 +144,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
   const roundTowersRef = useRef<THREE.InstancedMesh>(null);
   const facetedTowersRef = useRef<THREE.InstancedMesh>(null);
   const twistedTowersRef = useRef<THREE.InstancedMesh>(null);
+  const pyramidTowersRef = useRef<THREE.InstancedMesh>(null);
   const podiumsRef = useRef<THREE.InstancedMesh>(null);
   const windowsARef = useRef<THREE.InstancedMesh>(null);
   const windowsBRef = useRef<THREE.InstancedMesh>(null);
@@ -81,6 +152,8 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
   const roofGlowRef = useRef<THREE.InstancedMesh>(null);
   const landingPadsRef = useRef<THREE.InstancedMesh>(null);
   const gardensRef = useRef<THREE.InstancedMesh>(null);
+  const roofTreeTrunkRef = useRef<THREE.InstancedMesh>(null);
+  const roofTreeCanopyRef = useRef<THREE.InstancedMesh>(null);
   const signatureBandRef = useRef<THREE.InstancedMesh>(null);
   const antennaRef = useRef<THREE.InstancedMesh>(null);
   const antennaLightRef = useRef<THREE.InstancedMesh>(null);
@@ -95,6 +168,11 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
   const entrancePillarRef = useRef<THREE.InstancedMesh>(null);
   const entranceDoorFrameRef = useRef<THREE.InstancedMesh>(null);
   const entranceDoorGlassRef = useRef<THREE.InstancedMesh>(null);
+  const entranceDoorWoodRef = useRef<THREE.InstancedMesh>(null);
+  const entranceDoorIronRef = useRef<THREE.InstancedMesh>(null);
+  const entranceDoorHandleRef = useRef<THREE.InstancedMesh>(null);
+  const entranceDoorPanelRef = useRef<THREE.InstancedMesh>(null);
+  const entranceKickPlateRef = useRef<THREE.InstancedMesh>(null);
 
   // One shared canvas gets cloned per structural mesh so each can tile
   // the window grid at its own density (a squat podium needs far fewer
@@ -323,6 +401,38 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
     return geo;
   }, []);
 
+  // A plain BoxGeometry with its top four vertices pulled inward — the
+  // box tower's actual silhouette narrows toward the roof instead of
+  // standing as one uniform rectangular slab top to bottom, which was
+  // the single biggest thing making it read as "the clumsy one" next
+  // to the round/faceted/twisted archetypes' already-tapered profiles.
+  // Nudged from a shallow 86% taper to 78% at explicit request for a
+  // more premium/slender profile — still short of a dramatic wedding-
+  // cake silhouette: the entrance/mullion system below positions
+  // itself using the tower's *base* width the whole way up, and both
+  // sit low on the tower (entrances at street level, mullions weighted
+  // toward the lower/mid facade), so the extra taper at the very top
+  // doesn't leave them visibly floating outside the narrower upper
+  // facade. Kept axis-aligned (only X/Z scaled at the top vertices, not
+  // rotated the way the twisted tower's geometry is) so each side stays
+  // a single flat trapezoidal face — the window texture (painted
+  // directly onto these faces, not separate window instances) and
+  // every wall-attached element's flat-face assumption both still hold.
+  const taperedBoxGeometry = useMemo(() => {
+    const geo = new THREE.BoxGeometry(1, 1, 1);
+    const pos = geo.attributes.position;
+    const TOP_SCALE = 0.78;
+    const v = new THREE.Vector3();
+    for (let idx = 0; idx < pos.count; idx++) {
+      v.fromBufferAttribute(pos, idx);
+      if (v.y > 0) {
+        pos.setXYZ(idx, v.x * TOP_SCALE, v.y, v.z * TOP_SCALE);
+      }
+    }
+    geo.computeVertexNormals();
+    return geo;
+  }, []);
+
   const data = useMemo(() => {
     const dummy = new THREE.Object3D();
     // Six buckets rather than three: each height tier (short/med/tall)
@@ -356,6 +466,15 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
     const facetedColors: THREE.Color[] = [];
     const twistedMatrices: THREE.Matrix4[] = [];
     const twistedColors: THREE.Color[] = [];
+    // A sharp, windowless obelisk/monolith — a genuinely different kind
+    // of mass than every other archetype here (all variations on a
+    // glass office tower): a solid four-sided pyramid spire with no
+    // window grid, just a body tint and the same generic accent-strip
+    // pass every archetype already gets. Reads as a landmark/civic
+    // structure planted among the office towers rather than one more
+    // workplace silhouette.
+    const pyramidMatrices: THREE.Matrix4[] = [];
+    const pyramidColors: THREE.Color[] = [];
     const podiumMatrices: THREE.Matrix4[] = [];
     const podiumColors: THREE.Color[] = [];
     const windowAMatrices: THREE.Matrix4[] = [];
@@ -370,6 +489,12 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
     const landingPadColors: THREE.Color[] = [];
     const gardenMatrices: THREE.Matrix4[] = [];
     const gardenColors: THREE.Color[] = [];
+    // Up to 4 rooftop trees/shrubs per building (see hasGreenRoof
+    // below) — padded per-building the same way hangingGardenMatrices
+    // already pads its own variable 0-3 bands.
+    const roofTreeTrunkAllMatrices: THREE.Matrix4[] = [];
+    const roofTreeCanopyAllMatrices: THREE.Matrix4[] = [];
+    const roofTreeCanopyAllColors: THREE.Color[] = [];
     const antennaMatrices: THREE.Matrix4[] = [];
     const antennaLightMatrices: THREE.Matrix4[] = [];
     const antennaLightColors: THREE.Color[] = [];
@@ -387,6 +512,20 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
     const entrancePillarMatrices: THREE.Matrix4[] = [];
     const entranceDoorFrameMatrices: THREE.Matrix4[] = [];
     const entranceDoorGlassMatrices: THREE.Matrix4[] = [];
+    const entranceDoorWoodMatrices: THREE.Matrix4[] = [];
+    const entranceDoorWoodColors: THREE.Color[] = [];
+    const entranceDoorIronMatrices: THREE.Matrix4[] = [];
+    const entranceDoorIronColors: THREE.Color[] = [];
+    const entranceDoorHandleMatrices: THREE.Matrix4[] = [];
+    const entranceDoorPanelMatrices: THREE.Matrix4[] = [];
+    const entranceKickPlateMatrices: THREE.Matrix4[] = [];
+    const doorLeafAnims: DoorLeafAnim[] = [];
+    // Tracks how many leaf slots (2 per building, active or not) have
+    // been pushed so far — the glass/solid/handle arrays are built by
+    // one push per leaf regardless of whether that building actually
+    // has an entrance, so this is also each leaf's index in those
+    // count*2 instancedMeshes.
+    let doorLeafSlot = 0;
 
     for (let i = 0; i < count; i++) {
       const side = i % 2 === 0 ? -1 : 1;
@@ -407,7 +546,12 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       // would plant themselves right on top of the perpendicular
       // streets CrossStreets draws, since the two are otherwise
       // generated completely independently.
-      const z = keepClearOfCrossStreets(55 - seeded(i, 2) * 165);
+      // Also nudged clear of any fixed landmark set-piece on the same
+      // side (the MDS sphere, NoorvaTower, Waterfall, Biodome, SkyPlaza
+      // — see landmarkClearance.ts) — those are placed independently of
+      // this procedural pass and otherwise had no way to keep a
+      // randomly-rolled building from landing right on top of one.
+      const z = keepClearOfLandmarks(keepClearOfCrossStreets(55 - seeded(i, 2) * 165), side);
       // Buildings this close to the camera's own starting point sit at
       // a very short forward distance from frame 0 — at that range even
       // the flanking offset falls outside the horizontal FOV entirely
@@ -445,8 +589,12 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       // Taller buildings read as more slender in real skylines — bias
       // width down as height increases instead of picking the two
       // independently, which used to produce oddly cube-shaped towers.
+      // Pushed further (0.4 -> 0.58) at explicit request for a more
+      // "premium supertall" read — the reference skyline's towers are
+      // dramatically taller than they are wide, not just moderately
+      // tapered office blocks.
       const heightFactor = clamp01((height - 4) / 50);
-      const width = (1.6 + seeded(i, 4) * 5) * (1.18 - heightFactor * 0.4);
+      const width = (1.5 + seeded(i, 4) * 4.6) * (1.15 - heightFactor * 0.58);
       // Footprint depth, independent of width — real towers are rarely
       // square in plan; a rectangular block (or a slab far longer one
       // way than the other) is much more common than the perfectly
@@ -461,44 +609,75 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       // Random draw rather than a fixed cycle through the palette, so
       // neighboring buildings don't fall into an ABAB repeat.
       const accent = ACCENTS[Math.floor(seeded(i, 61) * ACCENTS.length)];
-      // Four silhouettes instead of two: a plain box is still the
-      // majority (~58%), but a tapered round tower (~20%), a sharply
-      // tapered faceted/crystalline tower (~12%), and an organic
-      // twisted tower (~10%) break up the skyline so it doesn't read
-      // as one repeated rectangular asset. One probability-based roll
-      // (not `i % n`) so the mix doesn't fall into a visible repeating
+      // Five silhouettes now (round, faceted, pyramid, twisted, box),
+      // weighted toward the organic/sculptural ones and the new
+      // windowless pyramid archetype specifically to break up "every
+      // building is some kind of glass office tower" — box pushed down
+      // again (24% -> ~18%) at explicit request after the skyline still
+      // read as "ordinary boxy towers" from most angles; the other four
+      // archetypes split the rest. One probability-based roll (not
+      // `i % n`) so the mix doesn't fall into a visible repeating
       // pattern as the camera passes.
       const archetypeRoll = seeded(i, 55);
-      const isRound = archetypeRoll > 0.8;
-      const isFaceted = !isRound && archetypeRoll > 0.68;
-      const isTwisted = !isRound && !isFaceted && archetypeRoll > 0.58;
+      const isRound = archetypeRoll > 0.72;
+      const isFaceted = !isRound && archetypeRoll > 0.53;
+      // A sharp windowless pyramid/obelisk — the one archetype in this
+      // mix that isn't a variation on a glass office tower, so it reads
+      // as a distinct kind of structure (monument, civic building)
+      // rather than another workplace silhouette at a different scale.
+      const isPyramid = !isRound && !isFaceted && archetypeRoll > 0.4;
+      // The twisted tower's window texture is deliberately left
+      // unwrapped to the *un-twisted* geometry (see twistedGeometry
+      // below) so the horizontal window rows spiral up the facade as
+      // the tower turns — a real "twisted skyscraper" cue at a normal
+      // viewing distance. Right at the camera's own starting point,
+      // though, that same spiral gets viewed close enough and near
+      // edge-on that the individual windows blur together into a solid
+      // field of diagonal stripes instead of a recognizable facade —
+      // reads as a rendering glitch, not architecture. Keeping this
+      // archetype out of the tight near-camera band (see startBias
+      // above) sidesteps the one distance/angle combination where the
+      // effect breaks down, while leaving it untouched everywhere else
+      // it's actually seen from a normal distance.
+      const isTwisted =
+        !isRound && !isFaceted && !isPyramid && archetypeRoll > 0.2 && startBias < 0.5;
 
-      // Wider variance than a single flat dark tone, plus a subtle
-      // per-building colour temperature (some coolER blue-grey glass,
-      // some warmER concrete-grey) — real facades aren't one material.
+      // Six distinct facade material families rather than one fixed
+      // hue with barely-perceptible per-building drift (the previous
+      // version varied warmth by only ~0.006-0.008 out of a 0.1-0.3
+      // base — under 3% relative difference, which is why the whole
+      // skyline read as "the same building repeated" regardless of how
+      // much archetype/silhouette variety sat on top of it). Real
+      // skylines mix genuinely different claddings: navy and near-black
+      // glass, neutral charcoal, warm bronze/copper glass, bright
+      // silver steel, and cool teal glass — picking a family per
+      // building is what actually reads as material variety at a
+      // glance, before the eye even gets to silhouette.
+      const MATERIAL_FAMILIES = [
+        { r: 0.07, g: 0.09, b: 0.15 }, // deep navy glass
+        { r: 0.12, g: 0.12, b: 0.13 }, // neutral charcoal
+        { r: 0.19, g: 0.13, b: 0.08 }, // warm bronze/copper glass
+        { r: 0.21, g: 0.22, b: 0.24 }, // bright silver steel
+        { r: 0.06, g: 0.15, b: 0.14 }, // cool teal glass
+        { r: 0.035, g: 0.04, b: 0.05 }, // near-black obsidian
+      ];
+      const family = MATERIAL_FAMILIES[Math.floor(seeded(i, 64) * MATERIAL_FAMILIES.length)];
       // This is a real reflectance value now that the body is lit (see
       // the rig lights in IntroCinematic) rather than a raw output
-      // color — a genuinely near-zero albedo like the old 0.02-0.065
-      // stays black no matter how much light hits it, which is what
-      // made every face read as the same flat cutout regardless of
-      // which way it faced. A realistic dark-facade reflectance leaves
-      // the directional light room to actually carve out a lit side vs.
-      // a shadow side.
-      // Brighter base reflectance on mobile — a scene lit for a
-      // desktop monitor reads noticeably dimmer on a smaller,
-      // typically outdoor/handheld screen, and mobile also lost the
-      // Phong specular sheen (see the material choice below) that
-      // desktop uses to add a bit of extra highlight brightness.
-      const dark = (0.1 + seeded(i, 6) * 0.2) * (isMobile ? 1.45 : 1);
-      const warmth = seeded(i, 64);
-      // A fixed blue bias on the B channel (independent of `warmth`)
-      // plus a smaller warm-channel spread than before — even the
-      // "warmer" facades stay a cool blue-grey rather than crossing
-      // into neutral or warm territory.
+      // color — a genuinely near-zero albedo stays black no matter how
+      // much light hits it, which is what made every face read as the
+      // same flat cutout regardless of which way it faced. Brighter
+      // base reflectance on mobile — a scene lit for a desktop monitor
+      // reads noticeably dimmer on a smaller, typically outdoor/
+      // handheld screen, and mobile also lost the Phong specular sheen
+      // (see the material choice below) that desktop uses to add a bit
+      // of extra highlight brightness.
+      const brightnessMul = (0.75 + seeded(i, 6) * 0.75) * (isMobile ? 1.4 : 1);
+      const jitter = 0.02;
       const bodyColor = new THREE.Color(
-        dark + warmth * 0.008,
-        dark + warmth * 0.006,
-        dark + 0.045 + (1 - warmth) * 0.015
+        family.r * brightnessMul + (seeded(i, 65) - 0.5) * jitter,
+        family.g * brightnessMul + (seeded(i, 66) - 0.5) * jitter,
+        family.b * brightnessMul + (seeded(i, 67) - 0.5) * jitter
       );
       // A light nudge toward this building's own accent — enough that a
       // distant silhouette still carries a faint color cast from
@@ -522,6 +701,8 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         facetedColors.push(ZERO_COLOR.clone());
         twistedMatrices.push(ZERO_SCALE.clone());
         twistedColors.push(ZERO_COLOR.clone());
+        pyramidMatrices.push(ZERO_SCALE.clone());
+        pyramidColors.push(ZERO_COLOR.clone());
         for (let r = 0; r < MAX_MULLIONS; r++) mullionMatrices.push(ZERO_SCALE.clone());
       } else if (isFaceted) {
         // A sharply tapered hex-frustum tower — the taper itself is
@@ -536,6 +717,29 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         pushBoxTower(null);
         roundMatrices.push(ZERO_SCALE.clone());
         roundColors.push(ZERO_COLOR.clone());
+        twistedMatrices.push(ZERO_SCALE.clone());
+        twistedColors.push(ZERO_COLOR.clone());
+        pyramidMatrices.push(ZERO_SCALE.clone());
+        pyramidColors.push(ZERO_COLOR.clone());
+        for (let r = 0; r < MAX_MULLIONS; r++) mullionMatrices.push(ZERO_SCALE.clone());
+      } else if (isPyramid) {
+        // A sharp four-sided pyramid — solid, windowless, tinted with
+        // the same per-building body color every other archetype uses
+        // (see pyramidTowersRef's material below: no map, so the base
+        // color comes through untouched). Scaled slightly narrower than
+        // the other archetypes' own width factors so a tall, pointed
+        // monolith reads as a spire rather than a squat wedge.
+        dummy.position.set(x, height / 2, z);
+        dummy.scale.set(width * 0.66, height, width * 0.66);
+        dummy.rotation.set(0, seeded(i, 5) * Math.PI, 0);
+        dummy.updateMatrix();
+        pyramidMatrices.push(dummy.matrix.clone());
+        pyramidColors.push(bodyColor);
+        pushBoxTower(null);
+        roundMatrices.push(ZERO_SCALE.clone());
+        roundColors.push(ZERO_COLOR.clone());
+        facetedMatrices.push(ZERO_SCALE.clone());
+        facetedColors.push(ZERO_COLOR.clone());
         twistedMatrices.push(ZERO_SCALE.clone());
         twistedColors.push(ZERO_COLOR.clone());
         for (let r = 0; r < MAX_MULLIONS; r++) mullionMatrices.push(ZERO_SCALE.clone());
@@ -554,6 +758,8 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         roundColors.push(ZERO_COLOR.clone());
         facetedMatrices.push(ZERO_SCALE.clone());
         facetedColors.push(ZERO_COLOR.clone());
+        pyramidMatrices.push(ZERO_SCALE.clone());
+        pyramidColors.push(ZERO_COLOR.clone());
         for (let r = 0; r < MAX_MULLIONS; r++) mullionMatrices.push(ZERO_SCALE.clone());
       } else {
         // Rectangular rather than square footprint — see the `depth`
@@ -582,6 +788,8 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         facetedColors.push(ZERO_COLOR.clone());
         twistedMatrices.push(ZERO_SCALE.clone());
         twistedColors.push(ZERO_COLOR.clone());
+        pyramidMatrices.push(ZERO_SCALE.clone());
+        pyramidColors.push(ZERO_COLOR.clone());
 
         // Real vertical mullion ribs on the road-facing side, evenly
         // spaced and standing slightly proud of the wall — genuine 3D
@@ -638,24 +846,33 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         storefrontMatrices.push(ZERO_SCALE.clone());
       }
 
-      // A double-height ground-floor lobby — redesigned from a small
-      // door (which read as barely-there against a dark facade, even
-      // lit) into what it's actually meant to evoke: the full-height
-      // glass lobby frontage real corporate towers build at street
-      // level. Almost every tall-enough building gets one now (a small
-      // door was easy to make "occasional set dressing"; a building's
-      // one main entrance is not), and the glazing itself is always
-      // brightly lit — a grand lobby reads as inhabited/alive from a
-      // distance, which a dim/unlit variant (tried in an earlier pass)
-      // never did. A wide canopy overhang, a bright glass wall spanning
-      // most of the ground floor, three vertical mullions breaking it
-      // into bays like a real curtain-wall lobby, and bollards flanking
-      // the whole thing.
+      // A double-height ground-floor entrance — a real, proportioned
+      // double door (two narrow glass leaves in a dark frame) rather
+      // than a small barely-visible door or an undifferentiated wide
+      // glass wall. Almost every tall-enough building gets one now (a
+      // small door was easy to make "occasional set dressing"; a
+      // building's one main entrance is not), and the glazing itself is
+      // always brightly lit — a grand entrance reads as inhabited/alive
+      // from a distance, which a dim/unlit variant (tried in an earlier
+      // pass) never did. A wide canopy overhang, the door itself boxed
+      // in its own jamb/header frame, and bollards flanking the whole
+      // thing.
       const hasEntrance = height > 7 && seeded(i, 220) > 0.15;
       if (hasEntrance) {
         const lobbyWidth = Math.min(width * 0.82, depth * 0.82, 6);
         const lobbyHeight = 3.6 + seeded(i, 223) * 1.2;
-        const projection = 1.6 + seeded(i, 221) * 0.8;
+        // Kept shallow rather than the 1.6-2.4 this used to reach —
+        // street trees/lights/holo-ads all live in their own narrow
+        // road-shoulder corridor (x ~9.2-10.5, independently placed —
+        // see StreetTrees/StreetLights/HoloAds), and a building's near
+        // face can land as close as x~9-11 itself depending on its own
+        // width/offset roll. A deep canopy routinely reached straight
+        // into that corridor and got swallowed by a tree canopy sitting
+        // right in front of it — the door was being built correctly,
+        // just permanently hidden behind foliage. Staying shallow keeps
+        // the entrance's footprint close enough to the wall to clear
+        // that corridor in the large majority of rolls.
+        const projection = 0.9 + seeded(i, 221) * 0.5;
         const canopyY = lobbyHeight + 0.35;
 
         // Every element below is offset purely along the wall-normal
@@ -687,35 +904,230 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           entrancePillarMatrices.push(dummy.matrix.clone());
         });
 
-        // The bright glass lobby wall itself — one big pane rather
-        // than a door-sized insert, flush with the facade under the
-        // canopy.
-        const glassP = wallAttach(x, z, buildingYaw, -side * (width / 2 + 0.07), 0);
-        dummy.position.set(glassP.x, lobbyHeight / 2, glassP.z);
-        dummy.scale.set(0.05, lobbyHeight * 0.94, lobbyWidth * 0.95);
+        // The actual door — real double-door proportions (two narrow,
+        // human-scale leaves, not a wall-wide glass pane) so up close
+        // it reads as a door someone could walk through, while the
+        // canopy/glow/bollards above still give the entrance presence
+        // from a distance.
+        // Widened from the geometrically-"correct" 0.06 gap/0.1 jambs —
+        // at the distance this is actually seen from during the fly-
+        // through, that thin a split and frame anti-aliased down to a
+        // few pixels and the whole assembly read as a single flat grey
+        // panel rather than a recognizable double door. Bolder here
+        // reads better at speed even though it's less true to a real
+        // door's proportions up close.
+        const doorLeafWidth = 0.85 + seeded(i, 224) * 0.15;
+        const doorGap = 0.16;
+        const doorWidth = doorLeafWidth * 2 + doorGap;
+        const jambWidth = 0.14;
+        const headerHeight = 0.22;
+
+        // Roughly a three-way split rather than every entrance sharing
+        // one material — glass, stained hardwood, and worked iron are
+        // three genuinely different KINDS of building entrance in real
+        // architecture (a glass curtain-wall lobby, a townhouse's
+        // wooden door, a wrought-iron gate), not one door repainted.
+        // Wood and iron get their own separate material below (matte
+        // low-shine vs. bright high-shine specular — a color swap
+        // alone can't tell a painted metal door from real wood grain).
+        const materialRoll = seeded(i, 226);
+        const doorMaterial: DoorMaterial =
+          materialRoll > 0.66 ? "glass" : materialRoll > 0.33 ? "wood" : "iron";
+
+        // Every entrance's doors slide open and shut on their own
+        // automatic-door cycle (see doorOpenFraction/useFrame below) —
+        // a closed door, however well detailed, still reads as a solid
+        // wall panel; actually seeing it part company and reveal a dark
+        // opening behind it is what makes it unambiguous that this is a
+        // functioning entrance and not just more facade. A per-building
+        // period/phase (not one shared clock) so the skyline's doors
+        // don't all snap open in visible unison.
+        const doorPeriod = 4 + seeded(i, 229) * 3;
+        const doorPhase = seeded(i, 230) * doorPeriod;
+        const slideDirX = -Math.sin(buildingYaw);
+        const slideDirZ = Math.cos(buildingYaw);
+
+        // A real slab, not a decal — 0.05 used to give the leaf almost
+        // no actual thickness, so from anywhere off dead-center it read
+        // as a flat painted rectangle rather than an object standing
+        // proud of the wall. Thick enough now to catch a visible edge
+        // highlight from the rig light as the camera passes.
+        const leafDepth = 0.16;
+        // A raised center panel, proud of the leaf's own outer face —
+        // the single detail that makes an opaque door read as a molded
+        // 3D object (light/shadow across its own edges) instead of a
+        // flat painted color swatch. Only on the wood/iron variants;
+        // a glass leaf is a pane, not a paneled door, so it stays flat.
+        const panelDepth = 0.07;
+        const panelOffsetFromWall = 0.07 + leafDepth / 2 + panelDepth / 2;
+        const panelWidth = doorLeafWidth * 0.58;
+        const panelHeight = lobbyHeight * 0.94 * 0.68;
+
+        [-1, 1].forEach((leaf) => {
+          const leafOffset = leaf * (doorLeafWidth / 2 + doorGap / 2);
+          const p = wallAttach(x, z, buildingYaw, -side * (width / 2 + 0.07), leafOffset);
+          dummy.position.set(p.x, lobbyHeight / 2, p.z);
+          dummy.scale.set(leafDepth, lobbyHeight * 0.94, doorLeafWidth);
+          dummy.rotation.set(0, buildingYaw, 0);
+          dummy.updateMatrix();
+          if (doorMaterial === "glass") {
+            entranceDoorGlassMatrices.push(dummy.matrix.clone());
+            entranceDoorWoodMatrices.push(ZERO_SCALE.clone());
+            entranceDoorWoodColors.push(ZERO_COLOR.clone());
+            entranceDoorIronMatrices.push(ZERO_SCALE.clone());
+            entranceDoorIronColors.push(ZERO_COLOR.clone());
+          } else if (doorMaterial === "wood") {
+            entranceDoorWoodMatrices.push(dummy.matrix.clone());
+            entranceDoorWoodColors.push(
+              new THREE.Color(DOOR_WOOD_COLORS[Math.floor(seeded(i, 227) * DOOR_WOOD_COLORS.length)])
+            );
+            entranceDoorGlassMatrices.push(ZERO_SCALE.clone());
+            entranceDoorIronMatrices.push(ZERO_SCALE.clone());
+            entranceDoorIronColors.push(ZERO_COLOR.clone());
+          } else {
+            entranceDoorIronMatrices.push(dummy.matrix.clone());
+            entranceDoorIronColors.push(
+              new THREE.Color(DOOR_IRON_COLORS[Math.floor(seeded(i, 227) * DOOR_IRON_COLORS.length)])
+            );
+            entranceDoorGlassMatrices.push(ZERO_SCALE.clone());
+            entranceDoorWoodMatrices.push(ZERO_SCALE.clone());
+            entranceDoorWoodColors.push(ZERO_COLOR.clone());
+          }
+
+          // A handle bar on each leaf's inner edge — the single detail
+          // that reads as "operable door" rather than "fixed panel",
+          // on both door finishes (a glass door still has a handle).
+          const handleP = wallAttach(
+            x,
+            z,
+            buildingYaw,
+            -side * (width / 2 + 0.1),
+            leafOffset - leaf * doorLeafWidth * 0.32
+          );
+          dummy.position.set(handleP.x, lobbyHeight * 0.42, handleP.z);
+          dummy.scale.set(0.045, lobbyHeight * 0.32, 0.045);
+          dummy.rotation.set(0, buildingYaw, 0);
+          dummy.updateMatrix();
+          entranceDoorHandleMatrices.push(dummy.matrix.clone());
+
+          const panelP = wallAttach(x, z, buildingYaw, -side * (width / 2 + panelOffsetFromWall), leafOffset);
+          if (doorMaterial !== "glass") {
+            dummy.position.set(panelP.x, lobbyHeight / 2, panelP.z);
+            dummy.scale.set(panelDepth, panelHeight, panelWidth);
+            dummy.rotation.set(0, buildingYaw, 0);
+            dummy.updateMatrix();
+            entranceDoorPanelMatrices.push(dummy.matrix.clone());
+          } else {
+            entranceDoorPanelMatrices.push(ZERO_SCALE.clone());
+          }
+
+          doorLeafAnims.push({
+            index: doorLeafSlot,
+            material: doorMaterial,
+            leafX: p.x,
+            leafY: lobbyHeight / 2,
+            leafZ: p.z,
+            handleX: handleP.x,
+            handleY: lobbyHeight * 0.42,
+            handleZ: handleP.z,
+            panelX: panelP.x,
+            panelY: lobbyHeight / 2,
+            panelZ: panelP.z,
+            yaw: buildingYaw,
+            dirX: leaf * slideDirX,
+            dirZ: leaf * slideDirZ,
+            leafDepth,
+            leafHeight: lobbyHeight * 0.94,
+            leafWidth: doorLeafWidth,
+            handleSize: 0.045,
+            handleHeight: lobbyHeight * 0.32,
+            panelDepth,
+            panelHeight,
+            panelWidth,
+            maxSlide: doorLeafWidth * 0.95,
+            period: doorPeriod,
+            phase: doorPhase,
+          });
+          doorLeafSlot++;
+        });
+
+        // A raised kick plate along the door's base — real doors take a
+        // scuffed metal strip at foot height; without it the leaves
+        // look like they run straight into the floor rather than
+        // sitting in an actual doorway. Deeper than before to match the
+        // leaves' own new thickness rather than reading as a decal on
+        // top of them.
+        const kickP = wallAttach(x, z, buildingYaw, -side * (width / 2 + 0.13), 0);
+        dummy.position.set(kickP.x, 0.11, kickP.z);
+        dummy.scale.set(0.16, 0.22, doorWidth * 0.98);
         dummy.rotation.set(0, buildingYaw, 0);
         dummy.updateMatrix();
-        entranceDoorGlassMatrices.push(dummy.matrix.clone());
+        entranceKickPlateMatrices.push(dummy.matrix.clone());
 
-        // Three vertical mullions dividing the glass wall into bays —
-        // real curtain-wall lobbies read as structured glazing, not
-        // one uninterrupted glowing sheet.
-        [-1, 0, 1].forEach((m) => {
-          const p = wallAttach(x, z, buildingYaw, -side * (width / 2 + 0.05), m * lobbyWidth * 0.32);
+        // Frame: two side jambs, a header above, and the center
+        // mullion between the leaves — an actual door frame outline
+        // instead of mullions scattered across an undifferentiated
+        // glass wall. Thickened and pushed further proud of the wall
+        // than the 0.09-deep/0.05-out version this used to be — that
+        // read as a thin painted stripe with almost no shadow of its
+        // own; a genuinely protruding frame is what actually casts a
+        // visible edge under the rig light and reads as real millwork
+        // standing off the facade rather than a decal on it.
+        const frameDepth = 0.2;
+        const jambOffset = doorWidth / 2 + jambWidth / 2;
+        [-1, 1].forEach((jamb) => {
+          const p = wallAttach(x, z, buildingYaw, -side * (width / 2 + 0.09), jamb * jambOffset);
           dummy.position.set(p.x, lobbyHeight / 2, p.z);
-          dummy.scale.set(0.09, lobbyHeight * 0.98, 0.05);
+          dummy.scale.set(frameDepth, lobbyHeight * 0.98, jambWidth);
+          dummy.rotation.set(0, buildingYaw, 0);
           dummy.updateMatrix();
           entranceDoorFrameMatrices.push(dummy.matrix.clone());
         });
+
+        const headerP = wallAttach(x, z, buildingYaw, -side * (width / 2 + 0.09), 0);
+        dummy.position.set(headerP.x, lobbyHeight + headerHeight / 2, headerP.z);
+        dummy.scale.set(frameDepth, headerHeight, doorWidth + jambWidth * 2);
+        dummy.rotation.set(0, buildingYaw, 0);
+        dummy.updateMatrix();
+        entranceDoorFrameMatrices.push(dummy.matrix.clone());
+
+        const mullionP = wallAttach(x, z, buildingYaw, -side * (width / 2 + 0.09), 0);
+        dummy.position.set(mullionP.x, lobbyHeight / 2, mullionP.z);
+        dummy.scale.set(frameDepth, lobbyHeight * 0.98, doorGap + 0.03);
+        dummy.rotation.set(0, buildingYaw, 0);
+        dummy.updateMatrix();
+        entranceDoorFrameMatrices.push(dummy.matrix.clone());
       } else {
         entranceCanopyMatrices.push(ZERO_SCALE.clone());
         entranceGlowMatrices.push(ZERO_SCALE.clone());
         entrancePillarMatrices.push(ZERO_SCALE.clone());
         entrancePillarMatrices.push(ZERO_SCALE.clone());
         entranceDoorGlassMatrices.push(ZERO_SCALE.clone());
+        entranceDoorGlassMatrices.push(ZERO_SCALE.clone());
+        entranceDoorWoodMatrices.push(ZERO_SCALE.clone());
+        entranceDoorWoodMatrices.push(ZERO_SCALE.clone());
+        entranceDoorWoodColors.push(ZERO_COLOR.clone());
+        entranceDoorWoodColors.push(ZERO_COLOR.clone());
+        entranceDoorIronMatrices.push(ZERO_SCALE.clone());
+        entranceDoorIronMatrices.push(ZERO_SCALE.clone());
+        entranceDoorIronColors.push(ZERO_COLOR.clone());
+        entranceDoorIronColors.push(ZERO_COLOR.clone());
+        entranceDoorHandleMatrices.push(ZERO_SCALE.clone());
+        entranceDoorHandleMatrices.push(ZERO_SCALE.clone());
+        entranceDoorPanelMatrices.push(ZERO_SCALE.clone());
+        entranceDoorPanelMatrices.push(ZERO_SCALE.clone());
+        entranceKickPlateMatrices.push(ZERO_SCALE.clone());
         entranceDoorFrameMatrices.push(ZERO_SCALE.clone());
         entranceDoorFrameMatrices.push(ZERO_SCALE.clone());
         entranceDoorFrameMatrices.push(ZERO_SCALE.clone());
+        entranceDoorFrameMatrices.push(ZERO_SCALE.clone());
+        // No animation entries pushed here — these two leaf slots stay
+        // permanently ZERO_SCALE (set once above), so the door-opening
+        // useFrame loop (which only walks the active-leaf list) never
+        // needs to touch them. doorLeafSlot still advances by 2 so the
+        // *next* building's leaves land on the correct index in the
+        // count*2 glass/solid/handle arrays.
+        doorLeafSlot += 2;
       }
 
       // Hanging gardens — cascading vertical greenery bands wrapped
@@ -723,10 +1135,20 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       // amenity real mixed-use towers increasingly build in rather
       // than every surface being glass and steel. Weighted toward
       // taller buildings (there's more facade to hang a garden on),
-      // 1-2 bands per building at different heights so it reads as
-      // planted terraces rather than one uniform green stripe.
+      // 1-3 bands per building at different heights so it reads as
+      // planted terraces rather than one uniform green stripe. Raised
+      // from a 28% hit rate to ~55% at explicit request for a lusher,
+      // more densely-planted skyline closer to the reference art's own
+      // heavily-terraced towers.
+      const gardenRoll = seeded(i, 108);
       const gardenBandCount =
-        height > 14 && seeded(i, 108) > 0.72 ? (seeded(i, 109) > 0.5 ? 2 : 1) : 0;
+        height > 14 && gardenRoll > 0.45
+          ? gardenRoll > 0.8
+            ? 3
+            : seeded(i, 109) > 0.5
+              ? 2
+              : 1
+          : 0;
       const gardenGreens = ["#3a7d44", "#4f9e5f", "#2f6b3a"];
       for (let g = 0; g < gardenBandCount; g++) {
         const bandY = 2 + seeded(i * 3 + g, 110) * Math.max(1, height - 5);
@@ -741,57 +1163,46 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         );
       }
 
-      // A wider, shorter podium base used to sit here on a random
-      // subset of towers — the low-rise "skirt" real skyscrapers
-      // sometimes sit on. Turned off: at the speed and angle this
-      // skyline is actually seen from, a podium reads as a stray
-      // block bulging out at a tower's foot rather than a tiered
-      // building, so a plain straight wall down to street level reads
-      // cleaner. Left as an always-false flag (rather than deleting
-      // the podium mesh/arrays outright) for the same reason
-      // signatureBand/landingPad below are kept as permanent
-      // zero-scale slots — removing the draw call would mean
-      // re-threading every other index-aligned array in this pass.
-      const hasPodium = false;
-      if (hasPodium) {
-        const podiumHeight = 2.5 + seeded(i, 23) * 3;
-        const podiumWidth = width * (1.5 + seeded(i, 24) * 0.6);
-        dummy.position.set(x, podiumHeight / 2, z);
-        dummy.scale.set(podiumWidth, podiumHeight, podiumWidth);
-        dummy.rotation.set(0, 0, 0);
+      // Repurposes what used to be a street-level podium skirt (see the
+      // dead `hasPodium` flag this replaced) into a rooftop setback
+      // crown instead — a smaller tier stacked on top of a box tower's
+      // main volume, the "wedding cake" massing real premium
+      // supertalls actually use (visible stepped setbacks near the
+      // top) rather than every tower being one uniform extrusion
+      // top to bottom. Box towers only — the other archetypes already
+      // have their own distinct rooflines (tapered, twisted, pointed).
+      const hasCrown = !isRound && !isFaceted && !isTwisted && !isPyramid && height > 16 && seeded(i, 23) > 0.5;
+      if (hasCrown) {
+        const crownHeight = 2 + seeded(i, 24) * 5;
+        const crownWidth = width * (0.5 + seeded(i, 25) * 0.22);
+        const crownDepth = depth * (0.5 + seeded(i, 26) * 0.22);
+        dummy.position.set(x, height + crownHeight / 2, z);
+        dummy.scale.set(crownWidth, crownHeight, crownDepth);
+        dummy.rotation.set(0, buildingYaw, 0);
         dummy.updateMatrix();
         podiumMatrices.push(dummy.matrix.clone());
-        // Some podiums read as a lit lobby (brighter), others as the
-        // shadowed street-level base real buildings have from
-        // neighboring towers blocking light — not a uniform tint.
-        const podiumLit = seeded(i, 65) > 0.5;
-        podiumColors.push(
-          podiumLit
-            ? new THREE.Color(dark * 1.4, dark * 1.35, dark * 2.15)
-            : new THREE.Color(dark * 0.4, dark * 0.42, dark * 0.62)
-        );
+        podiumColors.push(bodyColor);
       } else {
         podiumMatrices.push(ZERO_SCALE.clone());
         podiumColors.push(ZERO_COLOR.clone());
       }
 
-      // Accent light strip — a lit sign band, a lobby facade wash, an
-      // illuminated stairwell — real buildings that have one make it a
-      // deliberate architectural feature, not something every single
-      // tower in the skyline carries on both faces. Rolled per-building
-      // at ~28% rather than always-on, so it reads as the exception
-      // (the landmark building with the lit sign) instead of the rule.
-      const hasAccentStrip = seeded(i, 96) > 0.72;
+      // Corner accent light — a continuous vertical light strip
+      // climbing almost the tower's full height at (near) its corner,
+      // the "glowing edge" cue premium supertalls in the reference art
+      // carry, rather than a short random-length band lost mid-facade.
+      // Raised from a rare ~28% "exception" to the majority (~65%) at
+      // explicit request — a skyline where most towers carry this cue
+      // is what actually reads as premium rather than ordinary.
+      const hasAccentStrip = seeded(i, 96) > 0.35;
+      const accentHeight = height * (0.8 + seeded(i, 8) * 0.16);
 
-      // Facade A: faces the road.
+      // Facade A: faces the road, offset toward one corner along depth.
       if (hasAccentStrip) {
-        dummy.position.set(
-          x - side * (width / 2 + 0.02),
-          2 + seeded(i, 7) * Math.max(1, height - 4),
-          z
-        );
-        dummy.scale.set(0.06, 0.6 + seeded(i, 8) * 2.4, 0.4);
-        dummy.rotation.set(0, 0, 0);
+        const stripA = wallAttach(x, z, buildingYaw, -side * (width / 2 + 0.02), depth * 0.38);
+        dummy.position.set(stripA.x, accentHeight / 2, stripA.z);
+        dummy.scale.set(0.07, accentHeight, 0.16);
+        dummy.rotation.set(0, buildingYaw, 0);
         dummy.updateMatrix();
         windowAMatrices.push(dummy.matrix.clone());
         // Lerped toward white rather than the raw accent hue — a flat
@@ -806,18 +1217,15 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         windowAColors.push(ZERO_COLOR.clone());
       }
 
-      // Facade B: the opposite edge, so towers still glow when the
+      // Facade B: the opposite corner, so towers still glow when the
       // path curves and briefly reveals their far side. Same roll as
       // facade A — a building with a lit accent shows it on both faces
       // rather than one side rolling independently of the other.
       if (hasAccentStrip) {
-        dummy.position.set(
-          x + side * (width / 2 + 0.02),
-          2 + seeded(i, 9) * Math.max(1, height - 4),
-          z + 1.2
-        );
-        dummy.scale.set(0.06, 0.5 + seeded(i, 10) * 2.0, 0.4);
-        dummy.rotation.set(0, 0, 0);
+        const stripB = wallAttach(x, z, buildingYaw, side * (width / 2 + 0.02), -depth * 0.38);
+        dummy.position.set(stripB.x, accentHeight / 2, stripB.z);
+        dummy.scale.set(0.07, accentHeight, 0.16);
+        dummy.rotation.set(0, buildingYaw, 0);
         dummy.updateMatrix();
         windowBMatrices.push(dummy.matrix.clone());
         windowBColors.push(
@@ -831,15 +1239,23 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         windowBColors.push(ZERO_COLOR.clone());
       }
 
-      // A random subset of tall plain-box buildings tapers into a
-      // corporate spire — the other archetypes already have their own
-      // distinct rooflines.
+      // A tall, thin needle spire capping a good share of both box and
+      // round towers — the premium-supertall reference this skyline is
+      // chasing reads as almost entirely spire-topped, with the needle
+      // itself often as tall as the tower body it caps rather than a
+      // small accent. Faceted/twisted towers keep their own already-
+      // distinct tapered rooflines (a spire on top of an already-
+      // tapered crystal/twist reads as two competing silhouettes
+      // stacked on each other) and crowned towers keep their own
+      // stepped-setback top instead, but round towers qualify alongside
+      // box ones — a tapered cylinder with a thin needle on top is one
+      // of the most classic "corporate spire" tower profiles there is.
       const isSpireCandidate =
-        height > 24 && seeded(i, 57) > 0.72 && !isRound && !isFaceted && !isTwisted;
+        height > 15 && seeded(i, 57) > 0.3 && !isFaceted && !isTwisted && !isPyramid && !hasCrown;
       if (isSpireCandidate) {
-        const spireHeight = 6 + seeded(i, 21) * 10;
+        const spireHeight = 10 + seeded(i, 21) * 22;
         dummy.position.set(x, height + spireHeight / 2, z);
-        dummy.scale.set(width * 0.28, spireHeight, width * 0.28);
+        dummy.scale.set(width * 0.2, spireHeight, width * 0.2);
         dummy.rotation.set(0, 0, 0);
         dummy.updateMatrix();
         spireMatrices.push(dummy.matrix.clone());
@@ -921,7 +1337,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       // get a clean roofline of their own (cylindrical, faceted-tip,
       // twisted-tip), so this is reserved for the plain box where a
       // hard flat top edge otherwise reads as an unfinished extrusion.
-      if (!isRound && !isFaceted && !isTwisted) {
+      if (!isRound && !isFaceted && !isTwisted && !isPyramid) {
         dummy.position.set(x, height - 0.14, z);
         dummy.scale.set(width * 1.1, 0.3, depth * 1.1);
         dummy.rotation.set(0, 0, 0);
@@ -943,23 +1359,74 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       landingPadMatrices.push(ZERO_SCALE.clone());
       landingPadColors.push(ZERO_COLOR.clone());
 
-      // A small fraction of podium roofs used to get a rooftop garden;
-      // with hasPodium permanently off above there's no podium roof
-      // left to put one on, so this stays permanently false too rather
-      // than needing its own separate flag.
-      const hasGarden = hasPodium && seeded(i, 60) > 0.85 - starProximity * 0.4;
-      if (hasGarden) {
-        const podiumHeight = 2.5 + seeded(i, 23) * 3;
-        const podiumWidth = width * (1.5 + seeded(i, 24) * 0.6);
-        dummy.position.set(x, podiumHeight + 0.05, z);
-        dummy.scale.set(podiumWidth * 0.7, 0.05, podiumWidth * 0.7);
+      // A genuine low-rise "green roof" building — a short (roughly
+      // 3-5 story) box whose entire flat roof is a planted deck rather
+      // than bare mechanical roofline, the reference art's own
+      // low/mid-rise buildings-with-a-garden-on-top look, distinct from
+      // both the hanging-garden facade bands above (those wrap a tall
+      // tower's wall) and the crown tier (that's an unplanted setback).
+      // Box archetype only, short-to-mid height only, and mutually
+      // exclusive with the crown tier so a roof is never asked to be
+      // both a stepped setback and a flat garden deck at once.
+      const hasGreenRoof =
+        !isRound &&
+        !isFaceted &&
+        !isTwisted &&
+        !isPyramid &&
+        !hasCrown &&
+        height >= 6 &&
+        height <= 16 &&
+        seeded(i, 60) > 0.55;
+      const roofTreeMatrices: THREE.Matrix4[] = [];
+      const roofTreeCanopyMats: THREE.Matrix4[] = [];
+      if (hasGreenRoof) {
+        dummy.position.set(x, height + 0.03, z);
+        dummy.scale.set(width * 0.86, 0.05, depth * 0.86);
+        dummy.rotation.set(0, buildingYaw, 0);
         dummy.updateMatrix();
         gardenMatrices.push(dummy.matrix.clone());
         gardenColors.push(new THREE.Color("#4f9e5f"));
+
+        // A handful of small trees/shrubs scattered across the deck —
+        // the actual "covered in plants" read a flat green disc alone
+        // doesn't give.
+        const treeCount = 2 + Math.floor(seeded(i, 121) * 3);
+        for (let rt = 0; rt < treeCount; rt++) {
+          const localX = (seeded(i * 5 + rt, 122) - 0.5) * width * 0.7;
+          const localZ = (seeded(i * 5 + rt, 123) - 0.5) * depth * 0.7;
+          const cos = Math.cos(buildingYaw);
+          const sin = Math.sin(buildingYaw);
+          const wx = x + localX * cos - localZ * sin;
+          const wz = z + localX * sin + localZ * cos;
+          const trunkH = 0.4 + seeded(i * 5 + rt, 124) * 0.3;
+          const canopyR = 0.28 + seeded(i * 5 + rt, 125) * 0.22;
+
+          dummy.position.set(wx, height + trunkH / 2, wz);
+          dummy.rotation.set(0, 0, 0);
+          dummy.scale.set(0.07, trunkH, 0.07);
+          dummy.updateMatrix();
+          roofTreeMatrices.push(dummy.matrix.clone());
+
+          dummy.position.set(wx, height + trunkH + canopyR * 0.75, wz);
+          dummy.scale.set(canopyR, canopyR * 1.1, canopyR);
+          dummy.updateMatrix();
+          roofTreeCanopyMats.push(dummy.matrix.clone());
+        }
       } else {
         gardenMatrices.push(ZERO_SCALE.clone());
         gardenColors.push(ZERO_COLOR.clone());
       }
+      while (roofTreeMatrices.length < 4) roofTreeMatrices.push(ZERO_SCALE.clone());
+      while (roofTreeCanopyMats.length < 4) roofTreeCanopyMats.push(ZERO_SCALE.clone());
+      roofTreeMatrices.forEach((m) => roofTreeTrunkAllMatrices.push(m));
+      roofTreeCanopyMats.forEach((m, idx) => {
+        roofTreeCanopyAllMatrices.push(m);
+        roofTreeCanopyAllColors.push(
+          new THREE.Color(
+            ["#3a7d44", "#4f9e5f", "#2f6b3a", "#5aa668"][(i * 4 + idx) % 4]
+          )
+        );
+      });
 
       // A random subset of tall buildings gets a slim communication/
       // lightning-rod antenna topped with a slow-blinking red aviation
@@ -999,9 +1466,9 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       roofEquipColors.push(ZERO_COLOR.clone());
     }
 
-    // Same padding trick for hangingGardenMatrices — 0, 1, or 2 bands
-    // per building.
-    while (hangingGardenMatrices.length < count * 2) {
+    // Same padding trick for hangingGardenMatrices — 0, 1, 2, or 3
+    // bands per building (see gardenBandCount above).
+    while (hangingGardenMatrices.length < count * 3) {
       hangingGardenMatrices.push(ZERO_SCALE.clone());
       hangingGardenColors.push(ZERO_COLOR.clone());
     }
@@ -1015,6 +1482,8 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       facetedColors,
       twistedMatrices,
       twistedColors,
+      pyramidMatrices,
+      pyramidColors,
       podiumMatrices,
       podiumColors,
       windowAMatrices,
@@ -1029,6 +1498,9 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       landingPadColors,
       gardenMatrices,
       gardenColors,
+      roofTreeTrunkAllMatrices,
+      roofTreeCanopyAllMatrices,
+      roofTreeCanopyAllColors,
       antennaMatrices,
       antennaLightMatrices,
       antennaLightColors,
@@ -1047,6 +1519,14 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       entrancePillarMatrices,
       entranceDoorFrameMatrices,
       entranceDoorGlassMatrices,
+      entranceDoorWoodMatrices,
+      entranceDoorWoodColors,
+      entranceDoorIronMatrices,
+      entranceDoorIronColors,
+      entranceDoorHandleMatrices,
+      entranceDoorPanelMatrices,
+      entranceKickPlateMatrices,
+      doorLeafAnims,
     };
   }, [count, isMobile]);
 
@@ -1077,6 +1557,10 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
   );
   useLayoutEffect(
     () => applyInstances(twistedTowersRef.current, data.twistedMatrices, data.twistedColors),
+    [data]
+  );
+  useLayoutEffect(
+    () => applyInstances(pyramidTowersRef.current, data.pyramidMatrices, data.pyramidColors),
     [data]
   );
   useLayoutEffect(
@@ -1117,6 +1601,19 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
   );
   useLayoutEffect(
     () => applyInstances(gardensRef.current, data.gardenMatrices, data.gardenColors),
+    [data]
+  );
+  useLayoutEffect(
+    () => applyInstances(roofTreeTrunkRef.current, data.roofTreeTrunkAllMatrices),
+    [data]
+  );
+  useLayoutEffect(
+    () =>
+      applyInstances(
+        roofTreeCanopyRef.current,
+        data.roofTreeCanopyAllMatrices,
+        data.roofTreeCanopyAllColors
+      ),
     [data]
   );
   useLayoutEffect(
@@ -1167,6 +1664,36 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
   );
   useLayoutEffect(
     () => applyInstances(entranceDoorGlassRef.current, data.entranceDoorGlassMatrices),
+    [data]
+  );
+  useLayoutEffect(
+    () =>
+      applyInstances(
+        entranceDoorWoodRef.current,
+        data.entranceDoorWoodMatrices,
+        data.entranceDoorWoodColors
+      ),
+    [data]
+  );
+  useLayoutEffect(
+    () =>
+      applyInstances(
+        entranceDoorIronRef.current,
+        data.entranceDoorIronMatrices,
+        data.entranceDoorIronColors
+      ),
+    [data]
+  );
+  useLayoutEffect(
+    () => applyInstances(entranceDoorHandleRef.current, data.entranceDoorHandleMatrices),
+    [data]
+  );
+  useLayoutEffect(
+    () => applyInstances(entranceDoorPanelRef.current, data.entranceDoorPanelMatrices),
+    [data]
+  );
+  useLayoutEffect(
+    () => applyInstances(entranceKickPlateRef.current, data.entranceKickPlateMatrices),
     [data]
   );
 
@@ -1231,6 +1758,68 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
     }
   });
 
+  // Automatic doors: each active leaf/handle pair slides along its own
+  // building-local tangent direction per doorOpenFraction's cycle. Runs
+  // over data.doorLeafAnims (only the leaves that actually exist) and
+  // writes straight into the glass/wood/iron/handle instancedMeshes —
+  // the frame/canopy/kick-plate stay fixed, since it's the leaves
+  // opening past a stationary doorway that has to read, not the
+  // doorway itself moving.
+  const doorDummy = useMemo(() => new THREE.Object3D(), []);
+  useFrame((state) => {
+    const anims = data.doorLeafAnims;
+    if (anims.length === 0) return;
+    const glassMesh = entranceDoorGlassRef.current;
+    const woodMesh = entranceDoorWoodRef.current;
+    const ironMesh = entranceDoorIronRef.current;
+    const handleMesh = entranceDoorHandleRef.current;
+    const panelMesh = entranceDoorPanelRef.current;
+    if (!glassMesh && !woodMesh && !ironMesh && !handleMesh && !panelMesh) return;
+
+    const t = state.clock.getElapsedTime();
+    for (let a = 0; a < anims.length; a++) {
+      const anim = anims[a];
+      const cycleT = ((t + anim.phase) % anim.period) / anim.period;
+      const slide = doorOpenFraction(cycleT) * anim.maxSlide;
+      const dx = anim.dirX * slide;
+      const dz = anim.dirZ * slide;
+
+      const leafMesh =
+        anim.material === "glass" ? glassMesh : anim.material === "wood" ? woodMesh : ironMesh;
+      if (leafMesh) {
+        doorDummy.position.set(anim.leafX + dx, anim.leafY, anim.leafZ + dz);
+        doorDummy.rotation.set(0, anim.yaw, 0);
+        doorDummy.scale.set(anim.leafDepth, anim.leafHeight, anim.leafWidth);
+        doorDummy.updateMatrix();
+        leafMesh.setMatrixAt(anim.index, doorDummy.matrix);
+      }
+
+      if (handleMesh) {
+        doorDummy.position.set(anim.handleX + dx, anim.handleY, anim.handleZ + dz);
+        doorDummy.rotation.set(0, anim.yaw, 0);
+        doorDummy.scale.set(anim.handleSize, anim.handleHeight, anim.handleSize);
+        doorDummy.updateMatrix();
+        handleMesh.setMatrixAt(anim.index, doorDummy.matrix);
+      }
+
+      // Only the wood/iron variants have a raised panel — the glass
+      // leaves' panel slots stay at the ZERO_SCALE they were pushed
+      // with initially and are simply skipped here.
+      if (panelMesh && anim.material !== "glass") {
+        doorDummy.position.set(anim.panelX + dx, anim.panelY, anim.panelZ + dz);
+        doorDummy.rotation.set(0, anim.yaw, 0);
+        doorDummy.scale.set(anim.panelDepth, anim.panelHeight, anim.panelWidth);
+        doorDummy.updateMatrix();
+        panelMesh.setMatrixAt(anim.index, doorDummy.matrix);
+      }
+    }
+    if (glassMesh) glassMesh.instanceMatrix.needsUpdate = true;
+    if (woodMesh) woodMesh.instanceMatrix.needsUpdate = true;
+    if (ironMesh) ironMesh.instanceMatrix.needsUpdate = true;
+    if (handleMesh) handleMesh.instanceMatrix.needsUpdate = true;
+    if (panelMesh) panelMesh.instanceMatrix.needsUpdate = true;
+  });
+
   // Six box-tower bucket configs — [shortA, shortB, medA, medB, tallA,
   // tallB], matching boxTowerRefs'/pushBoxTower's index order — driving
   // the six near-identical instancedMesh blocks below from one array
@@ -1279,7 +1868,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           }}
           args={[undefined, undefined, count]}
         >
-          <boxGeometry args={[1, 1, 1]} />
+          <primitive object={taperedBoxGeometry} attach="geometry" />
           {isMobile ? (
             <meshLambertMaterial
               map={cfg.map}
@@ -1410,6 +1999,15 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         )}
       </instancedMesh>
 
+      {/* Sharp four-sided pyramid/obelisk — no window map (this isn't
+          an office tower), just a solid Phong body so the per-instance
+          bodyColor tint reads clean, plus a soft emissive lift so it
+          doesn't go flat black against the rig light from every angle. */}
+      <instancedMesh ref={pyramidTowersRef} args={[undefined, undefined, count]}>
+        <coneGeometry args={[0.72, 1, 4, 1]} />
+        <meshPhongMaterial specular="#4a5a78" shininess={30} emissive="#0c1220" emissiveIntensity={0.4} fog />
+      </instancedMesh>
+
       <instancedMesh ref={podiumsRef} args={[undefined, undefined, count]}>
         <boxGeometry args={[1, 1, 1]} />
         {isMobile ? (
@@ -1535,17 +2133,29 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         />
       </instancedMesh>
 
+      {/* Rooftop garden deck — lit (Lambert) rather than an additive
+          glow disc, matching the hanging-garden facade bands' own
+          material so both read as real planted greenery rather than a
+          neon accent. */}
       <instancedMesh ref={gardensRef} args={[undefined, undefined, count]}>
         <cylinderGeometry args={[0.72, 0.72, 1, 6]} />
-        <meshBasicMaterial
-          vertexColors
-          transparent
-          opacity={0.5}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-          fog={false}
-          toneMapped={false}
-        />
+        <meshLambertMaterial fog />
+      </instancedMesh>
+
+      {/* Rooftop trees/shrubs scattered across the green-roof deck
+          above (see hasGreenRoof) — up to 4 per building, padded with
+          zero-scale slots the same way hangingGardenMatrices is. */}
+      <instancedMesh ref={roofTreeTrunkRef} args={[undefined, undefined, count * 4]}>
+        <cylinderGeometry args={[0.7, 1, 1, 6]} />
+        <meshLambertMaterial color="#3a2a1e" fog />
+      </instancedMesh>
+      {/* Faceted low-poly geometry rather than a smooth sphere — a
+          perfectly round canopy reads as a lollipop from any distance
+          close enough to see it at all; the facets alone break that up
+          into something closer to a real irregular foliage mass. */}
+      <instancedMesh ref={roofTreeCanopyRef} args={[undefined, undefined, count * 4]}>
+        <icosahedronGeometry args={[1, 1]} />
+        <meshLambertMaterial fog />
       </instancedMesh>
 
       <instancedMesh ref={antennaRef} args={[undefined, undefined, count]}>
@@ -1626,11 +2236,11 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         />
       </instancedMesh>
 
-      {/* The lobby glazing itself — one big glass wall (always lit, not
-          an occasional variant, so the entrance actually reads as
-          inhabited from a distance) plus three dark vertical mullions
-          breaking it into bays, so it reads as structured curtain-wall
-          glazing rather than one flat glowing sheet.
+      {/* The actual entrance door — two glass leaves proportioned like a
+          real double door (not a wall-wide pane), boxed by a dark frame:
+          two side jambs, a header, and the center mullion splitting the
+          leaves. The split down the middle is what reads as "a door"
+          rather than "a window".
           A cool, near-clear tint rather than a warm solid color (real
           architectural glass is faintly blue/green, not a flat paint
           swatch) with a sharp, bright specular highlight — a crisp
@@ -1639,32 +2249,122 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           painted metal. The warm emissive is deliberately kept
           (real light glowing through from a lit interior at night),
           layered on top of the clear/reflective base instead of being
-          the material's dominant color the way the door's first pass
-          had it. */}
-      <instancedMesh ref={entranceDoorFrameRef} args={[undefined, undefined, count * 3]}>
+          the material's dominant color. */}
+      {/* The frame is what actually has to read as "a doorway" at
+          flythrough distance — the leaves behind it (glass, wood, or
+          iron) shrink to a handful of pixels and lose all their internal
+          detail (the split, the handle, the kick plate) well before
+          the frame does, so a plain near-black frame against an
+          already near-black building base meant the whole assembly
+          vanished into the wall. A cyan glow (tried first) turned out
+          to be the wrong fix even though it was technically visible —
+          this skyline's windows, holo-ads, and facade washes already
+          run almost entirely in that same cool blue family (see
+          ACCENTS above), so a cyan-lit frame just blended into "more
+          city glow" instead of reading as a distinct doorway. Warm
+          amber is this palette's one deliberate exception color (the
+          entrance canopy strip and door glass emissive already use
+          it) — using it here too means every entrance shares one
+          unmistakable, un-city-like signature the eye can pick out
+          from anywhere, rather than competing with a hundred other
+          blue-lit surfaces for attention. */}
+      <instancedMesh ref={entranceDoorFrameRef} args={[undefined, undefined, count * 4]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshPhongMaterial color="#0a0b10" specular="#2a3038" shininess={20} fog />
+        <meshPhongMaterial
+          color="#0a0b10"
+          specular="#2a3038"
+          shininess={20}
+          emissive="#ffb35c"
+          emissiveIntensity={0.65}
+          toneMapped={false}
+          fog
+        />
       </instancedMesh>
 
-      <instancedMesh ref={entranceDoorGlassRef} args={[undefined, undefined, count]}>
+      <instancedMesh ref={entranceDoorGlassRef} args={[undefined, undefined, count * 2]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshPhongMaterial
           color="#cfe8f5"
           transparent
-          opacity={0.5}
+          opacity={0.62}
           specular="#ffffff"
           shininess={110}
           emissive="#ffdca8"
-          emissiveIntensity={0.4}
+          emissiveIntensity={0.55}
           toneMapped={false}
           fog={false}
         />
       </instancedMesh>
 
+      {/* Stained hardwood doors — one of DOOR_WOOD_COLORS per instance.
+          Real wood doesn't throw a sharp specular highlight the way
+          polished metal or glass does; a dim, low-shininess sheen is
+          what separates "wood catching ambient light" from the bright
+          mirror-like highlight the iron/glass variants below use. The
+          small warm emissive is only there for the same reason every
+          door variant needs one — staying visible against an
+          already-dark facade at night — not because wood glows. */}
+      <instancedMesh ref={entranceDoorWoodRef} args={[undefined, undefined, count * 2]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshPhongMaterial
+          specular="#4a3626"
+          shininess={10}
+          emissive="#3a2818"
+          emissiveIntensity={0.5}
+          fog
+        />
+      </instancedMesh>
+
+      {/* Wrought-iron/blackened-steel doors — one of DOOR_IRON_COLORS
+          per instance. The opposite tuning from wood: a bright, tight,
+          cool-toned specular highlight is what makes worked metal read
+          as metal (a real iron gate catches a sharp glint of light,
+          not a soft glow), so this is the highest shininess of any
+          door material here. */}
+      <instancedMesh ref={entranceDoorIronRef} args={[undefined, undefined, count * 2]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshPhongMaterial
+          specular="#c8d0da"
+          shininess={95}
+          emissive="#20242c"
+          emissiveIntensity={0.45}
+          fog
+        />
+      </instancedMesh>
+
+      {/* Door handles — a small metallic bar on each leaf, the one
+          detail that reads as "something you'd actually grab and pull"
+          rather than a fixed wall panel, on any of the three door
+          finishes (real wood and iron doors get metal hardware too). */}
+      <instancedMesh ref={entranceDoorHandleRef} args={[undefined, undefined, count * 2]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshPhongMaterial color="#d8dce2" specular="#ffffff" shininess={140} fog />
+      </instancedMesh>
+
+      {/* Raised center panel on solid-metal doors only — standing
+          proud of the leaf's own face, this is what actually gives a
+          solid door a molded, 3D look (a visible light/shadow edge
+          around the panel) rather than reading as a flat rectangle of
+          color. Slightly darker than the leaf body it sits on so the
+          panel's own edge shadow reads even before the rig light
+          catches it. */}
+      <instancedMesh ref={entranceDoorPanelRef} args={[undefined, undefined, count * 2]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshPhongMaterial color="#20222a" specular="#7a828c" shininess={55} fog />
+      </instancedMesh>
+
+      {/* Kick plate at the door's base — grounds the leaves in an
+          actual doorway instead of them appearing to run straight into
+          the floor. */}
+      <instancedMesh ref={entranceKickPlateRef} args={[undefined, undefined, count]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshPhongMaterial color="#3a3d44" specular="#9aa0aa" shininess={60} fog />
+      </instancedMesh>
+
       {/* Hanging garden bands — lit rather than fully unlit flat green,
           so the foliage picks up the same rig lighting the structural
           buildings do instead of reading as a flat green decal. */}
-      <instancedMesh ref={hangingGardenRef} args={[undefined, undefined, count * 2]}>
+      <instancedMesh ref={hangingGardenRef} args={[undefined, undefined, count * 3]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshLambertMaterial fog />
       </instancedMesh>

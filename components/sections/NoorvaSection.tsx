@@ -228,7 +228,7 @@ export function NoorvaSection() {
           <NoorvaOrb />
           {/* Label tags around orb — HUD status-readout chips */}
           <div className="flex items-center justify-center gap-3 flex-wrap mt-10">
-            {["Emotional AI", "Contextual Memory", "Neural Learning", "Always With You"].map((tag) => (
+            {["Emotional AI", "Contextual Memory", "Neural Learning", "Noorva AI", "Always With You"].map((tag) => (
               <span
                 key={tag}
                 className="hud-tag px-3.5 py-1.5 rounded-full text-[0.7rem] font-medium uppercase"

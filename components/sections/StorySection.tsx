@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
 
@@ -23,6 +24,19 @@ interface PrincipleProps {
   dropGlow: string;
   floatDuration: number;
   floatDelay: number;
+  /** Some source photos are opaque rectangles rather than an
+   * alpha-cutout subject, so their right/bottom edge reads as a
+   * pasted-on box against the scene instead of blending into it —
+   * fade those two edges to transparent so the photo dissolves into
+   * the page background there. */
+  fadeRightBottom?: boolean;
+  /** A couple of these source photos are shot/graded so dark that the
+   * subject barely reads as more than a silhouette blob against the
+   * page's own near-black background — bump these up per-image rather
+   * than globally so the ones that are already legible don't get
+   * washed out chasing the ones that aren't. */
+  imageBrightness?: number;
+  imageContrast?: number;
 }
 
 function PrincipleBlock({
@@ -40,6 +54,9 @@ function PrincipleBlock({
   dropGlow,
   floatDuration,
   floatDelay,
+  fadeRightBottom = false,
+  imageBrightness = 1.12,
+  imageContrast = 1.25,
 }: PrincipleProps) {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
@@ -76,8 +93,18 @@ function PrincipleBlock({
           sizes="(max-width: 1024px) 100vw, 58vw"
           priority={priority}
           style={{
-            filter: `brightness(1.12) contrast(1.25) saturate(1.5) ${dropGlow}`,
-          }}
+            filter: `brightness(${imageBrightness}) contrast(${imageContrast}) saturate(1.5) ${dropGlow}`,
+            ...(fadeRightBottom
+              ? {
+                  maskImage:
+                    "linear-gradient(to right, black 68%, transparent 96%), linear-gradient(to bottom, black 55%, transparent 76%)",
+                  maskComposite: "intersect",
+                  WebkitMaskImage:
+                    "linear-gradient(to right, black 68%, transparent 96%), linear-gradient(to bottom, black 55%, transparent 76%)",
+                  WebkitMaskComposite: "source-in",
+                }
+              : {}),
+          } as CSSProperties}
         />
       </motion.div>
     </motion.div>
@@ -308,9 +335,12 @@ export function StorySection() {
             accentColor="rgba(0,100,255,0.72)"
             headlineGradient="linear-gradient(135deg, #FFFFFF 0%, #C8D8FF 20%, #5588FF 50%, #7B2FBE 100%)"
             numberColor="rgba(80,140,255,0.55)"
-            dropGlow="drop-shadow(0 0 50px rgba(0,85,255,0.80)) drop-shadow(0 0 100px rgba(123,47,190,0.50))"
+            dropGlow="drop-shadow(0 0 30px rgba(255,255,255,0.4))"
             floatDuration={8.5}
             floatDelay={1.2}
+            fadeRightBottom
+            imageBrightness={2.0}
+            imageContrast={1.0}
           />
 
           {/* 03 — INNOVATION */}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import {
@@ -21,18 +22,27 @@ function seeded(i: number, salt: number) {
 }
 
 // The same premium, near-monochrome "car of the future" palette the
-// moving traffic uses (see StreetCars for why it's skewed lighter than
-// a first pass).
+// main highway traffic uses.
 const CAR_COLORS = ["#eef1f3", "#c9cdd3", "#7d838c", "#3a4568", "#5a6270", "#8b93a0"];
 
-/** Small curbside parking bays tucked into the narrow strip between
- * the highway shoulder and the building line (the same corridor
- * BuildingBanners hangs its wall banners in) — a flat pull-in pad with
- * painted white stall stripes and two or three cars nose-in against
- * the curb. Purely static (no per-frame animation): unlike the moving
- * traffic in StreetCars, parked cars just need to sit there and read
- * as "somebody actually lives/works here," so this is one cheap
- * instanced layout pass with no useFrame at all. */
+interface CurbCar {
+  laneX: number;
+  dir: 1 | -1;
+  speed: number;
+  z: number;
+  length: number;
+  width: number;
+  colorIndex: number;
+  wheelSpin: number;
+}
+
+/** A slow curb-lane of local traffic tucked into the narrow strip
+ * between the highway shoulder and the building line (the same
+ * corridor BuildingBanners hangs its wall banners in) — loading-zone
+ * pavement markings with cars actually easing along them, rather than
+ * the permanently parked, never-moving cars this used to be. Every
+ * vehicle in the scene now moves; a car frozen mid-frame next to
+ * moving highway traffic was reading as broken rather than "parked". */
 export function ParkingLot({ isMobile }: { isMobile: boolean }) {
   const lotCount = isMobile ? 7 : 14;
   const carsPerLot = 2;
@@ -52,27 +62,19 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
   const paintTexture = useMemo(() => getCarPaintTexture(), []);
   const glassTexture = useTexture(CAR_GLASS) as THREE.Texture;
 
-  const data = useMemo(() => {
+  // The loading-zone pad/stripe markings on the pavement — purely
+  // static ground decoration, independent of the cars now moving
+  // through the lane above them.
+  const groundData = useMemo(() => {
     const dummy = new THREE.Object3D();
     const padMatrices: THREE.Matrix4[] = [];
     const stripeMatrices: THREE.Matrix4[] = [];
-    const shellMatrices: THREE.Matrix4[] = [];
-    const canopyMatrices: THREE.Matrix4[] = [];
-    const bodyColors: THREE.Color[] = [];
-    const wheelMatrices: THREE.Matrix4[] = [];
-    const rimMatrices: THREE.Matrix4[] = [];
-    const mirrorMatrices: THREE.Matrix4[] = [];
-    const markerMatrices: THREE.Matrix4[] = [];
-    const shadowMatrices: THREE.Matrix4[] = [];
-
     const stallWidth = 1.05;
     const bayDepth = 2.1;
 
     for (let i = 0; i < lotCount; i++) {
       const side = i % 2 === 0 ? -1 : 1;
       const z = 44 - seeded(i, 111) * 175;
-      // Sits flush against the building line (x >= 11, see CityScape's
-      // own x >= 11 invariant), just off the road shoulder.
       const bayX = side * (9.0 + seeded(i, 112) * 1.1);
       const bayWidth = stallWidth * carsPerLot + 0.3;
 
@@ -82,8 +84,6 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
       dummy.updateMatrix();
       padMatrices.push(dummy.matrix.clone());
 
-      // Painted stall-divider stripes — one more than the number of
-      // cars, marking both outer edges plus the split between them.
       for (let s = 0; s <= carsPerLot; s++) {
         const stripeZ = z - bayWidth / 2 + s * stallWidth;
         dummy.position.set(bayX, 0.02, stripeZ);
@@ -92,121 +92,39 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
         dummy.updateMatrix();
         stripeMatrices.push(dummy.matrix.clone());
       }
-
-      for (let c = 0; c < carsPerLot; c++) {
-        const carIdx = i * carsPerLot + c;
-        const carZ = z - bayWidth / 2 + stallWidth * (c + 0.5);
-        // Nose-in against the curb: rotated 90° off the road heading
-        // so the car faces the building rather than down the highway.
-        const facing = side < 0 ? Math.PI / 2 : -Math.PI / 2;
-        const carX = bayX - side * 0.55;
-        const length = 1.6 + seeded(carIdx, 113) * 0.3;
-        const width = 0.8 + seeded(carIdx, 114) * 0.1;
-
-        dummy.position.set(carX, CAR_SHELL_HEIGHT / 2, carZ);
-        dummy.rotation.set(0, facing, 0);
-        dummy.scale.set(width, CAR_SHELL_HEIGHT, length);
-        dummy.updateMatrix();
-        shellMatrices.push(dummy.matrix.clone());
-        bodyColors.push(
-          new THREE.Color(CAR_COLORS[Math.floor(seeded(carIdx, 115) * CAR_COLORS.length)])
-        );
-
-        // A real cabin box sitting on top of the tapered body — at
-        // actual render distance a smoothly curved shell with no
-        // silhouette break reads as a featureless blob, not a car; a
-        // distinct raised box is what the eye actually recognizes as
-        // a greenhouse even from far away.
-        dummy.position.set(carX, CAR_SHELL_HEIGHT + CABIN_HEIGHT / 2, carZ);
-        dummy.rotation.set(0, facing, 0);
-        dummy.translateZ(((CABIN_Z_START + CABIN_Z_END) / 2) * length);
-        dummy.scale.set(
-          width * 0.72,
-          CABIN_HEIGHT,
-          (CABIN_Z_END - CABIN_Z_START) * length * 0.86
-        );
-        dummy.updateMatrix();
-        canopyMatrices.push(dummy.matrix.clone());
-
-        // Side mirrors — same "unmistakably a real car" cue StreetCars
-        // uses, just built once here since these never move.
-        dummy.position.set(carX, 0.4, carZ);
-        dummy.rotation.set(0, facing, 0);
-        dummy.translateX(width / 2 + 0.03);
-        dummy.translateZ(length * 0.06);
-        dummy.scale.set(0.12, 0.05, 0.07);
-        dummy.updateMatrix();
-        mirrorMatrices.push(dummy.matrix.clone());
-
-        dummy.position.set(carX, 0.4, carZ);
-        dummy.rotation.set(0, facing, 0);
-        dummy.translateX(-(width / 2 + 0.03));
-        dummy.translateZ(length * 0.06);
-        dummy.scale.set(0.12, 0.05, 0.07);
-        dummy.updateMatrix();
-        mirrorMatrices.push(dummy.matrix.clone());
-
-        // A dim parking-marker glow on the tail — the side facing the
-        // road, since these are parked nose-in against the building.
-        // Without this, a car this dark (see the lighter-skewed
-        // CAR_COLORS above, still mostly cool greys) sitting in a
-        // shadowed curb bay had nothing to catch the eye against the
-        // black asphalt and read as a flat dark smudge rather than a
-        // parked vehicle; every other lit surface in this scene (window
-        // glow, roof glow, storefronts, moving traffic's own tail
-        // lights) gets some form of self-glow, so a completely dark,
-        // unlit car was the odd one out.
-        dummy.position.set(carX, 0.22, carZ);
-        dummy.rotation.set(0, facing, 0);
-        dummy.translateZ(-(length / 2 - 0.06));
-        dummy.scale.set(width * 0.62, 0.035, 0.025);
-        dummy.updateMatrix();
-        markerMatrices.push(dummy.matrix.clone());
-
-        const axleOff = length / 2 - 0.32;
-        const trackOff = width / 2 + 0.02;
-        [-1, 1].forEach((wx) => {
-          [-1, 1].forEach((wz) => {
-            dummy.position.set(carX + wz * axleOff, 0.2, carZ + wx * trackOff);
-            dummy.rotation.set(0, 0, Math.PI / 2);
-            dummy.scale.set(0.16, 0.14, 0.16);
-            dummy.updateMatrix();
-            wheelMatrices.push(dummy.matrix.clone());
-
-            // Hubcap/rim, same treatment as StreetCars' moving traffic.
-            dummy.position.set(
-              carX + wz * axleOff,
-              0.2,
-              carZ + wx * (trackOff + 0.065)
-            );
-            dummy.scale.set(0.14, 0.02, 0.14);
-            dummy.updateMatrix();
-            rimMatrices.push(dummy.matrix.clone());
-          });
-        });
-
-        // Ground contact shadow beneath each parked car.
-        dummy.position.set(carX, 0.014, carZ);
-        dummy.rotation.set(-Math.PI / 2, 0, 0);
-        dummy.scale.set(length * 1.15, width * 1.3, 1);
-        dummy.updateMatrix();
-        shadowMatrices.push(dummy.matrix.clone());
-      }
     }
 
-    return {
-      padMatrices,
-      stripeMatrices,
-      shellMatrices,
-      canopyMatrices,
-      bodyColors,
-      wheelMatrices,
-      rimMatrices,
-      mirrorMatrices,
-      markerMatrices,
-      shadowMatrices,
-    };
-  }, [lotCount, carCount]);
+    return { padMatrices, stripeMatrices };
+  }, [lotCount]);
+
+  const bodyColors = useMemo(
+    () => Array.from({ length: carCount }, () => new THREE.Color()),
+    [carCount]
+  );
+
+  // One slow-moving car per former "parking stall" — same curb-hugging
+  // x band as the old static bays, now actually driving along it
+  // (forward-facing, in the direction its own side of the road
+  // travels) rather than nosed in perpendicular against the curb.
+  const cars = useRef<CurbCar[]>([]);
+  if (cars.current.length === 0) {
+    cars.current = Array.from({ length: carCount }, (_, i) => {
+      const side = i % 2 === 0 ? -1 : 1;
+      return {
+        laneX: side * (9.0 + seeded(i, 112) * 1.1),
+        dir: side as 1 | -1,
+        // Deliberately slower than the main highway traffic (StreetCars,
+        // 6-11) — a curb lane reads as local/service traffic easing
+        // along, not racing down the highway.
+        speed: 1.6 + seeded(i, 116) * 1.8,
+        z: 44 - seeded(i, 111) * 175,
+        length: 1.6 + seeded(i, 113) * 0.3,
+        width: 0.8 + seeded(i, 114) * 0.1,
+        colorIndex: Math.floor(seeded(i, 115) * CAR_COLORS.length),
+        wheelSpin: seeded(i, 117) * Math.PI * 2,
+      };
+    });
+  }
 
   const applyInstances = (
     mesh: THREE.InstancedMesh | null,
@@ -220,18 +138,112 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   };
 
-  useLayoutEffect(() => applyInstances(padRef.current, data.padMatrices), [data]);
-  useLayoutEffect(() => applyInstances(stripeRef.current, data.stripeMatrices), [data]);
+  useLayoutEffect(() => applyInstances(padRef.current, groundData.padMatrices), [groundData]);
   useLayoutEffect(
-    () => applyInstances(shellRef.current, data.shellMatrices, data.bodyColors),
-    [data]
+    () => applyInstances(stripeRef.current, groundData.stripeMatrices),
+    [groundData]
   );
-  useLayoutEffect(() => applyInstances(canopyRef.current, data.canopyMatrices), [data]);
-  useLayoutEffect(() => applyInstances(wheelRef.current, data.wheelMatrices), [data]);
-  useLayoutEffect(() => applyInstances(rimRef.current, data.rimMatrices), [data]);
-  useLayoutEffect(() => applyInstances(mirrorRef.current, data.mirrorMatrices), [data]);
-  useLayoutEffect(() => applyInstances(markerRef.current, data.markerMatrices), [data]);
-  useLayoutEffect(() => applyInstances(shadowRef.current, data.shadowMatrices), [data]);
+
+  const layout = () => {
+    const dummy = new THREE.Object3D();
+    const shellMatrices: THREE.Matrix4[] = [];
+    const canopyMatrices: THREE.Matrix4[] = [];
+    const wheelMatrices: THREE.Matrix4[] = [];
+    const rimMatrices: THREE.Matrix4[] = [];
+    const mirrorMatrices: THREE.Matrix4[] = [];
+    const markerMatrices: THREE.Matrix4[] = [];
+    const shadowMatrices: THREE.Matrix4[] = [];
+
+    cars.current.forEach((car, i) => {
+      const facing = car.dir < 0 ? 0 : Math.PI;
+      const backZ = car.z + (car.dir < 0 ? car.length / 2 : -car.length / 2);
+
+      dummy.position.set(car.laneX, CAR_SHELL_HEIGHT / 2, car.z);
+      dummy.rotation.set(0, facing, 0);
+      dummy.scale.set(car.width, CAR_SHELL_HEIGHT, car.length);
+      dummy.updateMatrix();
+      shellMatrices.push(dummy.matrix.clone());
+      bodyColors[i]?.set(CAR_COLORS[car.colorIndex]);
+
+      dummy.position.set(car.laneX, CAR_SHELL_HEIGHT + CABIN_HEIGHT / 2, car.z);
+      dummy.rotation.set(0, facing, 0);
+      dummy.translateZ(((CABIN_Z_START + CABIN_Z_END) / 2) * car.length);
+      dummy.scale.set(
+        car.width * 0.72,
+        CABIN_HEIGHT,
+        (CABIN_Z_END - CABIN_Z_START) * car.length * 0.86
+      );
+      dummy.updateMatrix();
+      canopyMatrices.push(dummy.matrix.clone());
+
+      [-1, 1].forEach((wx) => {
+        dummy.position.set(car.laneX + wx * (car.width / 2 + 0.03), 0.4, car.z);
+        dummy.rotation.set(0, facing, 0);
+        dummy.scale.set(0.12, 0.05, 0.07);
+        dummy.updateMatrix();
+        mirrorMatrices.push(dummy.matrix.clone());
+      });
+
+      const axleOff = car.length / 2 - 0.32;
+      const trackOff = car.width / 2 + 0.02;
+      [-1, 1].forEach((wx) => {
+        [-1, 1].forEach((wz) => {
+          dummy.position.set(car.laneX + wx * trackOff, 0.2, car.z + wz * axleOff);
+          dummy.rotation.set(car.wheelSpin, 0, Math.PI / 2);
+          dummy.scale.set(0.16, 0.14, 0.16);
+          dummy.updateMatrix();
+          wheelMatrices.push(dummy.matrix.clone());
+
+          dummy.position.set(
+            car.laneX + wx * (trackOff + 0.065),
+            0.2,
+            car.z + wz * axleOff
+          );
+          dummy.rotation.set(0, 0, Math.PI / 2);
+          dummy.scale.set(0.14, 0.02, 0.14);
+          dummy.updateMatrix();
+          rimMatrices.push(dummy.matrix.clone());
+        });
+      });
+
+      // Tail-light glow rather than the old dim "parked courtesy light"
+      // — this car is actually driving now, so it gets the same kind
+      // of active light StreetCars' own traffic shows.
+      dummy.position.set(car.laneX, 0.22, backZ);
+      dummy.rotation.set(0, facing, 0);
+      dummy.scale.set(car.width * 0.62, 0.035, 0.025);
+      dummy.updateMatrix();
+      markerMatrices.push(dummy.matrix.clone());
+
+      dummy.position.set(car.laneX, 0.014, car.z);
+      dummy.rotation.set(-Math.PI / 2, 0, 0);
+      dummy.scale.set(car.width * 1.3, car.length * 1.15, 1);
+      dummy.updateMatrix();
+      shadowMatrices.push(dummy.matrix.clone());
+    });
+
+    applyInstances(shellRef.current, shellMatrices, bodyColors);
+    applyInstances(canopyRef.current, canopyMatrices);
+    applyInstances(wheelRef.current, wheelMatrices);
+    applyInstances(rimRef.current, rimMatrices);
+    applyInstances(mirrorRef.current, mirrorMatrices);
+    applyInstances(markerRef.current, markerMatrices);
+    applyInstances(shadowRef.current, shadowMatrices);
+  };
+
+  useLayoutEffect(layout, []);
+
+  useFrame((state, delta) => {
+    const camZ = state.camera.position.z;
+    cars.current.forEach((car, i) => {
+      car.z += car.dir * car.speed * delta;
+      car.wheelSpin += (car.dir * car.speed * delta) / 0.16;
+      if (car.z > camZ + 6) {
+        car.z = camZ - 60 - seeded(i + Math.floor(state.clock.elapsedTime), 118) * 90;
+      }
+    });
+    layout();
+  });
 
   return (
     <group>
@@ -259,15 +271,11 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
         <meshPhongMaterial map={glassTexture} specular="#3a4550" shininess={80} fog />
       </instancedMesh>
 
-      {/* Phong rather than flat unlit basic — matches StreetCars' own
-          fix: an unlit black cylinder is one flat silhouette regardless
-          of angle, reading as a hole rather than a tire. */}
       <instancedMesh ref={wheelRef} args={[undefined, undefined, carCount * 4]}>
         <cylinderGeometry args={[1, 1, 1, 12]} />
         <meshPhongMaterial color="#1c1e22" specular="#3a3d42" shininess={16} fog={false} />
       </instancedMesh>
 
-      {/* Aero wheel cover — matches StreetCars' moving traffic. */}
       <instancedMesh ref={rimRef} args={[undefined, undefined, carCount * 4]}>
         <cylinderGeometry args={[1, 1, 1, 16]} />
         <meshPhongMaterial color="#8a8f96" specular="#cfd4da" shininess={70} fog={false} />
@@ -278,16 +286,12 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
         <meshPhongMaterial color="#0e1114" specular="#2a3038" shininess={50} fog={false} />
       </instancedMesh>
 
-      {/* Dim parking-marker glow on each car's tail — see the comment
-          at markerMatrices above. Deliberately faint (low opacity,
-          small) so it reads as a parked courtesy light rather than an
-          active brake light. */}
       <instancedMesh ref={markerRef} args={[undefined, undefined, carCount]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshBasicMaterial
-          color="#ffb570"
+          color="#ff2a2a"
           transparent
-          opacity={0.5}
+          opacity={0.7}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           fog={false}
