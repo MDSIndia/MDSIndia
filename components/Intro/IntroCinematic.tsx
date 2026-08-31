@@ -1,6 +1,6 @@
 "use client";
 
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { KernelSize } from "postprocessing";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
@@ -12,6 +12,7 @@ import { HighwayRoad } from "./scene/HighwayRoad";
 import { RoadDetails } from "./scene/RoadDetails";
 import { CrossStreets } from "./scene/CrossStreets";
 import { CityScape } from "./scene/CityScape";
+import { SkylineFiller } from "./scene/SkylineFiller";
 import { DistantSkyline } from "./scene/DistantSkyline";
 import { ParticleField } from "./scene/ParticleField";
 import { Billboards } from "./scene/Billboards";
@@ -35,6 +36,7 @@ import { Pedestrians } from "./scene/Pedestrians";
 import { BusStop } from "./scene/BusStop";
 import { HolographicMonument } from "./scene/HolographicMonument";
 import { FuturisticPark } from "./scene/FuturisticPark";
+import { TreeOfLife } from "./scene/TreeOfLife";
 import { Star } from "./scene/Star";
 import { CosmicBlast } from "./scene/CosmicBlast";
 import { INTRO_DURATION } from "./scene/timeline";
@@ -65,6 +67,42 @@ function ClockGate({ active }: { active: boolean }) {
     wasActive.current = active;
   }, [active, clock]);
   return null;
+}
+
+/** The scene's only real lights (see the comment at the call site) —
+ * pulled into their own component so they can carry a gentle "breathing"
+ * animation rather than sitting at one perfectly fixed intensity for the
+ * whole flight. A single static value is exactly right for a still
+ * render, but across a ~10s continuous shot it reads as an obviously
+ * synthetic, unchanging light rig once you're looking at it that long;
+ * real ambient city light (haze, distant signage, atmosphere) drifts
+ * gently instead. Kept to a slow, low-amplitude sine rather than
+ * anything fast/irregular enough to read as flicker — each light has
+ * its own frequency/phase so they drift independently instead of
+ * breathing in lockstep. */
+function SceneLighting({ isMobile }: { isMobile: boolean }) {
+  const hemiRef = useRef<THREE.HemisphereLight>(null);
+  const keyRef = useRef<THREE.DirectionalLight>(null);
+  const fillRef = useRef<THREE.DirectionalLight>(null);
+
+  const baseHemi = isMobile ? 2.6 : 1.8;
+  const baseKey = isMobile ? 3.5 : 2.4;
+  const baseFill = isMobile ? 0.8 : 0.5;
+
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime();
+    if (hemiRef.current) hemiRef.current.intensity = baseHemi * (1 + Math.sin(t * 0.11 + 4.4) * 0.03);
+    if (keyRef.current) keyRef.current.intensity = baseKey * (1 + Math.sin(t * 0.17) * 0.035);
+    if (fillRef.current) fillRef.current.intensity = baseFill * (1 + Math.sin(t * 0.13 + 2.1) * 0.06);
+  });
+
+  return (
+    <>
+      <hemisphereLight ref={hemiRef} args={["#33455f", "#141824", baseHemi]} />
+      <directionalLight ref={keyRef} position={[40, 70, 24]} intensity={baseKey} color="#8fa8c8" />
+      <directionalLight ref={fillRef} position={[-30, 40, -20]} intensity={baseFill} color="#6a72a0" />
+    </>
+  );
 }
 
 /** Fullscreen real-time cinematic: a procedural cyberpunk highway
@@ -229,30 +267,22 @@ export function IntroCinematic({
                   at typical outdoor/handheld brightness read a scene
                   tuned for a desktop monitor as noticeably dimmer, so
                   mobile gets its own boosted intensity rather than
-                  sharing the desktop tuning as-is. */}
-              <hemisphereLight args={["#33455f", "#141824", isMobile ? 2.6 : 1.8]} />
-              <directionalLight
-                position={[40, 70, 24]}
-                intensity={isMobile ? 3.5 : 2.4}
-                color="#8fa8c8"
-              />
-              {/* A cool, restrained rim/fill from the opposite side —
-                  desaturated toward graphite-blue rather than a
-                  saturated violet, per explicit "restrained violet
-                  accents, avoid excessive neon" direction. Low
-                  intensity, pure fill — doesn't compete with the
-                  directional key for which side reads as "lit". */}
-              <directionalLight
-                position={[-30, 40, -20]}
-                intensity={isMobile ? 0.8 : 0.5}
-                color="#6a72a0"
-              />
+                  sharing the desktop tuning as-is. The cool, restrained
+                  rim/fill light is desaturated toward graphite-blue
+                  rather than a saturated violet, per explicit
+                  "restrained violet accents, avoid excessive neon"
+                  direction — low intensity, pure fill, doesn't compete
+                  with the directional key for which side reads as "lit".
+                  See SceneLighting above for the gentle per-light
+                  breathing animation. */}
+              <SceneLighting isMobile={isMobile} />
               <CameraRig isMobile={isMobile} />
               <Ground />
               <HighwayRoad />
               <RoadDetails isMobile={isMobile} />
               <CrossStreets isMobile={isMobile} />
               <CityScape isMobile={isMobile} />
+              <SkylineFiller isMobile={isMobile} />
               <DistantSkyline isMobile={isMobile} />
               <SkyBridges isMobile={isMobile} />
               <LightShafts isMobile={isMobile} />
@@ -283,6 +313,7 @@ export function IntroCinematic({
                 <SkyPlaza />
                 <HolographicMonument />
                 <FuturisticPark />
+                <TreeOfLife />
               </Suspense>
             </Suspense>
 

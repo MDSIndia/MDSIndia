@@ -25,6 +25,7 @@ const LANDMARK_CLEARANCES: LandmarkClearance[] = [
   { z: -105, side: -1, clearance: 10 }, // SkyPlaza.tsx, x=-19
   { z: -38, side: 1, clearance: 9 }, // HolographicMonument.tsx, x=16
   { z: -48, side: -1, clearance: 12 }, // FuturisticPark.tsx, x=-16, radius 12 — sits in the existing gap between NoorvaTower's (-27±8) and Waterfall's (-72±10) zones on this side, chosen specifically so it doesn't overlap either.
+  { z: 20, side: -1, clearance: 18 }, // TreeOfLife.tsx, x=-13, canopy radius 5.2 — moved closer to the road and enlarged; still well clear of NoorvaTower's own zone (-27±8) further down.
 ];
 
 /** Pushes a building's own z position out of any same-side landmark's

@@ -3,6 +3,7 @@
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { getLeafCardTexture } from "./leafTexture";
 
 const RADIUS = 10;
 // Right side of the road, further down the route than every other
@@ -29,6 +30,7 @@ function seeded(i: number, salt: number) {
 export function Biodome() {
   const wireRef = useRef<THREE.Mesh>(null);
   const glowMatRef = useRef<THREE.MeshBasicMaterial>(null);
+  const leafTexture = useMemo(() => getLeafCardTexture(), []);
 
   const trees = useMemo(
     () =>
@@ -104,10 +106,21 @@ export function Biodome() {
             <cylinderGeometry args={[0.08, 0.1, tr.height * 0.8, 6]} />
             <meshLambertMaterial color="#3a2a1e" fog />
           </mesh>
-          <mesh position={[0, tr.height * 0.8 + tr.radius * 0.7, 0]}>
-            <icosahedronGeometry args={[tr.radius, 1]} />
-            <meshLambertMaterial color={tr.color} fog />
-          </mesh>
+          {/* Two crossed leaf cards rather than a solid icosahedron —
+              see leafTexture.ts: a painted, alpha-cutout silhouette
+              reads as foliage where a polygon shape reads as geometric
+              no matter how round. */}
+          {[0, 1].map((c) => (
+            <mesh
+              key={c}
+              position={[0, tr.height * 0.8 + tr.radius * 0.7, 0]}
+              rotation={[seeded(i * 2 + c, 515) * Math.PI, (c / 2) * Math.PI, 0]}
+              scale={[tr.radius * 1.8, tr.radius * 1.8, 1]}
+            >
+              <planeGeometry args={[1, 1]} />
+              <meshLambertMaterial map={leafTexture} color={tr.color} alphaTest={0.45} side={THREE.DoubleSide} fog />
+            </mesh>
+          ))}
         </group>
       ))}
 

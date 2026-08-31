@@ -40,8 +40,10 @@ function buildPlacements(count: number, isMobile: boolean): BannerPlacement[] {
     // Nudged clear of cross streets and fixed landmark set-pieces
     // exactly like CityScape does to the same raw value — has to match
     // precisely, since this whole function exists purely to recompute
-    // where CityScape's own buildings actually ended up.
-    const z = keepClearOfLandmarks(keepClearOfCrossStreets(55 - seeded(i, 2) * 165), side);
+    // where CityScape's own buildings actually ended up. Range matches
+    // CityScape's own 165 -> 180 -> 220 widening (empty-ending, then
+    // behind-the-glow fixes).
+    const z = keepClearOfLandmarks(keepClearOfCrossStreets(55 - seeded(i, 2) * 220), side);
     const startBias = clamp01((z - 15) / 40);
     // Matches CityScape's own (now tightened) spread exactly — this
     // previously used a slightly different formula than CityScape's
@@ -188,8 +190,10 @@ export function BuildingBanners({ isMobile }: { isMobile: boolean }) {
   // and iterating past its actual count means placing banners on
   // buildings CityScape never generates at all (a stale value here,
   // left over from before CityScape's density was cut, was producing
-  // banners floating with no host building anywhere near them).
-  const count = isMobile ? 38 : 68;
+  // banners floating with no host building anywhere near them). Raised
+  // alongside CityScape's own 38/68 -> 55/95 -> 66/115 density passes
+  // (empty-spaces, then behind-the-glow fixes).
+  const count = isMobile ? 66 : 115;
   const placements = useMemo(
     () => buildPlacements(count, isMobile),
     [count, isMobile]

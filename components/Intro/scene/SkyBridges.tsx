@@ -3,6 +3,7 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { getLeafCardTexture } from "./leafTexture";
 
 function seeded(i: number, salt: number) {
   const v = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453;
@@ -23,6 +24,13 @@ const CANOPY_GREENS = ["#3a7d44", "#4f9e5f", "#2f6b3a", "#5aa668"];
 export function SkyBridges({ isMobile }: { isMobile: boolean }) {
   const count = isMobile ? 5 : 9;
   const treeCount = count * TREES_PER_BRIDGE;
+  // Two crossed cards per tree (a cheap billboard-cross) rather than
+  // one flat plane — a single card disappears edge-on from some
+  // viewing angles; two perpendicular cards keep some silhouette
+  // visible from any direction these small deck-top trees are seen
+  // from during the flythrough.
+  const canopyCardCount = treeCount * 2;
+  const leafTexture = useMemo(() => getLeafCardTexture(), []);
 
   const bodyRef = useRef<THREE.InstancedMesh>(null);
   const walkwayRef = useRef<THREE.InstancedMesh>(null);
@@ -32,8 +40,8 @@ export function SkyBridges({ isMobile }: { isMobile: boolean }) {
   const trunkRef = useRef<THREE.InstancedMesh>(null);
   const canopyRef = useRef<THREE.InstancedMesh>(null);
   const canopyColors = useMemo(
-    () => Array.from({ length: treeCount }, () => new THREE.Color()),
-    [treeCount]
+    () => Array.from({ length: canopyCardCount }, () => new THREE.Color()),
+    [canopyCardCount]
   );
 
   const data = useMemo(() => {
@@ -133,12 +141,20 @@ export function SkyBridges({ isMobile }: { isMobile: boolean }) {
         dummy.updateMatrix();
         trunkMatrices.push(dummy.matrix.clone());
 
-        dummy.position.set(worldX, baseY + trunkHeight + canopyRadius * 0.75, worldZ);
-        dummy.rotation.set(0, 0, 0);
-        dummy.scale.set(canopyRadius, canopyRadius * 1.1, canopyRadius);
-        dummy.updateMatrix();
-        canopyMatrices.push(dummy.matrix.clone());
-        canopyColors[treeIdx]?.set(CANOPY_GREENS[treeIdx % CANOPY_GREENS.length]);
+        const canopyY = baseY + trunkHeight + canopyRadius * 0.75;
+        const treeColor = CANOPY_GREENS[treeIdx % CANOPY_GREENS.length];
+        for (let c = 0; c < 2; c++) {
+          dummy.position.set(worldX, canopyY, worldZ);
+          dummy.rotation.set(
+            seeded(treeIdx * 2 + c, 40) * Math.PI,
+            (c / 2) * Math.PI + seeded(treeIdx, 39) * Math.PI,
+            0
+          );
+          dummy.scale.set(canopyRadius * 1.8, canopyRadius * 1.8, 1);
+          dummy.updateMatrix();
+          canopyMatrices.push(dummy.matrix.clone());
+          canopyColors[treeIdx * 2 + c]?.set(treeColor);
+        }
       }
     }
 
@@ -259,12 +275,13 @@ export function SkyBridges({ isMobile }: { isMobile: boolean }) {
         <cylinderGeometry args={[0.7, 1, 1, 6]} />
         <meshLambertMaterial color="#3a2a1e" fog />
       </instancedMesh>
-      {/* Faceted rather than a smooth sphere — breaks the perfectly
-          round "lollipop" outline into something closer to a real
-          irregular canopy mass. */}
-      <instancedMesh ref={canopyRef} args={[undefined, undefined, treeCount]}>
-        <icosahedronGeometry args={[1, 1]} />
-        <meshLambertMaterial fog />
+      {/* Textured alpha-cutout leaf cards rather than a solid
+          icosahedron — see leafTexture.ts: a shape built from polygons
+          reads as geometric no matter how round, while a painted,
+          irregular leaf-cluster silhouette does not. */}
+      <instancedMesh ref={canopyRef} args={[undefined, undefined, canopyCardCount]}>
+        <planeGeometry args={[1, 1]} />
+        <meshLambertMaterial map={leafTexture} alphaTest={0.45} side={THREE.DoubleSide} fog />
       </instancedMesh>
     </group>
   );

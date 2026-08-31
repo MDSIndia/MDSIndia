@@ -12,6 +12,7 @@ import {
 import { STAR_POSITION } from "./path";
 import { keepClearOfCrossStreets } from "./crossStreetPositions";
 import { keepClearOfLandmarks } from "./landmarkClearance";
+import { getLeafCardTexture } from "./leafTexture";
 
 function seeded(i: number, salt: number) {
   const v = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453;
@@ -109,6 +110,9 @@ const DOOR_WOOD_COLORS = ["#6b3f24", "#4a2f1f", "#7a5230", "#5c2e28"];
 const DOOR_IRON_COLORS = ["#2e3138", "#454b54", "#3a3d44", "#4a5148"];
 const ZERO_SCALE = new THREE.Matrix4().makeScale(0, 0, 0);
 const ZERO_COLOR = new THREE.Color(0, 0, 0);
+// Reused every frame for the antenna beacon blink below rather than
+// allocating a new THREE.Color per building per frame.
+const antennaTmpColor = new THREE.Color();
 // Every box tower gets exactly this many mullion-rib slots (unused
 // ones per building sit at ZERO_SCALE) — real vertical structural ribs
 // protruding slightly off the facade, lit by the same directional
@@ -125,15 +129,23 @@ const MAX_MULLIONS = 9;
  * stays instanced (a fixed number of draw calls regardless of `count`,
  * one per element type) so the extra density is cheap. */
 export function CityScape({ isMobile }: { isMobile: boolean }) {
-  // Cut again at explicit request, on top of the earlier 200/110 ->
-  // 95/55 pass — a skyline this dense read as wall-to-wall repeated
-  // silhouettes no matter how much per-archetype variety was layered
-  // on top; fewer buildings gives each one more visual room to
-  // actually register as its own distinct shape (and leaves more open
-  // sky for the new set-piece landmarks — Biodome, SkyPlaza,
-  // HolographicMonument — to actually read against, rather than
-  // getting lost in a packed procedural crowd).
-  const count = isMobile ? 38 : 68;
+  // Raised back from 38/68 toward the earlier 55/95 level at explicit
+  // "empty spaces" complaint — cutting density that far (on top of each
+  // building's own random seeded spread, cross-street gaps, and the
+  // large forced-empty bands landmarkClearance.ts carves out around
+  // each landmark) left visibly bare stretches of skyline between
+  // buildings rather than the intended "more room to register each
+  // shape." The per-archetype variety (round/faceted/pyramid/twisted/
+  // box) already does the work of keeping a denser skyline from reading
+  // as repeated silhouettes, so filling back in doesn't reintroduce the
+  // "wall-to-wall same shape" problem the earlier cut was solving.
+  // Raised again (55/95 -> 66/115) alongside the z-range widening below
+  // — at explicit "buildings behind the glow, on the road side" feedback
+  // (the star's own halo grows huge near the very end and there was
+  // nothing placed far enough down the road to still be visible through
+  // it), so density needed to hold steady across the longer range
+  // rather than getting spread thinner over it.
+  const count = isMobile ? 66 : 115;
   // Six box-tower slots — [shortA, shortB, medA, medB, tallA, tallB],
   // index = heightBucket*2 + variant (see the `data` useMemo below and
   // BOX_TOWER_BUCKETS further down) — a plain array-of-refs rather than
@@ -154,6 +166,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
   const gardensRef = useRef<THREE.InstancedMesh>(null);
   const roofTreeTrunkRef = useRef<THREE.InstancedMesh>(null);
   const roofTreeCanopyRef = useRef<THREE.InstancedMesh>(null);
+  const leafTexture = useMemo(() => getLeafCardTexture(), []);
   const signatureBandRef = useRef<THREE.InstancedMesh>(null);
   const antennaRef = useRef<THREE.InstancedMesh>(null);
   const antennaLightRef = useRef<THREE.InstancedMesh>(null);
@@ -498,6 +511,13 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
     const antennaMatrices: THREE.Matrix4[] = [];
     const antennaLightMatrices: THREE.Matrix4[] = [];
     const antennaLightColors: THREE.Color[] = [];
+    // Per-building phase offset for the antenna beacon's blink — see
+    // the useFrame block below: without this every beacon blinked on
+    // the exact same shared material opacity, so the whole skyline's
+    // aviation lights flashed in perfect unison like a synchronized
+    // light show, which reads as mechanical rather than a real city
+    // where each building's beacon runs on its own clock.
+    const antennaPhases: number[] = [];
     const parapetMatrices: THREE.Matrix4[] = [];
     const parapetColors: THREE.Color[] = [];
     const signatureBandMatrices: THREE.Matrix4[] = [];
@@ -551,7 +571,17 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       // — see landmarkClearance.ts) — those are placed independently of
       // this procedural pass and otherwise had no way to keep a
       // randomly-rolled building from landing right on top of one.
-      const z = keepClearOfLandmarks(keepClearOfCrossStreets(55 - seeded(i, 2) * 165), side);
+      // Range widened twice now: 165 -> 180 (min z -110 -> -125) so the
+      // formula could reach the star at z=-122 at all, then 180 -> 220
+      // (min z -> -165) at the follow-up "buildings at the back side of
+      // the glow too, on the road side" feedback — the star's halo
+      // grows to fill much of the frame right at the very end (see
+      // Star.tsx's growth curve), and with nothing placed past it the
+      // view through/around that glow was pure empty light. Buildings
+      // now continue in the same near-road lane well behind the star's
+      // position, so the corridor still reads as city rather than
+      // trailing off into a void right where the glow is brightest.
+      const z = keepClearOfLandmarks(keepClearOfCrossStreets(55 - seeded(i, 2) * 220), side);
       // Buildings this close to the camera's own starting point sit at
       // a very short forward distance from frame 0 — at that range even
       // the flanking offset falls outside the horizontal FOV entirely
@@ -1368,6 +1398,8 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       // Box archetype only, short-to-mid height only, and mutually
       // exclusive with the crown tier so a roof is never asked to be
       // both a stepped setback and a flat garden deck at once.
+      // Raised from 0.55 to 0.4 (~45% -> ~60% of eligible buildings) at
+      // explicit "make the whole city look natural" request.
       const hasGreenRoof =
         !isRound &&
         !isFaceted &&
@@ -1376,7 +1408,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         !hasCrown &&
         height >= 6 &&
         height <= 16 &&
-        seeded(i, 60) > 0.55;
+        seeded(i, 60) > 0.4;
       const roofTreeMatrices: THREE.Matrix4[] = [];
       const roofTreeCanopyMats: THREE.Matrix4[] = [];
       if (hasGreenRoof) {
@@ -1408,7 +1440,12 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           roofTreeMatrices.push(dummy.matrix.clone());
 
           dummy.position.set(wx, height + trunkH + canopyR * 0.75, wz);
-          dummy.scale.set(canopyR, canopyR * 1.1, canopyR);
+          dummy.rotation.set(
+            seeded(i * 5 + rt, 126) * Math.PI,
+            seeded(i * 5 + rt, 127) * Math.PI,
+            0
+          );
+          dummy.scale.set(canopyR * 1.9, canopyR * 1.9, 1);
           dummy.updateMatrix();
           roofTreeCanopyMats.push(dummy.matrix.clone());
         }
@@ -1447,10 +1484,12 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         dummy.updateMatrix();
         antennaLightMatrices.push(dummy.matrix.clone());
         antennaLightColors.push(new THREE.Color("#ff3b30"));
+        antennaPhases.push(seeded(i, 59) * Math.PI * 2);
       } else {
         antennaMatrices.push(ZERO_SCALE.clone());
         antennaLightMatrices.push(ZERO_SCALE.clone());
         antennaLightColors.push(ZERO_COLOR.clone());
+        antennaPhases.push(0);
       }
     }
 
@@ -1504,6 +1543,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       antennaMatrices,
       antennaLightMatrices,
       antennaLightColors,
+      antennaPhases,
       parapetMatrices,
       parapetColors,
       signatureBandMatrices,
@@ -1726,13 +1766,27 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
     if (roofMat) roofMat.opacity = Math.min(1, 0.4 + mobileBoost);
 
     // Slow aviation-style blink (~once every couple seconds), not a
-    // rapid strobe.
-    const antennaMat = antennaLightRef.current?.material as
-      | THREE.MeshBasicMaterial
-      | undefined;
-    if (antennaMat) {
-      const blink = Math.sin(t * 1.4) > 0.85 ? 1 : 0.08;
-      antennaMat.opacity = Math.min(1, blink + mobileBoost * 0.3);
+    // rapid strobe — each building's own phase (baked in at placement
+    // time, see antennaPhases above) offsets its cycle, so the beacons
+    // across the skyline blink independently rather than all flashing
+    // on the same shared material opacity in perfect lockstep. Driven
+    // through instanceColor (already used to tell a lit beacon apart
+    // from a zeroed-out one on buildings with no antenna) rather than
+    // the material's own opacity, since that's the only per-instance
+    // channel available on an InstancedMesh.
+    const antennaMesh = antennaLightRef.current;
+    if (antennaMesh && antennaMesh.instanceColor) {
+      const baseBrightness = Math.min(1, 0.8 + mobileBoost * 0.3);
+      data.antennaLightColors.forEach((baseColor, i) => {
+        if (baseColor.r === 0 && baseColor.g === 0 && baseColor.b === 0) return;
+        const blink =
+          Math.sin(t * 1.4 + data.antennaPhases[i]) > 0.85 ? 1 : 0.08;
+        antennaTmpColor
+          .copy(baseColor)
+          .multiplyScalar(blink * baseBrightness);
+        antennaMesh.setColorAt(i, antennaTmpColor);
+      });
+      antennaMesh.instanceColor.needsUpdate = true;
     }
 
     {
@@ -2149,13 +2203,13 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         <cylinderGeometry args={[0.7, 1, 1, 6]} />
         <meshLambertMaterial color="#3a2a1e" fog />
       </instancedMesh>
-      {/* Faceted low-poly geometry rather than a smooth sphere — a
-          perfectly round canopy reads as a lollipop from any distance
-          close enough to see it at all; the facets alone break that up
-          into something closer to a real irregular foliage mass. */}
+      {/* Textured alpha-cutout leaf card rather than a solid
+          icosahedron — see leafTexture.ts: a painted, irregular
+          silhouette reads as foliage where a polygon shape reads as
+          geometric no matter how round. */}
       <instancedMesh ref={roofTreeCanopyRef} args={[undefined, undefined, count * 4]}>
-        <icosahedronGeometry args={[1, 1]} />
-        <meshLambertMaterial fog />
+        <planeGeometry args={[1, 1]} />
+        <meshLambertMaterial map={leafTexture} alphaTest={0.45} side={THREE.DoubleSide} fog />
       </instancedMesh>
 
       <instancedMesh ref={antennaRef} args={[undefined, undefined, count]}>

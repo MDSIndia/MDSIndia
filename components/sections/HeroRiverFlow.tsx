@@ -1,5 +1,7 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
+
 /** Traces the glowing river visible in the hero's static background
  * images and overlays animated light traveling along it — the images
  * themselves are static, this is what makes the water read as moving.
@@ -10,9 +12,13 @@
  * instead tracks the midpoint of the lit band around the previous
  * row's position, which follows the middle of the braid the way a
  * viewer's eye does). Coordinates are in each image's native pixel
- * space; the `viewBox` + `slice` preserveAspectRatio makes that space
- * line up with the image underneath even though both are stretched/
- * cropped identically by `object-cover` at any viewport size.
+ * space; the visible viewBox sub-rectangle is computed below to
+ * reproduce the exact same crop the underlying `<Image>` gets from
+ * `object-cover` + its own `objectPosition` (see HeroSection.tsx) —
+ * SVG's `preserveAspectRatio` only offers Min/Mid/Max (0%/50%/100%)
+ * anchors, which can't express that image's off-center object-position,
+ * so this replicates the cover-crop math by hand instead of relying on
+ * `preserveAspectRatio` to line the two up on its own (it can't).
  *
  * The moving elements are small blurred streaks riding `animateMotion`
  * with `rotate="auto"` so they orient along the current's direction —
@@ -24,6 +30,30 @@
  * motion, so the streaks keep facing the way they're actually moving). */
 
 type Point = [number, number];
+
+// Must match the `objectPosition` set on the desktop/mobile `<Image>`
+// in HeroSection.tsx exactly — this is the other half of that crop.
+const OBJECT_POSITION: [number, number] = [0.5, 0.78];
+
+/** Computes the same sub-rectangle of `(imgW, imgH)` that CSS
+ * `object-fit: cover` + `object-position: ${pos[0]*100}% ${pos[1]*100}%`
+ * would show inside a `(containerW, containerH)` box — i.e. scale to
+ * cover, then slide the crop window by `pos` across whatever overflows. */
+function coverViewBox(
+  imgW: number,
+  imgH: number,
+  containerW: number,
+  containerH: number,
+  pos: [number, number]
+): string {
+  if (containerW <= 0 || containerH <= 0) return `0 0 ${imgW} ${imgH}`;
+  const scale = Math.max(containerW / imgW, containerH / imgH);
+  const cropW = containerW / scale;
+  const cropH = containerH / scale;
+  const cropX = (imgW - cropW) * pos[0];
+  const cropY = (imgH - cropH) * pos[1];
+  return `${cropX.toFixed(1)} ${cropY.toFixed(1)} ${cropW.toFixed(1)} ${cropH.toFixed(1)}`;
+}
 
 function smoothPath(points: Point[]): string {
   const d: string[] = [`M ${points[0][0]} ${points[0][1]}`];
@@ -49,6 +79,8 @@ function smoothPath(points: Point[]): string {
 // the new artwork.
 const DESKTOP_VIEWBOX = "0 0 1672 941";
 const MOBILE_VIEWBOX = "0 0 853 1844";
+const DESKTOP_SIZE: [number, number] = [1672, 941];
+const MOBILE_SIZE: [number, number] = [853, 1844];
 
 // The river's distant tip fades in gradually in the source images —
 // too faintly for the flow overlay to have any real glow to blend
@@ -114,7 +146,11 @@ const MOBILE_PATH = smoothPath([
 ]);
 
 const SPARK_COUNT = 11;
-const LAP_SECONDS = 3.2;
+// Was 3.2, then 5 — slowed down again at explicit request. Higher
+// LAP_SECONDS means each spark takes longer to travel the full path,
+// i.e. a slower-looking flow (this is a duration, not a speed, so
+// bigger = slower).
+const LAP_SECONDS = 6.5;
 
 export function HeroRiverFlow({
   variant,
@@ -126,17 +162,43 @@ export function HeroRiverFlow({
   const isDesktop = variant === "desktop";
   const path = isDesktop ? DESKTOP_PATH : MOBILE_PATH;
   const [fadeStart, fadeEnd] = isDesktop ? DESKTOP_FADE : MOBILE_FADE;
+  const [imgW, imgH] = isDesktop ? DESKTOP_SIZE : MOBILE_SIZE;
   // animateMotion's rotate="auto" turns the shape so its local +x axis
   // follows the path's tangent — so the *length* of the streak has to
   // be on rx (x-radius), not ry, or it ends up perpendicular to travel.
   const streakRx = isDesktop ? 13 : 9;
   const streakRy = isDesktop ? 2.2 : 1.6;
 
+  const containerRef = useRef<SVGSVGElement>(null);
+  // Falls back to the plain, centered (Mid/Mid) viewBox until the
+  // container's actually been measured — a brief centered-crop mismatch
+  // on first paint is preferable to a hard dependency on a measurement
+  // effect running before anything renders.
+  const [computedViewBox, setComputedViewBox] = useState(
+    isDesktop ? DESKTOP_VIEWBOX : MOBILE_VIEWBOX
+  );
+
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      setComputedViewBox(
+        coverViewBox(imgW, imgH, rect.width, rect.height, OBJECT_POSITION)
+      );
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [imgW, imgH]);
+
   return (
     <svg
+      ref={containerRef}
       aria-hidden
-      viewBox={isDesktop ? DESKTOP_VIEWBOX : MOBILE_VIEWBOX}
-      preserveAspectRatio="xMidYMid slice"
+      viewBox={computedViewBox}
+      preserveAspectRatio="none"
       className={`absolute inset-0 w-full h-full pointer-events-none ${isDesktop ? "hidden md:block" : "block md:hidden"}`}
       style={{ mixBlendMode: "screen" }}
     >

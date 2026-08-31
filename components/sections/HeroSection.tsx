@@ -21,7 +21,16 @@ export function HeroSection() {
     >
       {/* Static background image — swapped by breakpoint via Tailwind's
           responsive `hidden`/`block` rather than a single `<picture>`,
-          so both variants stay simple `next/image fill` covers. */}
+          so both variants stay simple `next/image fill` covers.
+          object-position shifted down from the default centered crop —
+          the source image's own top third is mostly plain night sky
+          with no skyline/glow in it, so a centered crop on a wide
+          desktop viewport (which crops top/bottom to cover) was cutting
+          the lit street-level/river detail at the bottom just to keep
+          an equal slice of that empty sky at the top, reading as a bare
+          "gap" right where the navbar sits. Pushing the visible window
+          down keeps the glowing skyline/river filling the frame and
+          crops the empty sky instead. */}
       <Image
         src="/herodesktop.png"
         alt=""
@@ -29,6 +38,7 @@ export function HeroSection() {
         priority
         sizes="100vw"
         className="hidden md:block object-cover"
+        style={{ objectPosition: "50% 78%" }}
       />
       <Image
         src="/heromobile.png"
@@ -37,6 +47,7 @@ export function HeroSection() {
         priority
         sizes="100vw"
         className="block md:hidden object-cover"
+        style={{ objectPosition: "50% 78%" }}
       />
       <HeroRiverFlow variant="desktop" reducedMotion={!!reducedMotion} />
       <HeroRiverFlow variant="mobile" reducedMotion={!!reducedMotion} />

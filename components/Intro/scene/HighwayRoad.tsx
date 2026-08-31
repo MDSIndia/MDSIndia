@@ -44,11 +44,23 @@ function buildWetSheenTexture() {
   // reading as broad color bands rather than reflections. Base opacity
   // capped much lower too — this should read as dark wet asphalt with
   // restrained hints of color, not a wash.
+  //
+  // Symmetric (0 -> peak -> 0) rather than a one-directional ramp: a
+  // monotonic gradient looks fine as a single image, but this texture
+  // tiles ~30 times down the road (RepeatWrapping) — a ramp that ends
+  // at its brightest value snaps straight back to fully transparent at
+  // every wrap boundary, which is a hard seam repeating every ~7 world
+  // units. At a road's shallow, near-edge-on viewing angle that seam
+  // projects as a visible rectangular panel line, which is what was
+  // reading as a "blocky, tiled" road surface instead of continuous
+  // wet asphalt. Both edges now match (transparent), so the tile wraps
+  // with no discontinuity.
   const grad = ctx.createLinearGradient(0, canvas.height, 0, 0);
   grad.addColorStop(0, "rgba(80,130,190,0)");
-  grad.addColorStop(0.5, "rgba(90,160,220,0.04)");
-  grad.addColorStop(0.78, "rgba(130,200,255,0.1)");
-  grad.addColorStop(1, "rgba(180,230,255,0.16)");
+  grad.addColorStop(0.35, "rgba(90,160,220,0.035)");
+  grad.addColorStop(0.5, "rgba(130,200,255,0.07)");
+  grad.addColorStop(0.65, "rgba(90,160,220,0.035)");
+  grad.addColorStop(1, "rgba(80,130,190,0)");
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -126,7 +138,12 @@ function buildEnergyLineTexture() {
 function buildRoadTexture() {
   const canvas = document.createElement("canvas");
   canvas.width = 256;
-  canvas.height = 512;
+  // 480 rather than 512 — the dash pattern below is [34, 26], a 60px
+  // repeat; 512 isn't a multiple of that (512/60 leaves a 32px
+  // remainder), so the dash rhythm restarted out of phase at every
+  // texture-repeat wrap instead of continuing smoothly. 480 = 8 x 60
+  // divides evenly, so the dashes line up across every tile boundary.
+  canvas.height = 480;
   const ctx = canvas.getContext("2d")!;
 
   // Plain dark asphalt rather than glossy black glass — a real road

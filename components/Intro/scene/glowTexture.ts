@@ -82,6 +82,71 @@ export function getRayTexture(): THREE.Texture {
   return cachedRay;
 }
 
+let cachedPortalGrid: THREE.Texture | null = null;
+
+/** A faint circular hologram reticle — a few concentric ring outlines
+ * plus short radial tick marks, like a HUD targeting overlay — applied
+ * to a camera-facing disc sitting behind the finale's 3D portal rings
+ * (Star.tsx). The 3D torus rings alone read as generic sci-fi rings;
+ * this flat, technical, faintly-scanned pattern is what actually reads
+ * as a *hologram projection* rather than a lit ring shape. Kept subtle
+ * (thin strokes, no fill) so it adds texture without competing with the
+ * bright rings and core glow layered on top of it. */
+export function getPortalGridTexture(): THREE.Texture {
+  if (cachedPortalGrid) return cachedPortalGrid;
+  const size = 512;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  const cx = size / 2;
+  const cy = size / 2;
+
+  ctx.strokeStyle = "rgba(200,235,255,0.5)";
+  ctx.lineWidth = 1.5;
+  const ringRadii = [0.32, 0.5, 0.68, 0.88];
+  for (const rf of ringRadii) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, rf * cx, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Short radial tick marks around the outermost ring, like a
+  // targeting reticle rather than a plain circle.
+  const tickCount = 36;
+  for (let i = 0; i < tickCount; i++) {
+    const angle = (i / tickCount) * Math.PI * 2;
+    const long = i % 3 === 0;
+    const rOuter = 0.95 * cx;
+    const rInner = rOuter - (long ? 22 : 10);
+    ctx.strokeStyle = long
+      ? "rgba(220,245,255,0.65)"
+      : "rgba(180,225,255,0.35)";
+    ctx.lineWidth = long ? 2 : 1;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(angle) * rInner, cy + Math.sin(angle) * rInner);
+    ctx.lineTo(cx + Math.cos(angle) * rOuter, cy + Math.sin(angle) * rOuter);
+    ctx.stroke();
+  }
+
+  // Faint radial spokes crossing the whole disc — the "projected
+  // schematic" look a real hologram readout carries, kept very low
+  // opacity so it stays a texture detail, not a bold graphic.
+  const spokeCount = 8;
+  ctx.strokeStyle = "rgba(190,230,255,0.18)";
+  ctx.lineWidth = 1;
+  for (let i = 0; i < spokeCount; i++) {
+    const angle = (i / spokeCount) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(angle) * cx * 0.92, cy + Math.sin(angle) * cx * 0.92);
+    ctx.stroke();
+  }
+
+  cachedPortalGrid = new THREE.CanvasTexture(canvas);
+  return cachedPortalGrid;
+}
+
 /** A tileable grid of lit/unlit window panes on a facade base, applied
  * as a `map` on the structural building materials — without this, a
  * lit box's whole face is one flat color regardless of shading, which
