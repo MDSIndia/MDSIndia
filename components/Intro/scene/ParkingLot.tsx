@@ -6,6 +6,7 @@ import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import {
   createAeroCarBodyGeometry,
+  createCarCabinGeometry,
   getCarPaintTexture,
   CAR_SHELL_HEIGHT,
   CABIN_HEIGHT,
@@ -23,7 +24,14 @@ function seeded(i: number, salt: number) {
 
 // The same premium, near-monochrome "car of the future" palette the
 // main highway traffic uses.
-const CAR_COLORS = ["#eef1f3", "#c9cdd3", "#7d838c", "#3a4568", "#5a6270", "#8b93a0"];
+// Pearl white weighted up (appears 3x) at explicit "use this type of
+// car" reference — see StreetCars' own copy of this comment for why.
+const CAR_COLORS = ["#eef1f3", "#eef1f3", "#eef1f3", "#c9cdd3", "#7d838c", "#3a4568", "#5a6270", "#8b93a0"];
+// Segments making up the glowing side line — see the layout comment
+// below for why a single straight bar became a swept multi-segment
+// curve at explicit "use this type of car" reference.
+const SIDE_LINE_SEGMENTS = 5;
+const SIDE_LINE_FLARE = 0.06;
 
 interface CurbCar {
   laneX: number;
@@ -55,10 +63,12 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
   const wheelRef = useRef<THREE.InstancedMesh>(null);
   const rimRef = useRef<THREE.InstancedMesh>(null);
   const mirrorRef = useRef<THREE.InstancedMesh>(null);
+  const sideLineRef = useRef<THREE.InstancedMesh>(null);
   const markerRef = useRef<THREE.InstancedMesh>(null);
   const shadowRef = useRef<THREE.InstancedMesh>(null);
 
   const shellGeometry = useMemo(() => createAeroCarBodyGeometry(), []);
+  const cabinGeometry = useMemo(() => createCarCabinGeometry(), []);
   const paintTexture = useMemo(() => getCarPaintTexture(), []);
   const glassTexture = useTexture(CAR_GLASS) as THREE.Texture;
 
@@ -118,8 +128,10 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
         // along, not racing down the highway.
         speed: 1.6 + seeded(i, 116) * 1.8,
         z: 44 - seeded(i, 111) * 175,
-        length: 1.6 + seeded(i, 113) * 0.3,
-        width: 0.8 + seeded(i, 114) * 0.1,
+        // Sized up ~50%, matching StreetCars'/FlyingCars' own pass, at
+        // explicit "cars look so small, make them big" request.
+        length: 2.4 + seeded(i, 113) * 0.3,
+        width: 1.08 + seeded(i, 114) * 0.12,
         colorIndex: Math.floor(seeded(i, 115) * CAR_COLORS.length),
         wheelSpin: seeded(i, 117) * Math.PI * 2,
       };
@@ -151,6 +163,7 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
     const wheelMatrices: THREE.Matrix4[] = [];
     const rimMatrices: THREE.Matrix4[] = [];
     const mirrorMatrices: THREE.Matrix4[] = [];
+    const sideLineMatrices: THREE.Matrix4[] = [];
     const markerMatrices: THREE.Matrix4[] = [];
     const shadowMatrices: THREE.Matrix4[] = [];
 
@@ -168,13 +181,39 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
       dummy.position.set(car.laneX, CAR_SHELL_HEIGHT + CABIN_HEIGHT / 2, car.z);
       dummy.rotation.set(0, facing, 0);
       dummy.translateZ(((CABIN_Z_START + CABIN_Z_END) / 2) * car.length);
+      // Widened 0.72 -> 0.85 at explicit "use this type of car"
+      // reference — a huge, near-full-width panoramic glass canopy
+      // rather than a narrower greenhouse with visible bodywork on
+      // either side.
       dummy.scale.set(
-        car.width * 0.72,
+        car.width * 0.85,
         CABIN_HEIGHT,
         (CABIN_Z_END - CABIN_Z_START) * car.length * 0.86
       );
       dummy.updateMatrix();
       canopyMatrices.push(dummy.matrix.clone());
+
+      // Glowing side character line — see StreetCars' own copy of this
+      // for why (the one design cue every reference concept car
+      // shared), extended here so parked cars match moving traffic
+      // instead of looking like a plainer variant. Built from several
+      // segments along a shallow parabola (low across the door/rocker,
+      // sweeping up into the fender flares at each end) rather than one
+      // straight bar, at explicit "use this type of car" reference.
+      const lineSpan = car.length * 0.8;
+      [-1, 1].forEach((wx) => {
+        for (let k = 0; k < SIDE_LINE_SEGMENTS; k++) {
+          const segT = k / (SIDE_LINE_SEGMENTS - 1);
+          const segZ = car.z + (segT - 0.5) * lineSpan;
+          const segH = SIDE_LINE_FLARE * (2 * segT - 1) ** 2;
+          dummy.position.set(car.laneX, CAR_SHELL_HEIGHT * 0.42 + segH, segZ);
+          dummy.rotation.set(0, facing, 0);
+          dummy.translateX(wx * (car.width / 2 + 0.012));
+          dummy.scale.set(0.018, 0.028, (lineSpan / SIDE_LINE_SEGMENTS) * 1.2);
+          dummy.updateMatrix();
+          sideLineMatrices.push(dummy.matrix.clone());
+        }
+      });
 
       [-1, 1].forEach((wx) => {
         dummy.position.set(car.laneX + wx * (car.width / 2 + 0.03), 0.4, car.z);
@@ -227,6 +266,7 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
     applyInstances(wheelRef.current, wheelMatrices);
     applyInstances(rimRef.current, rimMatrices);
     applyInstances(mirrorRef.current, mirrorMatrices);
+    applyInstances(sideLineRef.current, sideLineMatrices);
     applyInstances(markerRef.current, markerMatrices);
     applyInstances(shadowRef.current, shadowMatrices);
   };
@@ -267,7 +307,7 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
       {/* Cabin windows — a real SVG glass/frame texture (see
           car-glass.svg) rather than a flat painted color. */}
       <instancedMesh ref={canopyRef} args={[undefined, undefined, carCount]}>
-        <boxGeometry args={[1, 1, 1]} />
+        <primitive object={cabinGeometry} attach="geometry" />
         <meshPhongMaterial map={glassTexture} specular="#3a4550" shininess={80} fog />
       </instancedMesh>
 
@@ -284,6 +324,24 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
       <instancedMesh ref={mirrorRef} args={[undefined, undefined, carCount * 2]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshPhongMaterial color="#0e1114" specular="#2a3038" shininess={50} fog={false} />
+      </instancedMesh>
+
+      {/* Glowing side character line — see StreetCars' own copy of this
+          for why. */}
+      <instancedMesh ref={sideLineRef} args={[undefined, undefined, carCount * 2 * SIDE_LINE_SEGMENTS]}>
+        <boxGeometry args={[1, 1, 1]} />
+        {/* Shifted from blue-cyan (#6fd6ff) to teal (#4fe8c8) at
+            explicit "use this type of car" reference — see StreetCars'
+            own copy of this comment for why. */}
+        <meshBasicMaterial
+          color="#4fe8c8"
+          transparent
+          opacity={0.85}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          fog={false}
+          toneMapped={false}
+        />
       </instancedMesh>
 
       <instancedMesh ref={markerRef} args={[undefined, undefined, carCount]}>

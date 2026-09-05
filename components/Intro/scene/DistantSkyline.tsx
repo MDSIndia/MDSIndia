@@ -22,14 +22,21 @@ const ZERO_COLOR = new THREE.Color(0, 0, 0);
  * with only a sparse scatter of tiny window lights so they stay a
  * backdrop, not a competing layer of detail. */
 export function DistantSkyline({ isMobile }: { isMobile: boolean }) {
-  const count = isMobile ? 34 : 60;
-  const bodyRef = useRef<THREE.InstancedMesh>(null);
+  // Raised 25% (34/60 -> 43/75) at explicit "add more buildings" request.
+  const count = isMobile ? 43 : 75;
+  const boxRef = useRef<THREE.InstancedMesh>(null);
+  const taperRef = useRef<THREE.InstancedMesh>(null);
+  const spireRef = useRef<THREE.InstancedMesh>(null);
   const lightsRef = useRef<THREE.InstancedMesh>(null);
 
   const data = useMemo(() => {
     const dummy = new THREE.Object3D();
-    const bodyMatrices: THREE.Matrix4[] = [];
-    const bodyColors: THREE.Color[] = [];
+    const boxMatrices: THREE.Matrix4[] = [];
+    const boxColors: THREE.Color[] = [];
+    const taperMatrices: THREE.Matrix4[] = [];
+    const taperColors: THREE.Color[] = [];
+    const spireMatrices: THREE.Matrix4[] = [];
+    const spireColors: THREE.Color[] = [];
     const lightMatrices: THREE.Matrix4[] = [];
     const lightColors: THREE.Color[] = [];
     const palette = ["#00D4FF", "#0055FF", "#33E0FF"];
@@ -40,14 +47,49 @@ export function DistantSkyline({ isMobile }: { isMobile: boolean }) {
       const z = 90 - seeded(i, 72) * 260;
       const height = 26 + seeded(i, 73) * 70;
       const width = 6 + seeded(i, 74) * 12;
-
-      dummy.position.set(x, height / 2, z);
-      dummy.scale.set(width, height, width);
-      dummy.rotation.set(0, seeded(i, 75) * Math.PI, 0);
-      dummy.updateMatrix();
-      bodyMatrices.push(dummy.matrix.clone());
       const haze = 0.03 + seeded(i, 76) * 0.02;
-      bodyColors.push(new THREE.Color(haze, haze, haze + 0.015));
+      const color = new THREE.Color(haze, haze, haze + 0.015);
+
+      // Three silhouettes now instead of one flat box for every single
+      // building — at explicit "make the buildings look natural and in
+      // different shapes" request. Every other skyline layer in this
+      // scene already got multiple archetypes; this backdrop layer,
+      // being the widest and most numerous (up to 75 buildings), was
+      // the one place still stamping out the same box shape every time,
+      // which reads as repetitive/artificial even when hazy and distant.
+      // Kept to simple built-in geometries (cylinder taper, cone spire)
+      // rather than CityScape's own detailed archetypes — this is a
+      // flat unlit silhouette layer by design, so the win here is
+      // roofline/outline variety, not facade detail.
+      const shapeRoll = seeded(i, 81);
+      if (shapeRoll > 0.68) {
+        // A tapered spire — narrows steadily toward a point, distinct
+        // from a flat-topped tower's silhouette against the sky.
+        dummy.position.set(x, height / 2, z);
+        dummy.scale.set(width, height, width);
+        dummy.rotation.set(0, seeded(i, 75) * Math.PI, 0);
+        dummy.updateMatrix();
+        spireMatrices.push(dummy.matrix.clone());
+        spireColors.push(color);
+      } else if (shapeRoll > 0.4) {
+        // A stepped taper — wide base narrowing to roughly half width,
+        // the "setback tower" silhouette real dense-city skylines carry
+        // (zoning-driven step-backs), distinct from both the flat box
+        // and the fully-pointed spire.
+        dummy.position.set(x, height / 2, z);
+        dummy.scale.set(width, height, width);
+        dummy.rotation.set(0, seeded(i, 75) * Math.PI, 0);
+        dummy.updateMatrix();
+        taperMatrices.push(dummy.matrix.clone());
+        taperColors.push(color);
+      } else {
+        dummy.position.set(x, height / 2, z);
+        dummy.scale.set(width, height, width);
+        dummy.rotation.set(0, seeded(i, 75) * Math.PI, 0);
+        dummy.updateMatrix();
+        boxMatrices.push(dummy.matrix.clone());
+        boxColors.push(color);
+      }
 
       // A sparse handful of tiny window lights per silhouette — just
       // enough to read as "distant lit city," not enough to compete
@@ -77,17 +119,42 @@ export function DistantSkyline({ isMobile }: { isMobile: boolean }) {
       lightColors.push(ZERO_COLOR.clone());
     }
 
-    return { bodyMatrices, bodyColors, lightMatrices, lightColors };
+    return {
+      boxMatrices,
+      boxColors,
+      taperMatrices,
+      taperColors,
+      spireMatrices,
+      spireColors,
+      lightMatrices,
+      lightColors,
+    };
   }, [count]);
 
-  useLayoutEffect(() => {
-    const mesh = bodyRef.current;
+  const applyBody = (
+    mesh: THREE.InstancedMesh | null,
+    matrices: THREE.Matrix4[],
+    colors: THREE.Color[]
+  ) => {
     if (!mesh) return;
-    data.bodyMatrices.forEach((m, i) => mesh.setMatrixAt(i, m));
-    data.bodyColors.forEach((c, i) => mesh.setColorAt(i, c));
+    matrices.forEach((m, i) => mesh.setMatrixAt(i, m));
+    colors.forEach((c, i) => mesh.setColorAt(i, c));
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  }, [data]);
+  };
+
+  useLayoutEffect(
+    () => applyBody(boxRef.current, data.boxMatrices, data.boxColors),
+    [data]
+  );
+  useLayoutEffect(
+    () => applyBody(taperRef.current, data.taperMatrices, data.taperColors),
+    [data]
+  );
+  useLayoutEffect(
+    () => applyBody(spireRef.current, data.spireMatrices, data.spireColors),
+    [data]
+  );
 
   useLayoutEffect(() => {
     const mesh = lightsRef.current;
@@ -108,10 +175,28 @@ export function DistantSkyline({ isMobile }: { isMobile: boolean }) {
 
   return (
     <group>
-      <instancedMesh ref={bodyRef} args={[undefined, undefined, count]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshBasicMaterial vertexColors fog />
-      </instancedMesh>
+      {data.boxMatrices.length > 0 && (
+        <instancedMesh ref={boxRef} args={[undefined, undefined, data.boxMatrices.length]}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshBasicMaterial vertexColors fog />
+        </instancedMesh>
+      )}
+      {/* Stepped/wedge silhouette — a gentle hexagonal taper rather
+          than a full point, distinct from both the flat box and the
+          fully-pointed spire below. */}
+      {data.taperMatrices.length > 0 && (
+        <instancedMesh ref={taperRef} args={[undefined, undefined, data.taperMatrices.length]}>
+          <cylinderGeometry args={[0.28, 0.5, 1, 6]} />
+          <meshBasicMaterial vertexColors fog />
+        </instancedMesh>
+      )}
+      {/* Fully-tapered spire — narrows to a point at the roofline. */}
+      {data.spireMatrices.length > 0 && (
+        <instancedMesh ref={spireRef} args={[undefined, undefined, data.spireMatrices.length]}>
+          <coneGeometry args={[0.5, 1, 8]} />
+          <meshBasicMaterial vertexColors fog />
+        </instancedMesh>
+      )}
       <instancedMesh
         ref={lightsRef}
         args={[undefined, undefined, count * 5]}

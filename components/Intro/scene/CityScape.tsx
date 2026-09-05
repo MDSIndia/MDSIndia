@@ -8,6 +8,7 @@ import {
   getWindowGridTexture,
   getWindowEmissiveTexture,
   getWindowNormalTexture,
+  getCityEnvironmentMap,
 } from "./glowTexture";
 import { STAR_POSITION } from "./path";
 import { keepClearOfCrossStreets } from "./crossStreetPositions";
@@ -144,8 +145,11 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
   // (the star's own halo grows huge near the very end and there was
   // nothing placed far enough down the road to still be visible through
   // it), so density needed to hold steady across the longer range
-  // rather than getting spread thinner over it.
-  const count = isMobile ? 66 : 115;
+  // rather than getting spread thinner over it. Raised a further 25%
+  // (66/115 -> 83/144) at explicit "add more skyscrapers" request, then
+  // another 25% (83/144 -> 104/180) at explicit "add more buildings"
+  // request.
+  const count = isMobile ? 104 : 180;
   // Six box-tower slots — [shortA, shortB, medA, medB, tallA, tallB],
   // index = heightBucket*2 + variant (see the `data` useMemo below and
   // BOX_TOWER_BUCKETS further down) — a plain array-of-refs rather than
@@ -167,9 +171,28 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
   const roofTreeTrunkRef = useRef<THREE.InstancedMesh>(null);
   const roofTreeCanopyRef = useRef<THREE.InstancedMesh>(null);
   const leafTexture = useMemo(() => getLeafCardTexture(), []);
+  // A soft, plausible night-city reflection for every glass-faced
+  // tower material below — see getCityEnvironmentMap for why a real
+  // specular highlight alone wasn't enough to read as glass. Desktop
+  // only: this is one extra texture sample per pixel on materials that
+  // already carry a full window/normal/emissive stack, and mobile's
+  // brighter, simpler Lambert variant is tuned as a cheaper substitute
+  // rather than a place to add more sampling cost.
+  //
+  // combine=AddOperation at low reflectivity, not the MixOperation/0.35
+  // this first shipped with — Mix *replaces* a third of the surface
+  // color with the (fairly bright) env reflection, which was quietly
+  // washing out the carefully-tuned window-grid/emissive detail that
+  // actually makes a facade read as a defined building rather than a
+  // flat glowing card. Add just layers a faint reflective sheen on top
+  // instead, so the reflection reads as a highlight, not a wash.
+  const cityEnvMap = useMemo(() => (isMobile ? null : getCityEnvironmentMap()), [isMobile]);
   const signatureBandRef = useRef<THREE.InstancedMesh>(null);
   const antennaRef = useRef<THREE.InstancedMesh>(null);
   const antennaLightRef = useRef<THREE.InstancedMesh>(null);
+  const beaconRef = useRef<THREE.InstancedMesh>(null);
+  const floatingRingRef = useRef<THREE.InstancedMesh>(null);
+  const floatingStrutRef = useRef<THREE.InstancedMesh>(null);
   const parapetRef = useRef<THREE.InstancedMesh>(null);
   const contactShadowRef = useRef<THREE.InstancedMesh>(null);
   const roofEquipRef = useRef<THREE.InstancedMesh>(null);
@@ -434,7 +457,12 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
   const taperedBoxGeometry = useMemo(() => {
     const geo = new THREE.BoxGeometry(1, 1, 1);
     const pos = geo.attributes.position;
-    const TOP_SCALE = 0.78;
+    // 0.78 -> 0.68 at explicit "match the reference's dramatically
+    // tapered supertalls" request — kept well short of the point where
+    // the corner accent strips below (fixed at the tower's *base*
+    // width the whole way up, per their own comment) would visibly
+    // float outside the narrower top.
+    const TOP_SCALE = 0.68;
     const v = new THREE.Vector3();
     for (let idx = 0; idx < pos.count; idx++) {
       v.fromBufferAttribute(pos, idx);
@@ -518,6 +546,27 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
     // light show, which reads as mechanical rather than a real city
     // where each building's beacon runs on its own clock.
     const antennaPhases: number[] = [];
+    // A rare vertical light-beam accent on a handful of the tallest
+    // towers — a searchlight/holographic-projector column shooting
+    // straight up off the roof, at explicit "make it more futuristic"
+    // request. Deliberately sparse (a fraction of an already-rare
+    // antenna subset) rather than another roof gadget layered onto
+    // towers that already carry an antenna/ring/garden/equipment mix —
+    // this reads as a skyline landmark accent precisely because most
+    // towers don't have one, the same restraint that made floating
+    // rings/antennas work rather than clutter.
+    const beaconMatrices: THREE.Matrix4[] = [];
+    // A hovering ring platform on a rare subset of tall towers — a
+    // distinct silhouette (a real space-station/observation-deck cue)
+    // none of the five archetypes' own rooflines produce on their own,
+    // so it reads as genuinely different architecture rather than
+    // another variation on a box/round/faceted top. Struts always
+    // pushed 3-per-building (real or zero-scale) rather than a
+    // variable-length collect-then-pad pass, since there's no reason
+    // for the count to vary building to building.
+    const floatingRingMatrices: THREE.Matrix4[] = [];
+    const floatingRingColors: THREE.Color[] = [];
+    const floatingStrutMatrices: THREE.Matrix4[] = [];
     const parapetMatrices: THREE.Matrix4[] = [];
     const parapetColors: THREE.Color[] = [];
     const signatureBandMatrices: THREE.Matrix4[] = [];
@@ -619,12 +668,13 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       // Taller buildings read as more slender in real skylines — bias
       // width down as height increases instead of picking the two
       // independently, which used to produce oddly cube-shaped towers.
-      // Pushed further (0.4 -> 0.58) at explicit request for a more
-      // "premium supertall" read — the reference skyline's towers are
-      // dramatically taller than they are wide, not just moderately
-      // tapered office blocks.
+      // Pushed further twice now (0.4 -> 0.58 -> 0.72) at explicit
+      // "still looks the same, match the reference's buildings" request
+      // — the reference's own towers are needle-thin supertalls, far
+      // more dramatically slender than a "moderately tapered office
+      // block" reads as.
       const heightFactor = clamp01((height - 4) / 50);
-      const width = (1.5 + seeded(i, 4) * 4.6) * (1.15 - heightFactor * 0.58);
+      const width = (1.5 + seeded(i, 4) * 4.6) * (1.15 - heightFactor * 0.72);
       // Footprint depth, independent of width — real towers are rarely
       // square in plan; a rectangular block (or a slab far longer one
       // way than the other) is much more common than the perfectly
@@ -1206,7 +1256,25 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         const crownHeight = 2 + seeded(i, 24) * 5;
         const crownWidth = width * (0.5 + seeded(i, 25) * 0.22);
         const crownDepth = depth * (0.5 + seeded(i, 26) * 0.22);
-        dummy.position.set(x, height + crownHeight / 2, z);
+        // Over half of crowned towers cantilever the crown off to one
+        // side instead of sitting centered on the shaft below it — a
+        // real "modern architecture" cue (Beijing's CCTV tower,
+        // Marina Bay Sands, The Interlace) that reads as distinctly
+        // more futuristic/engineered than a symmetric setback, and a
+        // cheap way to get genuinely different-looking silhouettes out
+        // of the same box-tower archetype rather than every crowned
+        // tower sharing the same centered massing. Raised from a third
+        // to just over half at explicit "more sci-fi structures"
+        // request.
+        const isCantilever = seeded(i, 91) > 0.45;
+        const cantileverX = isCantilever
+          ? (seeded(i, 92) > 0.5 ? 1 : -1) * width * (0.32 + seeded(i, 93) * 0.24)
+          : 0;
+        const cantileverZ = isCantilever
+          ? (seeded(i, 94) - 0.5) * depth * 0.4
+          : 0;
+        const localOffset = wallAttach(0, 0, buildingYaw, cantileverX, cantileverZ);
+        dummy.position.set(x + localOffset.x, height + crownHeight / 2, z + localOffset.z);
         dummy.scale.set(crownWidth, crownHeight, crownDepth);
         dummy.rotation.set(0, buildingYaw, 0);
         dummy.updateMatrix();
@@ -1221,17 +1289,24 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       // climbing almost the tower's full height at (near) its corner,
       // the "glowing edge" cue premium supertalls in the reference art
       // carry, rather than a short random-length band lost mid-facade.
-      // Raised from a rare ~28% "exception" to the majority (~65%) at
-      // explicit request — a skyline where most towers carry this cue
-      // is what actually reads as premium rather than ordinary.
-      const hasAccentStrip = seeded(i, 96) > 0.35;
+      // Raised from a rare ~28% "exception" to the majority (~65%),
+      // then again to ~85% at explicit "match the reference" request —
+      // the reference's own towers read as bold glowing light ribbons
+      // more than as glass with windows, which a strip only a third of
+      // towers carried could never approach regardless of how bright it
+      // was individually.
+      const hasAccentStrip = seeded(i, 96) > 0.15;
       const accentHeight = height * (0.8 + seeded(i, 8) * 0.16);
 
       // Facade A: faces the road, offset toward one corner along depth.
+      // Widened (0.07 -> 0.16) alongside the probability bump — a
+      // hairline strip read as a lit seam even at 85% coverage; a
+      // genuinely thick glowing ribbon is what the reference's own
+      // buildings carry.
       if (hasAccentStrip) {
         const stripA = wallAttach(x, z, buildingYaw, -side * (width / 2 + 0.02), depth * 0.38);
         dummy.position.set(stripA.x, accentHeight / 2, stripA.z);
-        dummy.scale.set(0.07, accentHeight, 0.16);
+        dummy.scale.set(0.16, accentHeight, 0.24);
         dummy.rotation.set(0, buildingYaw, 0);
         dummy.updateMatrix();
         windowAMatrices.push(dummy.matrix.clone());
@@ -1241,7 +1316,7 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         // in white pushes every channel up (not just the ones the accent
         // already maxes out), which is what makes it read as a bright,
         // hot light source instead of a tinted panel.
-        windowAColors.push(new THREE.Color(accent).lerp(new THREE.Color(GLOW_WHITE), 0.25));
+        windowAColors.push(new THREE.Color(accent).lerp(new THREE.Color(GLOW_WHITE), 0.4));
       } else {
         windowAMatrices.push(ZERO_SCALE.clone());
         windowAColors.push(ZERO_COLOR.clone());
@@ -1254,14 +1329,14 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       if (hasAccentStrip) {
         const stripB = wallAttach(x, z, buildingYaw, side * (width / 2 + 0.02), -depth * 0.38);
         dummy.position.set(stripB.x, accentHeight / 2, stripB.z);
-        dummy.scale.set(0.07, accentHeight, 0.16);
+        dummy.scale.set(0.16, accentHeight, 0.24);
         dummy.rotation.set(0, buildingYaw, 0);
         dummy.updateMatrix();
         windowBMatrices.push(dummy.matrix.clone());
         windowBColors.push(
           new THREE.Color(ACCENTS[Math.floor(seeded(i, 62) * ACCENTS.length)]).lerp(
             new THREE.Color(GLOW_WHITE),
-            0.25
+            0.4
           )
         );
       } else {
@@ -1491,6 +1566,67 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
         antennaLightColors.push(ZERO_COLOR.clone());
         antennaPhases.push(0);
       }
+
+      // Rooftop light-beam beacon — see beaconMatrices above. Only the
+      // tallest hero towers (height > 32, itself a small slice of the
+      // 8-54 range) and a further ~6% roll on top of that, so this
+      // lands on only a handful of towers across the whole skyline. A
+      // tall, thin additively-blended cone standing in for a
+      // searchlight/holographic beam shooting straight up — a static
+      // mesh (no per-frame cost) since a steady beam reads as a fixed
+      // structure the way a real rooftop light would, not something
+      // that needs to animate to register.
+      const hasBeacon = height > 32 && seeded(i, 112) > 0.94;
+      if (hasBeacon) {
+        const beamHeight = 14 + seeded(i, 113) * 10;
+        dummy.position.set(x, height + beamHeight / 2, z);
+        dummy.scale.set(0.5, beamHeight, 0.5);
+        dummy.rotation.set(0, 0, 0);
+        dummy.updateMatrix();
+        beaconMatrices.push(dummy.matrix.clone());
+      } else {
+        beaconMatrices.push(ZERO_SCALE.clone());
+      }
+
+      // A hovering ring platform, suspended clear of the roof on thin
+      // struts — pyramid archetypes already have their own distinct
+      // monument silhouette that this would just clutter, so it's
+      // reserved for every other archetype. Raised from a rare ~12% of
+      // eligible towers to ~45%, and the height bar lowered (22 -> 17),
+      // at explicit "more sci-fi structures, most towers are still
+      // plain glass office blocks" feedback — a deliberate landmark
+      // accent is exactly right for one or two towers in a skyline, but
+      // reads as too rare to register as part of the skyline's own
+      // character when it's this uncommon.
+      const hasFloatingRing = !isPyramid && height > 17 && seeded(i, 95) > 0.55;
+      if (hasFloatingRing) {
+        const footprint = Math.max(width, depth);
+        const ringRadius = footprint * (0.62 + seeded(i, 96) * 0.16);
+        const ringGap = 1.6 + seeded(i, 97) * 1.6;
+        const ringY = height + ringGap;
+        dummy.position.set(x, ringY, z);
+        dummy.rotation.set(Math.PI / 2, 0, 0);
+        dummy.scale.setScalar(ringRadius);
+        dummy.updateMatrix();
+        floatingRingMatrices.push(dummy.matrix.clone());
+        floatingRingColors.push(new THREE.Color(accent).lerp(new THREE.Color(GLOW_WHITE), 0.3));
+
+        const strutCount = 3;
+        for (let s = 0; s < strutCount; s++) {
+          const strutAngle = (s / strutCount) * Math.PI * 2 + seeded(i, 98) * Math.PI * 2;
+          const sx = x + Math.cos(strutAngle) * ringRadius * 0.82;
+          const sz = z + Math.sin(strutAngle) * ringRadius * 0.82;
+          dummy.position.set(sx, height + ringGap / 2, sz);
+          dummy.rotation.set(0, 0, 0);
+          dummy.scale.set(0.05, ringGap, 0.05);
+          dummy.updateMatrix();
+          floatingStrutMatrices.push(dummy.matrix.clone());
+        }
+      } else {
+        floatingRingMatrices.push(ZERO_SCALE.clone());
+        floatingRingColors.push(ZERO_COLOR.clone());
+        for (let s = 0; s < 3; s++) floatingStrutMatrices.push(ZERO_SCALE.clone());
+      }
     }
 
     // roofEquipMatrices gets 0, 1, or 2 pushes per building (equipment
@@ -1544,6 +1680,10 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
       antennaLightMatrices,
       antennaLightColors,
       antennaPhases,
+      beaconMatrices,
+      floatingRingMatrices,
+      floatingRingColors,
+      floatingStrutMatrices,
       parapetMatrices,
       parapetColors,
       signatureBandMatrices,
@@ -1661,12 +1801,29 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
     [data]
   );
   useLayoutEffect(
+    () => applyInstances(beaconRef.current, data.beaconMatrices),
+    [data]
+  );
+  useLayoutEffect(
     () =>
       applyInstances(
         antennaLightRef.current,
         data.antennaLightMatrices,
         data.antennaLightColors
       ),
+    [data]
+  );
+  useLayoutEffect(
+    () =>
+      applyInstances(
+        floatingRingRef.current,
+        data.floatingRingMatrices,
+        data.floatingRingColors
+      ),
+    [data]
+  );
+  useLayoutEffect(
+    () => applyInstances(floatingStrutRef.current, data.floatingStrutMatrices),
     [data]
   );
   useLayoutEffect(
@@ -1880,13 +2037,24 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
   // instead of six hand-written copies (which is exactly the kind of
   // duplication that made it easy for the "B" variants to silently
   // drift out of sync with the "A" ones during earlier edits).
+  // Each bucket's own emissive tint — the "A" variants stay the cool
+  // blue-white every window in this skyline used to share; the "B"
+  // variants shift warm (tungsten/amber), so the skyline reads as a mix
+  // of cool LED-lit offices and warm incandescent-lit interiors, the
+  // way a real city's windows never come from a single light source.
+  // Cheap to do at the bucket level (six shared materials, not per
+  // building) since the A/B split is already an existing, independent
+  // per-building roll (see pushBoxTower) — this just gives that roll a
+  // second visible effect instead of only varying the window pattern.
+  const WARM_EMISSIVE = "#ffd9ae";
+  const COOL_EMISSIVE = "#bfe4ff";
   const boxTowerConfigs = [
-    { map: windowMaps.towerShort, normalMap: windowNormalMaps.towerShort, emissiveMap: windowEmissiveMaps.towerShort },
-    { map: windowMaps.towerShortB, normalMap: windowNormalMaps.towerShortB, emissiveMap: windowEmissiveMaps.towerShortB },
-    { map: windowMaps.towerMed, normalMap: windowNormalMaps.towerMed, emissiveMap: windowEmissiveMaps.towerMed },
-    { map: windowMaps.towerMedB, normalMap: windowNormalMaps.towerMedB, emissiveMap: windowEmissiveMaps.towerMedB },
-    { map: windowMaps.towerTall, normalMap: windowNormalMaps.towerTall, emissiveMap: windowEmissiveMaps.towerTall },
-    { map: windowMaps.towerTallB, normalMap: windowNormalMaps.towerTallB, emissiveMap: windowEmissiveMaps.towerTallB },
+    { map: windowMaps.towerShort, normalMap: windowNormalMaps.towerShort, emissiveMap: windowEmissiveMaps.towerShort, emissive: COOL_EMISSIVE },
+    { map: windowMaps.towerShortB, normalMap: windowNormalMaps.towerShortB, emissiveMap: windowEmissiveMaps.towerShortB, emissive: WARM_EMISSIVE },
+    { map: windowMaps.towerMed, normalMap: windowNormalMaps.towerMed, emissiveMap: windowEmissiveMaps.towerMed, emissive: COOL_EMISSIVE },
+    { map: windowMaps.towerMedB, normalMap: windowNormalMaps.towerMedB, emissiveMap: windowEmissiveMaps.towerMedB, emissive: WARM_EMISSIVE },
+    { map: windowMaps.towerTall, normalMap: windowNormalMaps.towerTall, emissiveMap: windowEmissiveMaps.towerTall, emissive: COOL_EMISSIVE },
+    { map: windowMaps.towerTallB, normalMap: windowNormalMaps.towerTallB, emissiveMap: windowEmissiveMaps.towerTallB, emissive: WARM_EMISSIVE },
   ];
 
   return (
@@ -1929,22 +2097,34 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
               normalMap={cfg.normalMap}
               normalScale={new THREE.Vector2(0.7, 0.7)}
               emissiveMap={cfg.emissiveMap}
-              emissive="#bfe4ff"
+              emissive={cfg.emissive}
               emissiveIntensity={1.05}
-              toneMapped={false}
               fog
             />
           ) : (
             <meshPhongMaterial
+              // toneMapped={false} removed at explicit "buildings need
+              // to be well defined" request — it was applied to this
+              // whole material (not just the emissive glow layered
+              // additive materials elsewhere use it for), which meant
+              // the *lit facade itself* — map, normal, specular, the
+              // works — also bypassed ACES tone mapping. Any pixel that
+              // pushed past 1.0 (a bright family color under strong rig
+              // light, a specular hotspot, now also the env reflection)
+              // hard-clipped to flat white instead of compressing
+              // gracefully, which is what was reading as washed-out and
+              // undefined rather than a shaded, detailed facade.
               map={cfg.map}
               normalMap={cfg.normalMap}
               normalScale={new THREE.Vector2(0.85, 0.85)}
               emissiveMap={cfg.emissiveMap}
-              emissive="#bfe4ff"
+              emissive={cfg.emissive}
               emissiveIntensity={0.9}
-              toneMapped={false}
               specular="#3a4a66"
               shininess={22}
+              envMap={cityEnvMap}
+              combine={THREE.AddOperation}
+              reflectivity={0.1}
               fog
             />
           )}
@@ -1968,7 +2148,6 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
             emissiveMap={windowEmissiveMaps.round}
             emissive="#bfe4ff"
             emissiveIntensity={1.05}
-            toneMapped={false}
             fog
           />
         ) : (
@@ -1979,9 +2158,11 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
             emissiveMap={windowEmissiveMaps.round}
             emissive="#bfe4ff"
             emissiveIntensity={0.9}
-            toneMapped={false}
             specular="#3a4a66"
             shininess={22}
+            envMap={cityEnvMap}
+            combine={THREE.AddOperation}
+            reflectivity={0.1}
             fog
           />
         )}
@@ -2000,7 +2181,6 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
             emissiveMap={windowEmissiveMaps.faceted}
             emissive="#bfe4ff"
             emissiveIntensity={1.05}
-            toneMapped={false}
             fog
           />
         ) : (
@@ -2011,9 +2191,11 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
             emissiveMap={windowEmissiveMaps.faceted}
             emissive="#bfe4ff"
             emissiveIntensity={0.9}
-            toneMapped={false}
             specular="#3a4a66"
             shininess={26}
+            envMap={cityEnvMap}
+            combine={THREE.AddOperation}
+            reflectivity={0.1}
             fog
           />
         )}
@@ -2034,7 +2216,6 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
             emissiveMap={windowEmissiveMaps.twisted}
             emissive="#bfe4ff"
             emissiveIntensity={1.05}
-            toneMapped={false}
             fog
           />
         ) : (
@@ -2045,9 +2226,11 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
             emissiveMap={windowEmissiveMaps.twisted}
             emissive="#bfe4ff"
             emissiveIntensity={0.9}
-            toneMapped={false}
             specular="#3a4a66"
             shininess={26}
+            envMap={cityEnvMap}
+            combine={THREE.AddOperation}
+            reflectivity={0.1}
             fog
           />
         )}
@@ -2072,7 +2255,6 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
             emissiveMap={windowEmissiveMaps.podium}
             emissive="#bfe4ff"
             emissiveIntensity={1.05}
-            toneMapped={false}
             fog
           />
         ) : (
@@ -2083,9 +2265,11 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
             emissiveMap={windowEmissiveMaps.podium}
             emissive="#bfe4ff"
             emissiveIntensity={0.9}
-            toneMapped={false}
             specular="#3a4a66"
             shininess={18}
+            envMap={cityEnvMap}
+            combine={THREE.AddOperation}
+            reflectivity={0.1}
             fog
           />
         )}
@@ -2228,6 +2412,50 @@ export function CityScape({ isMobile }: { isMobile: boolean }) {
           fog={false}
           toneMapped={false}
         />
+      </instancedMesh>
+
+      {/* Rooftop beacon beam — see hasBeacon above. Cone rather than a
+          cylinder so the light reads as a focused energy spire
+          narrowing to a point far overhead instead of a uniform glow
+          stick (default cone geometry: wide base at the bottom, apex
+          at top — matches the beam's own base-at-roof placement below
+          with no extra rotation needed). Opacity kept low since this
+          is many world-units tall and additive blending stacks
+          brightness fast over that much depth. */}
+      <instancedMesh ref={beaconRef} args={[undefined, undefined, count]}>
+        <coneGeometry args={[1, 1, 10, 1, true]} />
+        <meshBasicMaterial
+          color="#bfefff"
+          transparent
+          opacity={0.16}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+          fog={false}
+          toneMapped={false}
+        />
+      </instancedMesh>
+
+      {/* Hovering ring platform — a real space-station/observation-deck
+          silhouette none of the five archetypes' own rooflines produce,
+          suspended clear of the roof on thin struts (see hasFloatingRing
+          above) rather than sitting flush on top of it, so it visibly
+          reads as a separate floating structure. */}
+      <instancedMesh ref={floatingRingRef} args={[undefined, undefined, count]}>
+        <torusGeometry args={[1, 0.045, 8, 40]} />
+        <meshPhongMaterial
+          color="#dfe8f0"
+          specular="#bfe4ff"
+          shininess={70}
+          emissive="#4fa8d8"
+          emissiveIntensity={0.35}
+          toneMapped={false}
+          fog
+        />
+      </instancedMesh>
+      <instancedMesh ref={floatingStrutRef} args={[undefined, undefined, count * 3]}>
+        <cylinderGeometry args={[1, 1, 1, 5]} />
+        <meshPhongMaterial color="#3a4048" specular="#8fc4e8" shininess={50} fog />
       </instancedMesh>
 
       {/* Rooftop mechanical equipment — plain unlit dark boxes/tanks,

@@ -13,41 +13,44 @@ function seeded(i: number, salt: number) {
 
 const ACCENTS = ["#a8d4e8", "#bcdcec", "#8fa8c8", "#dce4ec", "#e8d8b8", "#c0a8d8", "#e0c8a0"];
 const MATERIAL_FAMILIES = [
-  { r: 0.07, g: 0.09, b: 0.15 },
-  { r: 0.12, g: 0.12, b: 0.13 },
-  { r: 0.19, g: 0.13, b: 0.08 },
-  { r: 0.21, g: 0.22, b: 0.24 },
-  { r: 0.06, g: 0.15, b: 0.14 },
-  { r: 0.035, g: 0.04, b: 0.05 },
+  { r: 0.05, g: 0.07, b: 0.12 },
+  { r: 0.1, g: 0.1, b: 0.11 },
+  { r: 0.15, g: 0.1, b: 0.06 },
+  { r: 0.16, g: 0.17, b: 0.19 },
+  { r: 0.05, g: 0.12, b: 0.11 },
+  { r: 0.03, g: 0.035, b: 0.045 },
 ];
 
-/** Second-row buildings that fill the large forced-empty z-bands
- * landmarkClearance.ts carves out of CityScape's own near-road lane —
- * every CityScape building that would otherwise land inside a
- * landmark's clearance zone gets pushed clear of it entirely, which is
- * correct for stopping clipping but leaves a visibly bare stretch of
- * skyline wherever that band sits, on top of CityScape's own random
- * gaps. Set back far enough from the road (x 34-50) that none of this
- * scene's landmarks reach it, so it can safely fill exactly the z
- * range CityScape is forced to leave empty on that side, at explicit
- * "empty spaces" feedback. Reuses `keepClearOfLandmarks` itself to find
- * those bands (a candidate z counts as "in a gap" if the function would
- * have moved it) rather than hardcoding the ranges, so this stays
- * correct if the landmark layout ever changes. Simple geometry (box/
- * round/pyramid, no doors, windows, or banners) since this is
- * background depth filling in behind the landmarks, not the foreground
- * lane the camera passes directly alongside. */
-export function SkylineFiller({ isMobile }: { isMobile: boolean }) {
-  // Raised 25% (10/18 -> 13/23) at explicit "add more buildings" request.
-  const count = isMobile ? 13 : 23;
+// A middle-distance lane, between CityScape's own near-road row (x
+// 11-22) and DistantSkyline's hazy far backdrop (x 55-125) — until now
+// there was nothing at all in that gap for most of the route (only
+// SkylineFiller, and only inside the landmark clearance bands), which
+// is why the city read as one thin row of towers with empty space
+// behind it rather than actual city blocks. This runs continuously the
+// whole route length, not just in gaps.
+const X_NEAR = 24;
+const X_FAR = 15;
+
+/** A second row of buildings standing behind CityScape's own row,
+ * running the full route rather than only filling landmark gaps (see
+ * SkylineFiller for that narrower job) — real city blocks are many
+ * buildings deep, not a single row of towers facing the street with
+ * nothing behind them. Slightly dimmer/less detailed than the
+ * foreground row (no normal maps, lower emissive) since these read at
+ * a glance past the nearer buildings, not examined up close — the
+ * depth cue comes from genuinely being *there*, not from matching
+ * foreground fidelity. */
+export function SecondRowSkyline({ isMobile }: { isMobile: boolean }) {
+  // Raised 25% (46/80 -> 58/100) at explicit "add more buildings" request.
+  const count = isMobile ? 58 : 100;
 
   const boxRef = useRef<THREE.InstancedMesh>(null);
   const roundRef = useRef<THREE.InstancedMesh>(null);
   const pyramidRef = useRef<THREE.InstancedMesh>(null);
   const facetedRef = useRef<THREE.InstancedMesh>(null);
 
-  const windowMap = useMemo(() => getWindowGridTexture(2), []);
-  const windowEmissive = useMemo(() => getWindowEmissiveTexture(2), []);
+  const windowMap = useMemo(() => getWindowGridTexture(5), []);
+  const windowEmissive = useMemo(() => getWindowEmissiveTexture(5), []);
 
   const data = useMemo(() => {
     const dummy = new THREE.Object3D();
@@ -60,49 +63,47 @@ export function SkylineFiller({ isMobile }: { isMobile: boolean }) {
     const facetedMatrices: THREE.Matrix4[] = [];
     const facetedColors: THREE.Color[] = [];
 
-    let placed = 0;
-    let attempt = 0;
-    // Rolls candidates across the whole route and keeps only the ones
-    // landmarkClearance.ts would have pushed a real CityScape building
-    // out of — exactly the bands that would otherwise stay empty.
-    while (placed < count && attempt < count * 60) {
-      const side: -1 | 1 = attempt % 2 === 0 ? -1 : 1;
-      const rawZ = 50 - seeded(attempt, 901) * 175;
-      const z = keepClearOfCrossStreets(rawZ);
-      attempt++;
-      if (keepClearOfLandmarks(z, side) === z) continue;
-
-      const x = side * (34 + seeded(placed, 902) * 16);
-      const height = 5 + seeded(placed, 903) * 34;
-      const width = 2 + seeded(placed, 904) * 3.4;
-      const accent = ACCENTS[Math.floor(seeded(placed, 905) * ACCENTS.length)];
-      const family = MATERIAL_FAMILIES[Math.floor(seeded(placed, 906) * MATERIAL_FAMILIES.length)];
+    for (let i = 0; i < count; i++) {
+      const side: -1 | 1 = i % 2 === 0 ? -1 : 1;
+      const rawZ = 55 - seeded(i, 981) * 220;
+      const z = keepClearOfLandmarks(keepClearOfCrossStreets(rawZ), side);
+      const x = side * (X_NEAR + seeded(i, 982) * X_FAR);
+      const height = 6 + seeded(i, 983) * 42;
+      const width = 2 + seeded(i, 984) * 5;
+      const accent = ACCENTS[Math.floor(seeded(i, 985) * ACCENTS.length)];
+      const family = MATERIAL_FAMILIES[Math.floor(seeded(i, 986) * MATERIAL_FAMILIES.length)];
       const bodyColor = new THREE.Color(family.r, family.g, family.b).lerp(
         new THREE.Color(accent),
-        0.12
+        0.1
       );
+      const yaw = seeded(i, 987) * Math.PI;
 
       // Four silhouettes now (round/faceted/pyramid/box) rather than
-      // three — at explicit "all buildings look same" request.
-      const shapeRoll = seeded(placed, 907);
-      const yaw = seeded(placed, 908) * Math.PI;
-      if (shapeRoll > 0.72) {
+      // three — at explicit "all buildings look same" request. This
+      // population is the single largest in the scene (see count
+      // above), so adding a shape here does more for overall variety
+      // than tuning any one already-varied system further.
+      const shapeRoll = seeded(i, 988);
+      if (shapeRoll > 0.76) {
         dummy.position.set(x, height / 2, z);
-        dummy.scale.set(width * 0.55, height, width * 0.55);
+        dummy.scale.set(width * 0.5, height, width * 0.5);
         dummy.rotation.set(0, yaw, 0);
         dummy.updateMatrix();
         roundMatrices.push(dummy.matrix.clone());
         roundColors.push(bodyColor);
-      } else if (shapeRoll > 0.5) {
+      } else if (shapeRoll > 0.55) {
+        // Sharply tapered hex-frustum — same silhouette CityScape's own
+        // "faceted" archetype uses (a plain 6-sided cylinder tapered
+        // via scale, no custom geometry needed).
         dummy.position.set(x, height / 2, z);
-        dummy.scale.set(width * 0.46, height, width * 0.46);
+        dummy.scale.set(width * 0.42, height, width * 0.42);
         dummy.rotation.set(0, yaw, 0);
         dummy.updateMatrix();
         facetedMatrices.push(dummy.matrix.clone());
         facetedColors.push(bodyColor);
-      } else if (shapeRoll > 0.25) {
+      } else if (shapeRoll > 0.32) {
         dummy.position.set(x, height * 0.35, z);
-        dummy.scale.set(width * 0.85, height * 0.7, width * 0.85);
+        dummy.scale.set(width * 0.8, height * 0.7, width * 0.8);
         dummy.rotation.set(0, yaw, 0);
         dummy.updateMatrix();
         pyramidMatrices.push(dummy.matrix.clone());
@@ -110,12 +111,11 @@ export function SkylineFiller({ isMobile }: { isMobile: boolean }) {
       } else {
         dummy.position.set(x, height / 2, z);
         dummy.scale.set(width, height, width * 0.8);
-        dummy.rotation.set(0, yaw * 0.15, 0);
+        dummy.rotation.set(0, yaw * 0.12, 0);
         dummy.updateMatrix();
         boxMatrices.push(dummy.matrix.clone());
         boxColors.push(bodyColor);
       }
-      placed++;
     }
 
     return {
@@ -164,36 +164,43 @@ export function SkylineFiller({ isMobile }: { isMobile: boolean }) {
       {data.boxMatrices.length > 0 && (
         <instancedMesh ref={boxRef} args={[undefined, undefined, data.boxMatrices.length]}>
           <boxGeometry args={[1, 1, 1]} />
-          {/* toneMapped={false} removed — same washed-out-facade bug
-              fixed in CityScape (see its own comment there). */}
+          {/* toneMapped={false} removed — same bug fixed in CityScape:
+              applied to the whole lit facade rather than just an
+              additive glow layer, it made the material bypass ACES
+              tone mapping entirely, so any bright pixel (a light family
+              color under strong rig light, a specular hotspot) hard-
+              clipped to flat white instead of compressing gracefully —
+              exactly the washed-out, undefined look these buildings
+              were still showing after that same fix went into
+              CityScape's own towers. */}
           <meshPhongMaterial
             map={windowMap}
             emissiveMap={windowEmissive}
-            emissive="#bfe4ff"
-            emissiveIntensity={0.8}
-            specular="#3a4a66"
-            shininess={18}
+            emissive="#a8cfe8"
+            emissiveIntensity={0.65}
+            specular="#2a3a52"
+            shininess={14}
             fog
           />
         </instancedMesh>
       )}
       {data.roundMatrices.length > 0 && (
         <instancedMesh ref={roundRef} args={[undefined, undefined, data.roundMatrices.length]}>
-          <cylinderGeometry args={[1, 1, 1, 12]} />
+          <cylinderGeometry args={[0.72, 1, 1, 10]} />
           <meshPhongMaterial
             map={windowMap}
             emissiveMap={windowEmissive}
-            emissive="#bfe4ff"
-            emissiveIntensity={0.7}
-            specular="#3a4a66"
-            shininess={18}
+            emissive="#a8cfe8"
+            emissiveIntensity={0.6}
+            specular="#2a3a52"
+            shininess={14}
             fog
           />
         </instancedMesh>
       )}
       {data.pyramidMatrices.length > 0 && (
         <instancedMesh ref={pyramidRef} args={[undefined, undefined, data.pyramidMatrices.length]}>
-          <coneGeometry args={[0.8, 1, 4]} />
+          <coneGeometry args={[0.72, 1, 4, 1]} />
           <meshLambertMaterial fog />
         </instancedMesh>
       )}
@@ -203,10 +210,10 @@ export function SkylineFiller({ isMobile }: { isMobile: boolean }) {
           <meshPhongMaterial
             map={windowMap}
             emissiveMap={windowEmissive}
-            emissive="#bfe4ff"
-            emissiveIntensity={0.75}
-            specular="#3a4a66"
-            shininess={20}
+            emissive="#a8cfe8"
+            emissiveIntensity={0.6}
+            specular="#2a3a52"
+            shininess={16}
             fog
           />
         </instancedMesh>

@@ -15,20 +15,31 @@ interface ProfilePoint {
 // 0.5 (nose); h/w are fractions of the instance's own scale.y/scale.x,
 // sampled with smoothstep easing between keyframes so the surface
 // curves rather than kinking at each control point.
+// Rounder, fuller ends (nose/tail w/h both raised) at explicit
+// "use this type of car" reference — a bulbous, wheel-less-looking
+// concept-car pod rather than a pinched sports-car taper. The old
+// profile's nose/tail pulled in tight and low (w 0.56-0.62, h 0.16-0.2);
+// this keeps the same six-point shape but fills them out toward a
+// continuous, egg-like cross-section so the whole body reads as one
+// flowing blob rather than a wedge with a distinct point at each end.
 const PROFILE: ProfilePoint[] = [
-  { z: -0.5, h: 0.2, w: 0.62 }, // tail
-  { z: -0.3, h: 0.28, w: 0.86 }, // rear shoulder, into the cabin
+  { z: -0.5, h: 0.3, w: 0.74 }, // tail — rounded, not pinched
+  { z: -0.34, h: 0.34, w: 0.92 }, // rear shoulder, into the cabin
   { z: -0.14, h: 1.0, w: 1.0 }, // roof peak
-  { z: 0.16, h: 0.92, w: 0.94 }, // windshield base
-  { z: 0.3, h: 0.4, w: 0.78 }, // hood
-  { z: 0.5, h: 0.16, w: 0.56 }, // nose
+  { z: 0.14, h: 0.94, w: 0.96 }, // windshield base
+  { z: 0.32, h: 0.46, w: 0.86 }, // hood — fuller
+  { z: 0.5, h: 0.26, w: 0.68 }, // nose — rounded, blunter
 ];
 
 /** The roof-peak/cabin stretch of PROFILE above (roughly where h stays
  * above half height) — exported so callers can position a window band
  * exactly over the actual bulge instead of eyeballing it. */
-export const CABIN_Z_START = -0.3;
-export const CABIN_Z_END = 0.16;
+// Recomputed for the rounder PROFILE above (where h crosses 0.5 on each
+// side) — the fuller nose/tail pushed these outward from the old
+// -0.3/0.16, which also means the cabin box every caller sizes off
+// these now spans a wider, more panoramic stretch of the body.
+export const CABIN_Z_START = -0.27;
+export const CABIN_Z_END = 0.29;
 
 function smoothstep(t: number) {
   const x = THREE.MathUtils.clamp(t, 0, 1);
@@ -59,7 +70,12 @@ function sampleProfile(z: number): { h: number; w: number } {
  * instance a thousand times over, expensive to build twice for no
  * reason. */
 export function createAeroCarBodyGeometry(): THREE.BufferGeometry {
-  const geo = new THREE.BoxGeometry(1, 1, 1, 1, 8, 28);
+  // Segment counts bumped (8->10, 28->32) alongside the rounder PROFILE
+  // above — a fuller, more continuously-curved body shows faceting at
+  // the old resolution that the previous, straighter-sided taper didn't.
+  // This is a shared, built-once/cached-by-caller geometry (see the
+  // comment below), so the extra vertices cost nothing per-instance.
+  const geo = new THREE.BoxGeometry(1, 1, 1, 1, 10, 32);
   const pos = geo.attributes.position;
   const v = new THREE.Vector3();
   for (let i = 0; i < pos.count; i++) {
@@ -82,6 +98,49 @@ export function createAeroCarBodyGeometry(): THREE.BufferGeometry {
  * reads as "car" at a distance; CABIN_HEIGHT is that box's height. */
 export const CAR_SHELL_HEIGHT = 0.4;
 export const CABIN_HEIGHT = 0.22;
+
+let cachedCabinGeometry: THREE.BufferGeometry | null = null;
+
+/** The cabin/greenhouse sitting on top of the aero shell — every
+ * vehicle (StreetCars, FlyingCars, ParkingLot) was stacking a plain
+ * unit `boxGeometry` here: a perfectly vertical, unraked glass box,
+ * which is exactly what read as "toy car" rather than a real or
+ * concept vehicle — nothing that's actually been on a road has a
+ * windshield standing straight up. This remaps the same shared
+ * unit-box the aero shell itself is built from so both the front and
+ * rear glass rake inward as they rise (a real greenhouse silhouette,
+ * narrower at the roofline than at the beltline) with a touch of
+ * tumblehome (the sides leaning in slightly too), instead of tapering
+ * only the lower body and leaving the cabin a hard rectangular block on
+ * top of it. Cached and shared the same way the shell geometry is —
+ * every vehicle instances the one geometry. */
+export function createCarCabinGeometry(): THREE.BufferGeometry {
+  if (cachedCabinGeometry) return cachedCabinGeometry;
+  // Height segments raised 1 -> 5 at explicit "use this type of car"
+  // reference — a flat linear taper (only two rows of vertices, top and
+  // bottom) can only ever read as a raked glass panel; the reference's
+  // greenhouse is a genuine curved bubble canopy, which needs actual
+  // interior rows to belly outward before tapering back in toward the
+  // roofline.
+  const geo = new THREE.BoxGeometry(1, 1, 1, 1, 5, 6);
+  const pos = geo.attributes.position;
+  const v = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+    const topT = v.y + 0.5; // 0 at the beltline (base), 1 at the roofline
+    // A gentle outward belly peaking mid-height (sin(topT*PI)) layered
+    // on top of the base rake/tumblehome taper — this is what turns a
+    // flat raked panel into an actual domed bubble canopy, the reference
+    // car's single most distinctive feature.
+    const bulge = 1 + Math.sin(topT * Math.PI) * 0.14;
+    const zTaper = (1 - topT * 0.34) * bulge; // windshield/rear-glass rake + dome
+    const xTaper = (1 - topT * 0.16) * bulge; // tumblehome + dome
+    pos.setXYZ(i, v.x * xTaper, v.y, v.z * zTaper);
+  }
+  geo.computeVertexNormals();
+  cachedCabinGeometry = geo;
+  return geo;
+}
 
 let cachedCarPaintTexture: THREE.Texture | null = null;
 

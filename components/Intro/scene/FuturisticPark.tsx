@@ -3,6 +3,8 @@
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { getLeafCardTexture } from "./leafTexture";
+import { getBarkTexture } from "./barkTexture";
 
 function seeded(i: number, salt: number) {
   const v = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453;
@@ -120,6 +122,8 @@ export function FuturisticPark() {
   const canopyGlowRefs = useRef<(THREE.Mesh | null)[]>([]);
 
   const grassTexture = useMemo(() => getGrassTexture(), []);
+  const leafTexture = useMemo(() => getLeafCardTexture(), []);
+  const barkTexture = useMemo(() => getBarkTexture(), []);
 
   const trees = useMemo(
     () =>
@@ -415,7 +419,7 @@ export function FuturisticPark() {
         <group key={i} position={[tree.x, 0, tree.z]} rotation={[0, 0, tree.trunkLean]}>
           <mesh position={[0, tree.trunkHeight / 2, 0]}>
             <cylinderGeometry args={[0.08, 0.14, tree.trunkHeight, 6]} />
-            <meshLambertMaterial color="#2a3a2e" fog />
+            <meshLambertMaterial map={barkTexture} color="#2a3a2e" fog />
           </mesh>
           {tree.conical ? (
             <mesh position={[0, tree.trunkHeight + tree.canopyRadius * 0.9, 0]}>
@@ -423,14 +427,21 @@ export function FuturisticPark() {
               <meshLambertMaterial color={tree.color} fog />
             </mesh>
           ) : (
-            // Three overlapping offset lobes rather than one perfect
-            // sphere — a single sphere-on-a-stick reads as a lollipop;
-            // real broadleaf canopies are lumpy, asymmetric clusters.
-            [0, 1, 2].map((l) => {
-              const angle = seeded(tree.x * 7 + tree.z * 3, l * 91 + 1) * Math.PI * 2;
+            // Several overlapping textured leaf cards rather than solid
+            // spheres — the same fix applied everywhere else in this
+            // scene (StreetTrees/TreeOfLife/CityScape/SkyBridges/
+            // Biodome) at explicit "well defined and futuristic"
+            // request: this park's own broadleaf canopies were the one
+            // place still using smooth geometric primitives, which
+            // reads as artificial no matter how many lobes are
+            // clustered. A painted, alpha-cutout leaf-cluster
+            // silhouette gives an irregular, non-geometric edge
+            // instead.
+            [0, 1, 2, 3, 4].map((l) => {
               const isCore = l === 0;
-              const dist = isCore ? 0 : tree.canopyRadius * 0.5;
-              const s = isCore ? 1 : 0.6;
+              const angle = seeded(tree.x * 7 + tree.z * 3, l * 91 + 1) * Math.PI * 2;
+              const dist = isCore ? 0 : tree.canopyRadius * (0.35 + seeded(l, tree.x * 3 + 401) * 0.4);
+              const s = isCore ? 1.3 : 0.75 + seeded(l, tree.x * 3 + 402) * 0.5;
               return (
                 <mesh
                   key={l}
@@ -439,11 +450,19 @@ export function FuturisticPark() {
                     tree.trunkHeight + tree.canopyRadius * 0.7 + (isCore ? 0 : -tree.canopyRadius * 0.15),
                     Math.sin(angle) * dist,
                   ]}
-                  scale={s}
+                  rotation={[
+                    seeded(l, tree.x * 3 + 403) * Math.PI,
+                    seeded(l, tree.x * 3 + 404) * Math.PI,
+                    seeded(l, tree.x * 3 + 405) * Math.PI,
+                  ]}
+                  scale={tree.canopyRadius * s}
                 >
-                  <sphereGeometry args={[tree.canopyRadius, 10, 10]} />
+                  <planeGeometry args={[1, 1]} />
                   <meshLambertMaterial
+                    map={leafTexture}
                     color={isCore ? tree.color : new THREE.Color(tree.color).multiplyScalar(0.85)}
+                    alphaTest={0.45}
+                    side={THREE.DoubleSide}
                     fog
                   />
                 </mesh>
@@ -468,6 +487,39 @@ export function FuturisticPark() {
               side={THREE.BackSide}
             />
           </mesh>
+          {/* A couple of small glowing crystal-leaf accents nested in
+              the canopy — the same bioluminescent-tech detail
+              StreetTrees/TreeOfLife carry, extended here so this park's
+              own trees read as part of the same futuristic planting
+              language rather than a plainer variant. */}
+          {!tree.conical &&
+            [0, 1].map((c) => {
+              const angle = seeded(tree.x * 5 + tree.z * 2, c * 63 + 501) * Math.PI * 2;
+              const dist = tree.canopyRadius * (0.3 + seeded(c, tree.x * 4 + 502) * 0.5);
+              return (
+                <mesh
+                  key={c}
+                  position={[
+                    Math.cos(angle) * dist,
+                    tree.trunkHeight + tree.canopyRadius * (0.6 + seeded(c, tree.x * 4 + 503) * 0.6),
+                    Math.sin(angle) * dist,
+                  ]}
+                  rotation={[seeded(c, 504) * Math.PI, seeded(c, 505) * Math.PI, 0]}
+                  scale={0.06 + seeded(c, tree.x * 4 + 506) * 0.04}
+                >
+                  <octahedronGeometry args={[1, 0]} />
+                  <meshBasicMaterial
+                    color="#6fd6ff"
+                    transparent
+                    opacity={0.75}
+                    blending={THREE.AdditiveBlending}
+                    depthWrite={false}
+                    fog={false}
+                    toneMapped={false}
+                  />
+                </mesh>
+              );
+            })}
         </group>
       ))}
 

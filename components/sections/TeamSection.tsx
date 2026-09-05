@@ -17,6 +17,19 @@ const team = [
     photo: "/Sumanth-avatar.jpg",
     accent: "#00D4FF",
     glow: "0,212,255",
+    isFounder: true,
+  },
+  {
+    name: "Rakesh",
+    role: "Chief Technology Officer",
+    short: "CTO",
+    tagline: "Engineer. Architect. Problem-Solver.",
+    description:
+      "The technical force behind MDS's vision — turning ambitious ideas into resilient, scalable systems. Rakesh leads engineering with precision and care, building the infrastructure that lets MDS's products perform at the level its mission demands.",
+    photo: "/Rakesh-avatar.jpg",
+    accent: "#7B2FBE",
+    glow: "123,47,190",
+    isFounder: false,
   },
 ];
 
@@ -84,14 +97,11 @@ export function TeamSection() {
 
         {/* Card — a quiet glass card at rest; the member's accent
             color only shows up as a border tint + soft glow on hover.
-            Single centered "founder spotlight" card now that only
-            Sumanth is listed — sized for its own presence rather than
-            the narrower width the old 2-up grid used, but still capped
-            so it doesn't stretch into an oddly wide single column on
-            large screens. Full-bleed on the smallest phones (px-4 from
-            the section's own side padding does the clamping there),
-            up through a fixed comfortable width from sm and up. */}
-        <div className="w-full sm:w-auto sm:max-w-sm mx-auto">
+            Back to a 2-up grid now that Rakesh joins Sumanth — a single
+            column on mobile, side by side from sm up, capped to a width
+            that keeps two cards from stretching too wide on large
+            screens. */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
           {team.map((member, i) => (
             <motion.div
               key={member.name}
@@ -146,8 +156,10 @@ export function TeamSection() {
                     }}
                   />
 
-                  {/* Founder badge — Sumanth only */}
-                  {i === 0 && (
+                  {/* Founder badge — Sumanth only (see isFounder), not
+                      tied to array position now that a second member
+                      exists. */}
+                  {member.isFounder && (
                     <div
                       className="absolute top-2.5 right-2.5 flex items-center gap-1.5 px-2 py-0.5 rounded-full"
                       style={{

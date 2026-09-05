@@ -31,6 +31,11 @@ import { useLayoutEffect, useRef, useState } from "react";
 
 type Point = [number, number];
 
+function seeded(i: number, salt: number) {
+  const v = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453;
+  return v - Math.floor(v);
+}
+
 // Must match the `objectPosition` set on the desktop/mobile `<Image>`
 // in HeroSection.tsx exactly — this is the other half of that crop.
 const OBJECT_POSITION: [number, number] = [0.5, 0.78];
@@ -152,6 +157,19 @@ const SPARK_COUNT = 11;
 // bigger = slower).
 const LAP_SECONDS = 6.5;
 
+// A real braided river/light-trail is never one perfectly even string
+// of identical beads — it's several parallel threads of light, each a
+// different size/brightness/speed. These are small perpendicular-ish
+// offsets (in each viewBox's own pixel space) applied to two extra,
+// sparser copies of the streak group riding the same traced centerline,
+// which is what actually reads as "flowing water" instead of a
+// conveyor belt — real per-strand paths aren't needed for this, a
+// slight shift is enough to sell separate threads at this scale.
+const SIDE_STRANDS = [
+  { dx: 5, dy: -3, count: 5, scale: 0.62, opacity: 0.55 },
+  { dx: -6, dy: 2, count: 4, scale: 0.48, opacity: 0.4 },
+];
+
 export function HeroRiverFlow({
   variant,
   reducedMotion,
@@ -242,27 +260,74 @@ export function HeroRiverFlow({
             its local x-axis, which `rotate="auto"` keeps aligned with
             the path's own tangent at every point along the curve, so
             it always reads as a streak following the bend rather than
-            a shape sliding sideways through it. */}
+            a shape sliding sideways through it. Size, opacity, and
+            speed all get a small per-streak jitter — real light on
+            flowing water is never a string of identical, perfectly
+            evenly-timed beads, and that uniformity was what read as
+            mechanical rather than fluid. */}
         {!reducedMotion &&
-          Array.from({ length: SPARK_COUNT }).map((_, i) => (
-            <ellipse
-              key={i}
-              rx={streakRx}
-              ry={streakRy}
-              fill="rgba(200,235,255,0.9)"
-              filter={`url(#hero-river-spark-${variant})`}
-            >
-              <animateMotion
-                path={path}
-                keyPoints="1;0"
-                keyTimes="0;1"
-                calcMode="linear"
-                dur={`${LAP_SECONDS}s`}
-                begin={`${-(i * LAP_SECONDS) / SPARK_COUNT}s`}
-                repeatCount="indefinite"
-                rotate="auto"
-              />
-            </ellipse>
+          Array.from({ length: SPARK_COUNT }).map((_, i) => {
+            const sizeJitter = 0.75 + seeded(i, 411) * 0.6;
+            const speedJitter = 0.85 + seeded(i, 412) * 0.3;
+            const opacity = 0.7 + seeded(i, 413) * 0.3;
+            return (
+              <ellipse
+                key={i}
+                rx={streakRx * sizeJitter}
+                ry={streakRy * sizeJitter}
+                fill="rgba(200,235,255,0.9)"
+                opacity={opacity}
+                filter={`url(#hero-river-spark-${variant})`}
+              >
+                <animateMotion
+                  path={path}
+                  keyPoints="1;0"
+                  keyTimes="0;1"
+                  calcMode="linear"
+                  dur={`${LAP_SECONDS * speedJitter}s`}
+                  begin={`${-(i * LAP_SECONDS) / SPARK_COUNT}s`}
+                  repeatCount="indefinite"
+                  rotate="auto"
+                />
+              </ellipse>
+            );
+          })}
+
+        {/* Sparser side strands — same centerline, offset a few pixels
+            and rendered smaller/dimmer, so the river reads as a braid
+            of several currents rather than one channel of light. Own
+            independent phase/speed jitter per strand so the strands
+            drift in and out of alignment with each other and with the
+            main strand instead of visibly moving in lockstep. */}
+        {!reducedMotion &&
+          SIDE_STRANDS.map((strand, si) => (
+            <g key={si} transform={`translate(${strand.dx}, ${strand.dy})`}>
+              {Array.from({ length: strand.count }).map((_, i) => {
+                const sizeJitter = 0.7 + seeded(i, 421 + si * 7) * 0.5;
+                const speedJitter = 0.8 + seeded(i, 422 + si * 7) * 0.4;
+                return (
+                  <ellipse
+                    key={i}
+                    rx={streakRx * strand.scale * sizeJitter}
+                    ry={streakRy * strand.scale * sizeJitter}
+                    fill="rgba(200,235,255,0.9)"
+                    opacity={strand.opacity}
+                    filter={`url(#hero-river-spark-${variant})`}
+                  >
+                    <animateMotion
+                      path={path}
+                      keyPoints="1;0"
+                      keyTimes="0;1"
+                      calcMode="linear"
+                      dur={`${LAP_SECONDS * speedJitter}s`}
+                      begin={`${-(i * LAP_SECONDS) / strand.count - si * 0.7}s`}
+                      repeatCount="indefinite"
+                      rotate="auto"
+                    />
+                  </ellipse>
+                );
+              })}
+            </g>
           ))}
       </g>
     </svg>

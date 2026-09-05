@@ -56,8 +56,9 @@ function buildPlacements(count: number, isMobile: boolean): BannerPlacement[] {
     // Must match CityScape's own (now slimmer) width formula exactly —
     // any drift here means a banner sized for a wider tower than the
     // one actually rendered, which is what was reading as a banner
-    // floating past the edge of its own building's facade.
-    const width = (1.5 + seeded(i, 4) * 4.6) * (1.15 - heightFactor * 0.58);
+    // floating past the edge of its own building's facade. Matches
+    // CityScape's own 0.58 -> 0.72 slenderness pass.
+    const width = (1.5 + seeded(i, 4) * 4.6) * (1.15 - heightFactor * 0.72);
     // Must match CityScape's own archetype roll exactly (same salt,
     // same thresholds) — this function's whole job is figuring out
     // which of CityScape's buildings actually got a flat box facade to
@@ -192,8 +193,11 @@ export function BuildingBanners({ isMobile }: { isMobile: boolean }) {
   // left over from before CityScape's density was cut, was producing
   // banners floating with no host building anywhere near them). Raised
   // alongside CityScape's own 38/68 -> 55/95 -> 66/115 density passes
-  // (empty-spaces, then behind-the-glow fixes).
-  const count = isMobile ? 66 : 115;
+  // (empty-spaces, then behind-the-glow fixes), then 66/115 -> 83/144
+  // -> 104/180 for the "add more buildings" passes. Kept in sync even
+  // while this component is unmounted (see IntroCinematic.tsx) so it's
+  // still correct the moment it's re-enabled.
+  const count = isMobile ? 104 : 180;
   const placements = useMemo(
     () => buildPlacements(count, isMobile),
     [count, isMobile]

@@ -82,6 +82,78 @@ export function getRayTexture(): THREE.Texture {
   return cachedRay;
 }
 
+let cachedEnvMap: THREE.CubeTexture | null = null;
+
+/** A cheap procedural night-city environment cubemap — bright cool sky
+ * overhead, a band of warm/cool city glow at the horizon (standing in
+ * for thousands of distant lit windows), fading to near-black below.
+ * Every glass-faced building material in this scene (box/round/
+ * faceted/twisted towers) was relying on a single specular highlight
+ * to read as glass; a real curtain-wall facade also reflects its
+ * surroundings, which a specular highlight alone can't fake — this is
+ * what actually pushes the material from "shiny plastic" to "glass
+ * reflecting a lit city." No renderer/scene capture needed (this
+ * doesn't need to reflect the *actual* skyline accurately, just look
+ * like a plausible one), so it's six flat canvases, not a real-time
+ * cubemap render — far cheaper, and correct once rather than needing
+ * to stay in sync with the real scene. */
+export function getCityEnvironmentMap(): THREE.CubeTexture {
+  if (cachedEnvMap) return cachedEnvMap;
+  const size = 64;
+
+  const makeFace = (kind: "sky" | "ground" | "side"): HTMLCanvasElement => {
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d")!;
+    if (kind === "sky") {
+      const grad = ctx.createLinearGradient(0, 0, 0, size);
+      grad.addColorStop(0, "#0a1428");
+      grad.addColorStop(1, "#16283f");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, size, size);
+    } else if (kind === "ground") {
+      ctx.fillStyle = "#03050a";
+      ctx.fillRect(0, 0, size, size);
+    } else {
+      const grad = ctx.createLinearGradient(0, 0, 0, size);
+      grad.addColorStop(0, "#0c1830");
+      grad.addColorStop(0.62, "#16324a");
+      grad.addColorStop(0.72, "#3a6a8a");
+      grad.addColorStop(0.8, "#0d1c26");
+      grad.addColorStop(1, "#040608");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, size, size);
+      // A scatter of small bright points along the glow band — distant
+      // lit windows, so the reflection has some texture rather than a
+      // perfectly smooth gradient.
+      for (let i = 0; i < 14; i++) {
+        const x = seeded(i, 991) * size;
+        const y = size * (0.6 + seeded(i, 992) * 0.16);
+        ctx.fillStyle = `rgba(210,235,255,${0.3 + seeded(i, 993) * 0.4})`;
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
+    return canvas;
+  };
+
+  // Order three's CubeTexture expects: +X, -X, +Y, -Y, +Z, -Z.
+  const faces = [
+    makeFace("side"),
+    makeFace("side"),
+    makeFace("sky"),
+    makeFace("ground"),
+    makeFace("side"),
+    makeFace("side"),
+  ];
+
+  const texture = new THREE.CubeTexture(faces);
+  texture.needsUpdate = true;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  cachedEnvMap = texture;
+  return texture;
+}
+
 let cachedPortalGrid: THREE.Texture | null = null;
 
 /** A faint circular hologram reticle — a few concentric ring outlines

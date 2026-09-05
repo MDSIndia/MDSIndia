@@ -11,17 +11,27 @@ import { createFlightCurve, flightU } from "./path";
 // just needs to comfortably span the light-dissolve.
 const COAST_SECONDS = 1.6;
 
-// Exponential-smoothing time constant for the tiny inertia added on
-// top of the exact curve position — small enough (50ms) that it never
-// visibly lags the path, it just rounds off a mathematically-exact
-// per-frame snap into something that feels like a physical rig with a
-// touch of momentum rather than a value teleporting to a formula.
-const POSITION_SMOOTHING_TAU = 0.05;
-// The look-at target gets its own, slightly looser time constant —
-// a camera operator's attention trails the subject a touch more than
-// the rig's own body does, which is what actually reads as "someone
-// is flying this" rather than a subject glued dead-center in frame.
-const LOOK_SMOOTHING_TAU = 0.09;
+// Exponential-smoothing time constant for the inertia added on top of
+// the exact curve position. Pulled back down (0.05 -> 0.15 -> 0.07) —
+// the 0.15 value was an earlier attempt at "liquid flow" that read the
+// word as *weighty/momentum-heavy* (a body trailing the path with real
+// mass), but the very next reports were "lags and glitches... make it
+// smooth like liquid flow" — i.e. the added trailing delay was itself
+// being felt as lag, not fixed by it. A liquid actually flows
+// immediately into the shape of its container rather than trailing
+// behind; "liquid smooth" is better read as continuous and responsive
+// (no steps/kinks) than as slow-to-catch-up. This keeps enough
+// smoothing to round off the mathematically-exact per-frame position
+// into something non-robotic, without the pronounced response delay.
+const POSITION_SMOOTHING_TAU = 0.07;
+// The look-at target gets its own, still-somewhat-looser time constant
+// — a camera operator's attention trails the subject a touch more than
+// the rig's own body does — but pulled back down alongside the
+// position tau for the same reason (0.09 -> 0.28 -> 0.12).
+const LOOK_SMOOTHING_TAU = 0.12;
+// FOV (zoom) gets the same treatment, pulled back down alongside the
+// other two (0.18 -> 0.09).
+const FOV_SMOOTHING_TAU = 0.09;
 
 /** Drives the camera along the flight path — the path/waypoints and
  * overall timing are untouched. Deliberately stable rather than a
@@ -40,7 +50,7 @@ const LOOK_SMOOTHING_TAU = 0.09;
  * much narrower than desktop, so the same vertical FOV yields a far
  * narrower *horizontal* FOV — narrow enough that the skyline flanking
  * the road fell entirely outside the frustum on phones. */
-export function CameraRig({ isMobile }: { isMobile: boolean }) {
+export function CameraRig({ isMobile, active }: { isMobile: boolean; active: boolean }) {
   const { camera, scene } = useThree();
   const baseFov = isMobile ? 64 : 46;
   const curve = useMemo(() => createFlightCurve(), []);
@@ -55,6 +65,31 @@ export function CameraRig({ isMobile }: { isMobile: boolean }) {
   const targetPos = useMemo(() => new THREE.Vector3(), []);
   const smoothedPos = useRef<THREE.Vector3 | null>(null);
   const smoothedLook = useRef<THREE.Vector3 | null>(null);
+  const smoothedFov = useRef<number | null>(null);
+  const wasActive = useRef(false);
+
+  // The canvas (and this rig's own useFrame) is already running during
+  // the invisible warm-up stage before the user clicks — see
+  // IntroCinematic's own comment on why (pre-compiling shaders). That
+  // means smoothedPos/smoothedLook/smoothedFov above get seeded from
+  // whatever the flight curve's position happens to be at *warm-up*
+  // elapsed time, not real story time — then ClockGate resets the
+  // clock to 0 the instant the user actually clicks, so the target
+  // position snaps back to the true start while the smoothed values
+  // stay wherever warm-up left them, and the rig spends its first
+  // real frames easing back from that stale drift instead of starting
+  // clean. This was a real bug behind "stuck"/"unnatural" start
+  // reports, not just a tuning issue — clearing the smoothed refs the
+  // instant `active` flips true forces them to re-seed fresh on the
+  // very next frame, from the actual t=0 target.
+  useEffect(() => {
+    if (active && !wasActive.current) {
+      smoothedPos.current = null;
+      smoothedLook.current = null;
+      smoothedFov.current = null;
+    }
+    wasActive.current = active;
+  }, [active]);
 
   // A real backdrop instead of flat black: a soft vertical gradient with
   // a band of horizon glow (city light pollution reflecting off low
@@ -154,7 +189,15 @@ export function CameraRig({ isMobile }: { isMobile: boolean }) {
       // buildings back out of a shot that's deliberately keeping them
       // visible right up to the end.
       const engulfPunch = windowProgress(t, 8.5, INTRO_DURATION) * 6;
-      camera.fov = baseFov + establishWide + speedPush + finalPush - engulfPunch;
+      const targetFov = baseFov + establishWide + speedPush + finalPush - engulfPunch;
+      // Same exponential inertia as the position/look smoothing above —
+      // without it the lens still snapped exactly to its formula every
+      // frame while the rig itself now flows, which stood out as the
+      // one un-smoothed part of the shot.
+      if (smoothedFov.current === null) smoothedFov.current = targetFov;
+      const fovLerp = 1 - Math.exp(-delta / FOV_SMOOTHING_TAU);
+      smoothedFov.current += (targetFov - smoothedFov.current) * fovLerp;
+      camera.fov = smoothedFov.current;
       camera.updateProjectionMatrix();
     }
 

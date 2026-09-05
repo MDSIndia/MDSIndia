@@ -9,19 +9,21 @@ import { useMobile } from "@/hooks/useMobile";
 import { CameraRig } from "./scene/CameraRig";
 import { Ground } from "./scene/Ground";
 import { HighwayRoad } from "./scene/HighwayRoad";
+import { Sidewalk } from "./scene/Sidewalk";
 import { RoadDetails } from "./scene/RoadDetails";
 import { CrossStreets } from "./scene/CrossStreets";
 import { CityScape } from "./scene/CityScape";
 import { SkylineFiller } from "./scene/SkylineFiller";
+import { FinaleSkyline } from "./scene/FinaleSkyline";
+import { SecondRowSkyline } from "./scene/SecondRowSkyline";
 import { DistantSkyline } from "./scene/DistantSkyline";
 import { ParticleField } from "./scene/ParticleField";
-import { Billboards } from "./scene/Billboards";
-import { BuildingBanners } from "./scene/BuildingBanners";
-import { HoloAds } from "./scene/HoloAds";
 import { SkyBridges } from "./scene/SkyBridges";
 import { LightShafts } from "./scene/LightShafts";
 import { ElevatedTrain } from "./scene/ElevatedTrain";
 import { StreetLights } from "./scene/StreetLights";
+import { StreetKiosks } from "./scene/StreetKiosks";
+import { OrbitalRing } from "./scene/OrbitalRing";
 import { FlyingCars } from "./scene/FlyingCars";
 import { StreetCars } from "./scene/StreetCars";
 import { ParkingLot } from "./scene/ParkingLot";
@@ -29,6 +31,9 @@ import { StreetTrees } from "./scene/StreetTrees";
 import { FloatingLogo } from "./scene/FloatingLogo";
 import { Landmark } from "./scene/Landmark";
 import { NoorvaTower } from "./scene/NoorvaTower";
+import { MDSOfficeTower } from "./scene/MDSOfficeTower";
+import { OfficePark } from "./scene/OfficePark";
+import { TwinSpireBrace } from "./scene/TwinSpireBrace";
 import { Waterfall } from "./scene/Waterfall";
 import { Biodome } from "./scene/Biodome";
 import { SkyPlaza } from "./scene/SkyPlaza";
@@ -276,16 +281,20 @@ export function IntroCinematic({
                   See SceneLighting above for the gentle per-light
                   breathing animation. */}
               <SceneLighting isMobile={isMobile} />
-              <CameraRig isMobile={isMobile} />
+              <CameraRig isMobile={isMobile} active={active} />
               <Ground />
               <HighwayRoad />
+              <Sidewalk />
               <RoadDetails isMobile={isMobile} />
               <CrossStreets isMobile={isMobile} />
               <CityScape isMobile={isMobile} />
+              <SecondRowSkyline isMobile={isMobile} />
               <SkylineFiller isMobile={isMobile} />
+              <FinaleSkyline isMobile={isMobile} />
               <DistantSkyline isMobile={isMobile} />
               <SkyBridges isMobile={isMobile} />
               <LightShafts isMobile={isMobile} />
+              <OrbitalRing isMobile={isMobile} />
               <ElevatedTrain isMobile={isMobile} />
               <StreetLights isMobile={isMobile} />
               <StreetTrees isMobile={isMobile} />
@@ -302,11 +311,12 @@ export function IntroCinematic({
                 <ParkingLot isMobile={isMobile} />
                 <StreetCars isMobile={isMobile} />
                 <FlyingCars isMobile={isMobile} />
-                <Billboards isMobile={isMobile} />
-                <BuildingBanners isMobile={isMobile} />
-                <HoloAds isMobile={isMobile} />
+                <StreetKiosks isMobile={isMobile} />
                 <FloatingLogo />
                 <Landmark />
+                <MDSOfficeTower />
+                <OfficePark />
+                <TwinSpireBrace />
                 <NoorvaTower />
                 <Waterfall isMobile={isMobile} />
                 <Biodome />

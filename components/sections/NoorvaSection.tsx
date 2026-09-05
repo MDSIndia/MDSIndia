@@ -3,7 +3,7 @@
 import React from "react";
 import type { CSSProperties } from "react";
 import { motion } from "framer-motion";
-import { HandHeart, Lightbulb, Moon, Navigation } from "lucide-react";
+import { CalendarCheck, HandHeart, Lightbulb, Navigation } from "lucide-react";
 
 // Each card gets one clearly distinct accent so all four read apart
 // at a glance: blue and cyan come from Noorva's own orb/text-gradient
@@ -11,12 +11,19 @@ import { HandHeart, Lightbulb, Moon, Navigation } from "lucide-react";
 // stay far enough apart to avoid the "two purples" look.
 const scenarios = [
   {
-    iconComponent: Moon,
-    title: "Your Late Night Confidant",
+    // Merged the old "Late Night Confidant" and "Emotional Anchor"
+    // cards into one at explicit request — both were the same
+    // underlying promise (Noorva as emotional support in a hard
+    // moment), just split across a time-of-day framing and a
+    // difficult-day framing. One card carrying both moments reads as a
+    // fuller, less repetitive statement of that same promise, and
+    // frees up a 4th slot for a genuinely different capability.
+    iconComponent: HandHeart,
+    title: "Your Emotional Confidant",
     description:
-      "At 2 AM when thoughts race and sleep won't come, Noorva is there. Not with platitudes — with presence, understanding, and gentle clarity.",
-    color: "#0055FF",
-    glow: "rgba(0,85,255,0.22)",
+      "At 2 AM when thoughts race, or on the days that are simply hard, Noorva is there — not with platitudes, but with presence, understanding, and the emotional intelligence to validate what you're feeling and guide you toward calm.",
+    color: "#EC4899",
+    glow: "rgba(236,72,153,0.22)",
   },
   {
     iconComponent: Navigation,
@@ -35,12 +42,16 @@ const scenarios = [
     glow: "rgba(168,85,247,0.22)",
   },
   {
-    iconComponent: HandHeart,
-    title: "Your Emotional Anchor",
+    // New 4th card, replacing the old "Emotional Anchor" slot now that
+    // it's merged above — a planner/organizer capability distinct from
+    // Life Navigator's big-picture mentorship: day-to-day structure
+    // rather than major decisions.
+    iconComponent: CalendarCheck,
+    title: "Your Personal Planner",
     description:
-      "On difficult days, Noorva doesn't just listen — it understands, validates, and guides you toward calm with emotional intelligence that feels real.",
-    color: "#EC4899",
-    glow: "rgba(236,72,153,0.22)",
+      "From daily to-dos to long-term goals, Noorva keeps your life organized — gentle reminders, smart scheduling, and a clear view of what matters, so nothing important slips through the cracks.",
+    color: "#0055FF",
+    glow: "rgba(0,85,255,0.22)",
   },
 ];
 

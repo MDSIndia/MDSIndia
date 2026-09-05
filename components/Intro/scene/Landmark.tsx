@@ -46,7 +46,14 @@ export function Landmark() {
 
   return (
     <group position={POSITION}>
-      {/* Solid glass-blue core. */}
+      {/* Solid glass-blue core — depthWrite left on (unusual for a
+          transparent material, but deliberate here): without it, the
+          wireframe shell rendered right after never gets occluded by
+          this core at all, so its *back*-facing hex edges show through
+          the front ones and the whole sphere reads as a flat tangle of
+          superimposed lines instead of a solid globe with a clean,
+          occluded facing pattern. Writing depth here is what actually
+          hides the far-side wireframe behind the near side. */}
       <mesh>
         <icosahedronGeometry args={[RADIUS, 1]} />
         <meshPhongMaterial
@@ -54,8 +61,8 @@ export function Landmark() {
           specular="#4fd6ff"
           shininess={70}
           transparent
-          opacity={0.6}
-          depthWrite={false}
+          opacity={0.75}
+          depthWrite
           fog
         />
       </mesh>
@@ -138,9 +145,28 @@ export function Landmark() {
       </group>
 
       {/* The MDS mark, mounted on the face pointed back down the
-          highway so it's readable as the camera approaches. */}
+          highway so it's readable as the camera approaches. Sized up
+          (0.85 -> 1.0 of the sphere's own radius) at explicit "bolder
+          landmark signage" request. */}
       <mesh position={[0, 0, RADIUS * 0.9]}>
-        <planeGeometry args={[RADIUS * 0.85, RADIUS * 0.85]} />
+        <planeGeometry args={[RADIUS, RADIUS]} />
+        <meshBasicMaterial
+          map={texture}
+          transparent
+          toneMapped={false}
+          depthWrite={false}
+          fog={false}
+        />
+      </mesh>
+      {/* A second copy on the trailing face — the camera flies past
+          this landmark rather than stopping at it, and the mark used to
+          disappear entirely once the camera drew level with the sphere;
+          this keeps the brand mark visible on the way past too, not
+          just on approach. Mirrored correctly (its own plane, not a
+          double-sided copy of the front one, which would read backwards
+          from behind). */}
+      <mesh position={[0, 0, -RADIUS * 0.9]} rotation={[0, Math.PI, 0]}>
+        <planeGeometry args={[RADIUS, RADIUS]} />
         <meshBasicMaterial
           map={texture}
           transparent
