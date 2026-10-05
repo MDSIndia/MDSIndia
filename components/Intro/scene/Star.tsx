@@ -4,7 +4,7 @@ import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Sparkles } from "@react-three/drei";
 import * as THREE from "three";
-import { INTRO_DURATION, windowProgress, easeInQuad } from "./timeline";
+import { INTRO_DURATION, at, windowProgress, easeInQuad } from "./timeline";
 import { STAR_POSITION } from "./path";
 import { getRadialGlowTexture, getPortalGridTexture } from "./glowTexture";
 
@@ -110,7 +110,7 @@ export function Star({ isMobile }: { isMobile: boolean }) {
     // the whole frame including the buildings around it) so the
     // skyline stays visible right up to the end instead of the glow
     // doing all the work alone.
-    const growth = windowProgress(t, 6.2, INTRO_DURATION, easeInQuad);
+    const growth = windowProgress(t, at(5.0), INTRO_DURATION, easeInQuad);
     const scale = 0.1 + growth * growth * 13;
     group.visible = growth > 0.002;
     group.scale.setScalar(scale);
@@ -120,7 +120,7 @@ export function Star({ isMobile }: { isMobile: boolean }) {
     // torus with no rotation), which already matches this scene's
     // fixed x=0 camera path, so no per-frame billboarding is needed.
 
-    const engulf = windowProgress(t, 8.4, INTRO_DURATION);
+    const engulf = windowProgress(t, at(8.4), INTRO_DURATION);
     // A gentle, irregular flicker rather than a smooth mechanical pulse
     // — a hologram's own faint instability, not a hard glitch.
     const flicker = 0.92 + Math.sin(t * 9.2) * 0.04 + Math.sin(t * 3.1) * 0.04;

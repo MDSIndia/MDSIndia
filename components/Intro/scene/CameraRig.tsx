@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { INTRO_DURATION, clamp01, windowProgress } from "./timeline";
+import { INTRO_DURATION, at, clamp01, windowProgress } from "./timeline";
 import { createFlightCurve, flightU } from "./path";
 
 // How long the camera keeps gently coasting forward once the flight
@@ -180,15 +180,18 @@ export function CameraRig({ isMobile, active }: { isMobile: boolean; active: boo
       // horizontal frustum enough to reliably catch the flanking
       // skyline at the short range the camera starts at, rather than
       // leaving that to how many buildings happen to fall near center.
-      const establishWide = (1 - windowProgress(t, 0, 2.6)) * (isMobile ? 8 : 16);
-      const speedPush = windowProgress(t, 2.6, 6.6) * 27;
-      const finalPush = windowProgress(t, 7.1, 8.5) * 17;
+      const establishWide = (1 - windowProgress(t, 0, at(2.6))) * (isMobile ? 8 : 16);
+      const speedPush = windowProgress(t, at(2.6), at(6.6)) * 27;
+      // Starts earlier than the other beats' proportional share so the
+      // lens tightens on the star over ~1.4s of the 5s cut, not a
+      // sudden ~0.8s snap right at the end.
+      const finalPush = windowProgress(t, at(6.0), at(8.5)) * 17;
       // A gentler final punch-in than before — the star's own glow is
       // now doing less of the "consume the whole frame" work (see the
       // fog below), so an aggressive FOV crush here would just crop the
       // buildings back out of a shot that's deliberately keeping them
       // visible right up to the end.
-      const engulfPunch = windowProgress(t, 8.5, INTRO_DURATION) * 6;
+      const engulfPunch = windowProgress(t, at(8.5), INTRO_DURATION) * 6;
       const targetFov = baseFov + establishWide + speedPush + finalPush - engulfPunch;
       // Same exponential inertia as the position/look smoothing above —
       // without it the lens still snapped exactly to its formula every
@@ -201,9 +204,11 @@ export function CameraRig({ isMobile, active }: { isMobile: boolean; active: boo
       camera.updateProjectionMatrix();
     }
 
-    const establishFog = 1 - windowProgress(t, 0, 0.5);
-    const portalApproach = windowProgress(t, 7.2, 8.6);
-    const engulf = windowProgress(t, 8.5, INTRO_DURATION);
+    const establishFog = 1 - windowProgress(t, 0, at(0.5));
+    // Same early start as finalPush above: the cyan haze builds
+    // alongside the lens push instead of flooding the street in <1s.
+    const portalApproach = windowProgress(t, at(6.0), at(8.6));
+    const engulf = windowProgress(t, at(8.5), INTRO_DURATION);
 
     // The finale used to fog/whiten out completely (density racing up
     // to 0.22, color lerping all the way to near-white) which buried

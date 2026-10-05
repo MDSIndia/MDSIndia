@@ -3,7 +3,7 @@
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { clamp01, windowProgress } from "./timeline";
+import { at, clamp01, windowProgress } from "./timeline";
 import { STAR_POSITION } from "./path";
 import { getParticleDotTexture, getRadialGlowTexture } from "./glowTexture";
 
@@ -13,7 +13,7 @@ function seeded(i: number, salt: number) {
 }
 
 /** The moment the camera is engulfed by the star. */
-const BLAST_START = 8.55;
+const BLAST_START = at(8.55);
 const PALETTE = ["#ffffff", "#00d4ff", "#7fb2ff", "#0055FF", "#bfe9ff"];
 
 /** The star doesn't explode — it blooms: a graceful "digital big bang"

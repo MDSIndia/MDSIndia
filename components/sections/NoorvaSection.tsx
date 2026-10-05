@@ -195,7 +195,7 @@ export function NoorvaSection() {
             color: "rgba(255,255,255,0.62)",
           }}
         >
-          The Future of Human-AI Companionship
+          Personal Humanized AI — Part of the Noorva Ecosystem
         </motion.p>
 
         {/* Statement */}
@@ -224,7 +224,7 @@ export function NoorvaSection() {
               color: "rgba(255,255,255,0.92)",
             }}
           >
-            A digital life companion.
+            A personal lifestyle companion.
           </p>
         </motion.div>
 
@@ -239,7 +239,7 @@ export function NoorvaSection() {
           <NoorvaOrb />
           {/* Label tags around orb — HUD status-readout chips */}
           <div className="flex items-center justify-center gap-3 flex-wrap mt-10">
-            {["Emotional AI", "Contextual Memory", "Neural Learning", "Noorva AI", "Always With You"].map((tag) => (
+            {["Emotional AI", "Affective AI", "Human-Interactive AI", "Contextual Memory", "Always With You"].map((tag) => (
               <span
                 key={tag}
                 className="hud-tag px-3.5 py-1.5 rounded-full text-[0.7rem] font-medium uppercase"
@@ -332,9 +332,10 @@ export function NoorvaSection() {
           className="text-center text-sm leading-relaxed max-w-2xl mx-auto mt-12"
           style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.52)" }}
         >
-          Noorva is built on a foundation of emotional intelligence, contextual memory, and genuine
-          understanding. She learns your patterns, respects your boundaries, and grows with
-          you — day by day, conversation by conversation.
+          Noorva Companion is the flagship of the Noorva Ecosystem — a new category of
+          human-centered AI that understands your context, emotions, behaviors, and preferences.
+          Our vision is to turn AI from a tool you use into a companion that genuinely understands,
+          supports, and grows alongside you.
         </motion.p>
       </div>
     </section>

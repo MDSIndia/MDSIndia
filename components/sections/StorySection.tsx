@@ -37,6 +37,11 @@ interface PrincipleProps {
    * washed out chasing the ones that aren't. */
   imageBrightness?: number;
   imageContrast?: number;
+  /** Override for headlines too long to fit the text column at the
+   * default display size (e.g. "Customer Experience"). */
+  headlineFontSize?: string;
+  /** Label above the headline; "Core Value" by default. */
+  label?: string;
 }
 
 function PrincipleBlock({
@@ -57,6 +62,8 @@ function PrincipleBlock({
   fadeRightBottom = false,
   imageBrightness = 1.12,
   imageContrast = 1.25,
+  headlineFontSize = "clamp(3rem, 6.5vw, 7rem)",
+  label = "Core Value",
 }: PrincipleProps) {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
@@ -136,7 +143,7 @@ function PrincipleBlock({
             textTransform: "uppercase" as const,
           }}
         >
-          Core Principle&thinsp;{number}
+          {label}&thinsp;{number}
         </span>
         <span
           className="h-px"
@@ -156,7 +163,7 @@ function PrincipleBlock({
         transition={{ duration: 1.0, delay: 0.08, ease: EASE }}
         style={{
           fontFamily: NM,
-          fontSize: "clamp(3rem, 6.5vw, 7rem)",
+          fontSize: headlineFontSize,
           lineHeight: 0.88,
           letterSpacing: "0.02em",
           background: headlineGradient,
@@ -277,7 +284,7 @@ export function StorySection() {
               backgroundClip: "text",
             }}
           >
-            3 Core Principles
+            3 Core Values
           </h2>
           <p
             className="mt-5 max-w-xl mx-auto"
@@ -288,28 +295,49 @@ export function StorySection() {
               color: "rgba(255,255,255,0.58)",
             }}
           >
-            The values that guide every product, every decision, every line of code.
+            The values that guide our decisions, shape our culture, and sustain MDS for the long term.
           </p>
         </motion.div>
 
         {/* Blocks */}
         <div className="space-y-8 md:space-y-14">
 
-          {/* 01 — VISION */}
+          {/* 01 — INNOVATION */}
           <PrincipleBlock
             number="01"
-            headline="Vision"
-            subheading="See Beyond What Exists Today"
+            headline="Innovation"
+            subheading="Challenge the Status Quo"
             body={[
-              "At MDS, vision is the starting point of every innovation.",
-              "We believe the future is not something to wait for — it is something to create.",
-              "Our vision drives us to imagine possibilities beyond current limitations and build technology that transforms how people learn, create, communicate, and grow.",
-              "Every revolutionary product begins with the courage to see what others cannot.",
+              "At MDS, innovation is the driving force behind everything we do.",
+              "It is how we challenge the status quo, rethink traditional approaches, and create transformative change.",
+              "Breakthrough innovation is essential to disrupting markets, solving complex problems, and building technologies and products that leave a lasting impact on the world.",
             ]}
-            imageSrc="/MDSVision.png"
-            imageAlt="Vision — MDS Foundation"
+            imageSrc="/MDSInnovation.png"
+            imageAlt="Innovation — MDS Core Value"
             imageLeft={true}
             priority
+            accentColor="rgba(160,80,255,0.72)"
+            headlineGradient="linear-gradient(135deg, #FFFFFF 0%, #D8C8FF 18%, #9B5FDE 50%, #7B2FBE 100%)"
+            numberColor="rgba(160,80,255,0.55)"
+            dropGlow="drop-shadow(0 0 38px rgba(160,80,255,0.55)) drop-shadow(0 0 80px rgba(0,212,255,0.25))"
+            floatDuration={9}
+            floatDelay={0.6}
+          />
+
+          {/* 02 — EXCEPTIONAL CUSTOMER EXPERIENCE */}
+          <PrincipleBlock
+            number="02"
+            headline="Customer Experience"
+            headlineFontSize="clamp(2.2rem, 4.4vw, 4.8rem)"
+            subheading="Exceptional Value. Memorable Experiences."
+            body={[
+              "Everything we do is driven by a commitment to creating exceptional value and memorable experiences for our customers.",
+              "Great products begin with a deep understanding of human needs, so we place the customer experience at the heart of every decision, innovation, and interaction.",
+              "True differentiation is not what a product does — it is how it makes customers feel.",
+            ]}
+            imageSrc="/MDSVision.png"
+            imageAlt="Exceptional Customer Experience — MDS Core Value"
+            imageLeft={false}
             accentColor="rgba(0,212,255,0.72)"
             headlineGradient="linear-gradient(135deg, #FFFFFF 0%, #D8EEFF 22%, #7AA4FF 52%, #00D4FF 100%)"
             numberColor="rgba(0,212,255,0.55)"
@@ -318,20 +346,19 @@ export function StorySection() {
             floatDelay={0}
           />
 
-          {/* 02 — AMBITION */}
+          {/* 03 — WINNER'S SPIRIT */}
           <PrincipleBlock
-            number="02"
-            headline="Ambition"
-            subheading="Dream Bigger. Build Further."
+            number="03"
+            headline="Winner's Spirit"
+            subheading="Winning Is the Oxygen of MDS"
             body={[
-              "Ambition is the force that pushes us beyond ordinary goals.",
-              "We challenge ourselves to think bigger, move faster, and pursue ideas that have the power to create global impact.",
-              "At MDS, ambition means refusing to settle for incremental change and striving instead to build technologies that redefine industries and improve lives.",
-              "The future belongs to those bold enough to create it.",
+              "We approach every challenge, decision, product, and market with the determination to succeed, pursuing excellence through ambition, ownership, and accountability.",
+              "Winning is earned through rigorous research, calculated decision-making, preparation, relentless execution, continuous learning, and adaptability.",
+              "Once we commit, we pursue our objectives with determination, resilience, and an uncompromising commitment to winning.",
             ]}
             imageSrc="/MDSAmbition.png"
-            imageAlt="Ambition — MDS Foundation"
-            imageLeft={false}
+            imageAlt="Winner's Spirit — MDS Core Value"
+            imageLeft={true}
             accentColor="rgba(0,100,255,0.72)"
             headlineGradient="linear-gradient(135deg, #FFFFFF 0%, #C8D8FF 20%, #5588FF 50%, #7B2FBE 100%)"
             numberColor="rgba(80,140,255,0.55)"
@@ -341,28 +368,6 @@ export function StorySection() {
             fadeRightBottom
             imageBrightness={2.0}
             imageContrast={1.0}
-          />
-
-          {/* 03 — INNOVATION */}
-          <PrincipleBlock
-            number="03"
-            headline="Innovation"
-            subheading="Turning Possibilities Into Reality"
-            body={[
-              "Innovation is the heartbeat of MDS.",
-              "We constantly explore new technologies, challenge conventional thinking, and transform ideas into meaningful solutions.",
-              "It is through innovation that we build products like Noorva and pursue our mission of creating technology that empowers humanity.",
-              "Innovation is not a department — it is our mindset.",
-            ]}
-            imageSrc="/MDSInnovation.png"
-            imageAlt="Innovation — MDS Foundation"
-            imageLeft={true}
-            accentColor="rgba(160,80,255,0.72)"
-            headlineGradient="linear-gradient(135deg, #FFFFFF 0%, #D8C8FF 18%, #9B5FDE 50%, #7B2FBE 100%)"
-            numberColor="rgba(160,80,255,0.55)"
-            dropGlow="drop-shadow(0 0 38px rgba(160,80,255,0.55)) drop-shadow(0 0 80px rgba(0,212,255,0.25))"
-            floatDuration={9}
-            floatDelay={0.6}
           />
 
         </div>

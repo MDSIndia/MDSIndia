@@ -3,7 +3,7 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { windowProgress } from "./timeline";
+import { at, windowProgress } from "./timeline";
 import {
   ASPHALT_COLOR,
   ROAD_EDGE_LINE_COLOR,
@@ -283,7 +283,7 @@ export function HighwayRoad() {
     // of the strongest "we are going fast" cues cinema uses, and it's
     // free to tune independently of how fast the camera actually
     // translates through the world.
-    const speed = 0.6 + windowProgress(t, 2.6, 8.0) * 7.2;
+    const speed = 0.6 + windowProgress(t, at(2.6), at(8.0)) * 7.2;
     texture.offset.y -= speed * delta;
     // A slower, independent drift on the sheen — reads as reflections
     // sliding past rather than perfectly locked to the paint markings

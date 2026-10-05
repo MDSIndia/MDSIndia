@@ -3,7 +3,7 @@
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { windowProgress } from "./timeline";
+import { at, windowProgress } from "./timeline";
 
 function seeded(i: number, salt: number) {
   const v = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453;
@@ -68,7 +68,7 @@ export function ParticleField({ isMobile }: { isMobile: boolean }) {
 
   useFrame((state, delta) => {
     const t = state.clock.getElapsedTime();
-    ambientMaterial.opacity = windowProgress(t, 0, 2.0) * 0.4;
+    ambientMaterial.opacity = windowProgress(t, 0, at(2.0)) * 0.4;
     if (ambientRef.current) ambientRef.current.rotation.y += delta * 0.01;
   });
 

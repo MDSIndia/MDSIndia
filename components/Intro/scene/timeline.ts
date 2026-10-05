@@ -1,5 +1,17 @@
-/** Total length of the cinematic sequence, in seconds. */
-export const INTRO_DURATION = 9.0;
+/** Length the beat timestamps below were originally authored against. */
+const AUTHORED_DURATION = 9.0;
+
+/** Total length of the cinematic sequence, in seconds. Changing this is
+ * the one knob for the intro's pace: the camera path scales with it
+ * directly (it works in fractions of the total), and every authored beat
+ * timestamp goes through `at()` so it keeps its place in the story. */
+export const INTRO_DURATION = 5.0;
+
+/** Converts a timestamp authored against the original 9s cut into the
+ * current timeline, so each beat stays at the same fraction of the flight. */
+export function at(seconds: number): number {
+  return (seconds * INTRO_DURATION) / AUTHORED_DURATION;
+}
 
 export function clamp01(x: number): number {
   return Math.min(1, Math.max(0, x));

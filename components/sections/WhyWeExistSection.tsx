@@ -339,6 +339,18 @@ export function AboutMDSFullContent() {
           >
             About MDS
           </h2>
+          <p
+            className="mt-5"
+            style={{
+              fontFamily: SG,
+              fontSize: "0.68rem",
+              letterSpacing: "0.32em",
+              color: "rgba(255,255,255,0.45)",
+              textTransform: "uppercase",
+            }}
+          >
+            Hyderabad, India · Est. May 8, 2025 · Startup India Recognized
+          </p>
         </motion.div>
 
         {/* ══════════════════════════════════════════════════════════════
@@ -463,8 +475,9 @@ export function AboutMDSFullContent() {
               margin: "0 auto",
             }}
           >
-            We&apos;re driven by one pursuit: transformative, world-class products that solve real
-            problems, unlock human potential, and leave a lasting mark — not incremental software.
+            MDS designs and develops innovative, human-centered technologies and products that
+            address real-world problems and evolving human needs — transforming existing markets
+            and creating new ones.
           </motion.p>
         </motion.div>
 
@@ -545,9 +558,10 @@ export function AboutMDSFullContent() {
                 color: "#FFFFFF",
               }}
             >
-              Noorva is built to redefine how humans interact with AI: a trusted partner for
-              growth, productivity, learning, creativity, and decision-making — present in the
-              moments that matter, not just the tasks you assign it.
+              Noorva Companion is MDS&apos;s flagship personal lifestyle companion — helping people
+              navigate daily life, relationships, personal growth, productivity, wellbeing,
+              learning, and decision-making through deeply personalized and emotionally aware
+              interactions.
             </motion.p>
           </div>
 
@@ -624,9 +638,10 @@ export function AboutMDSFullContent() {
                 color: "#FFFFFF",
               }}
             >
-              Built with deep intelligence and human-centric design, Noorva understands people at a
-              profound level and adapts to their evolving needs — helping you move from intention to
-              action, closing the gap between what you aspire to and what you actually do.
+              Powered by Emotional AI, Affective AI, and our proprietary Human-Interactive AI,
+              Noorva understands context, emotions, behaviors, preferences, and personal
+              experiences — helping you move from intention to action, closing the gap between
+              what you aspire to and what you actually do.
             </motion.p>
 
             <motion.p
@@ -763,13 +778,92 @@ export function AboutMDSFullContent() {
                 maxWidth: 560,
               }}
             >
-              At MDS, we&apos;re laying the foundations of a smarter, more empowered tomorrow —
-              where technology amplifies human capability and redefines what&apos;s possible.
+              Our long-term goal is to become the most innovative technology company in the world
+              within 10 years — accelerating progress that might otherwise take 30 years or more,
+              and helping transform the world into a more advanced, futuristic society.
             </p>
           </div>
         </motion.div>
 
-        {/* 6 ── Closing quote — glassmorphism card */}
+        {/* 5b ── The next decade */}
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, ease: EASE }}
+          className="mb-10 md:mb-14 text-center"
+        >
+          <span
+            style={{
+              fontFamily: SG,
+              fontSize: "0.62rem",
+              letterSpacing: "0.48em",
+              color: "rgba(0,212,255,0.55)",
+              textTransform: "uppercase" as const,
+              display: "block",
+              marginBottom: "0.75rem",
+            }}
+          >
+            The Next Decade
+          </span>
+          <h3
+            style={{
+              fontFamily: NM,
+              fontSize: "clamp(1.35rem, 2.6vw, 2.3rem)",
+              lineHeight: 1.18,
+              letterSpacing: "0.01em",
+              marginBottom: "1rem",
+              fontWeight: 700,
+            }}
+          >
+            <span style={{ color: "rgba(255,255,255,0.93)" }}>Beyond AI, into </span>
+            <span
+              style={{
+                background: "linear-gradient(135deg, #00D4FF 0%, #7AA4FF 50%, #a855f7 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              four new frontiers.
+            </span>
+          </h3>
+          <p
+            style={{
+              fontFamily: SG,
+              fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
+              lineHeight: 1.8,
+              color: "#FFFFFF",
+              maxWidth: 640,
+              margin: "0 auto 1.5rem",
+            }}
+          >
+            Over the next ten years, MDS will expand into Quantum Technology, Nano technology,
+            Automobiles, and Space tech — using Quantum as the foundation to advance the other
+            three, and bringing Quantum Intelligence into the Noorva Ecosystem.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {["Quantum Technology", "Nano Technology", "Automobiles", "Space Tech"].map((t) => (
+              <span
+                key={t}
+                className="px-4 py-2 rounded-full text-xs font-medium uppercase"
+                style={{
+                  fontFamily: SG,
+                  letterSpacing: "0.12em",
+                  color: "rgba(216,238,255,0.92)",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.14)",
+                  backdropFilter: "blur(14px) saturate(150%)",
+                  WebkitBackdropFilter: "blur(14px) saturate(150%)",
+                }}
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* 6 ── Closing quote */}
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -788,9 +882,7 @@ export function AboutMDSFullContent() {
               textAlign: "center",
             }}
           >
-            &ldquo;We are creating the foundations of a smarter,
-            <br />
-            more{" "}
+            &ldquo;The best way to predict the future is to{" "}
             <span
               style={{
                 background:
@@ -800,9 +892,21 @@ export function AboutMDSFullContent() {
                 backgroundClip: "text",
               }}
             >
-              empowered tomorrow.
+              invent it.
             </span>
             &rdquo;
+          </p>
+          <p
+            className="mt-4"
+            style={{
+              fontFamily: SG,
+              fontSize: "0.72rem",
+              letterSpacing: "0.4em",
+              color: "rgba(255,255,255,0.35)",
+              textTransform: "uppercase",
+            }}
+          >
+            — Alan Kay
           </p>
         </motion.div>
 

@@ -94,7 +94,7 @@ export function HeroSection() {
               backgroundClip: "text",
             }}
           >
-            Building Products<br />that Makes an Impact
+            Building Products<br />that Make an Impact
           </motion.h1>
 
           <motion.p
@@ -107,7 +107,7 @@ export function HeroSection() {
               letterSpacing: "0.02em",
             }}
           >
-            Empowering The Future Through Products
+            Human-Centered Technology for a Better Future
           </motion.p>
 
           <motion.div variants={fadeUp} className="flex flex-wrap gap-3.5 justify-center md:justify-start">

@@ -33,7 +33,7 @@ export function Footer() {
               </div>
             </div>
             <p className="text-white/40 text-sm leading-relaxed max-w-xs">
-              Building the future of AI. Creating companions that understand, learn, and evolve with humanity.
+              Pioneering Personal Humanized AI. Building the Noorva Ecosystem — companions that understand, support, and grow alongside people.
             </p>
           </div>
 

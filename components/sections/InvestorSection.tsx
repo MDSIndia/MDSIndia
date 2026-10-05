@@ -48,10 +48,10 @@ const roadmap = [
 ];
 
 const whyPoints = [
-  { title: "Emotional AI", desc: "We're not building another chatbot. We're building a companion that remembers, empathizes, and grows.", iconComponent: Brain },
+  { title: "Emotional AI", desc: "Powered by Emotional AI, Affective AI, and our proprietary Human-Interactive AI — a companion that understands context, emotions, and preferences, and grows with you.", iconComponent: Brain },
   { title: "First-Mover Advantage", desc: "In the emotional AI companion space, MDS is positioning at the exact moment the market is forming.", iconComponent: Zap },
   { title: "Mission Alignment", desc: "We don't optimize for engagement metrics. We optimize for human flourishing.", iconComponent: Crosshair },
-  { title: "Technical Depth", desc: "Our AI architecture is built for depth, not just scale — real understanding, not statistical outputs.", iconComponent: Microscope },
+  { title: "Quantum Intelligence", desc: "Quantum technology is our foundation for the next decade — integrated into the Noorva Ecosystem to accelerate our market entry and advance Nano, Automobiles, and Space tech.", iconComponent: Microscope },
 ];
 
 export function MarketOpportunityFullContent() {
@@ -265,7 +265,7 @@ export function MarketOpportunityFullContent() {
 /* ─── Condensed "Market Opportunity" teaser — homepage ──────────────── */
 
 const MARKET_STATEMENT =
-  "Artificial intelligence is redefining how the world lives, works, and creates. With billions of future users and a multi-trillion-dollar market ahead, MDS is building the trusted AI ecosystem for the next generation.";
+  "Artificial intelligence is redefining how the world lives, works, and creates. With billions of future users and a multi-trillion-dollar market ahead, MDS is building the Noorva Ecosystem — the world's most human-centered AI ecosystem.";
 
 export function InvestorSection() {
   return (

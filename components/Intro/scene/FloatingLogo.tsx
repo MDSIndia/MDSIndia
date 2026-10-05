@@ -5,7 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { BRAND_LOGO } from "./adImages";
-import { windowProgress } from "./timeline";
+import { at, windowProgress } from "./timeline";
 
 useTexture.preload(BRAND_LOGO);
 
@@ -25,7 +25,7 @@ export function FloatingLogo() {
     if (!group) return;
 
     const appear =
-      windowProgress(t, 2.5, 3.2) * (1 - windowProgress(t, 4.5, 5.3));
+      windowProgress(t, at(2.5), at(3.2)) * (1 - windowProgress(t, at(4.5), at(5.3)));
     group.visible = appear > 0.01;
     group.position.set(-9.5, 17 + Math.sin(t * 0.5) * 0.6, -22);
     group.rotation.y = Math.sin(t * 0.3) * 0.16;
