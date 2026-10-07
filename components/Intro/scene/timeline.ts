@@ -5,7 +5,7 @@ const AUTHORED_DURATION = 9.0;
  * the one knob for the intro's pace: the camera path scales with it
  * directly (it works in fractions of the total), and every authored beat
  * timestamp goes through `at()` so it keeps its place in the story. */
-export const INTRO_DURATION = 5.0;
+export const INTRO_DURATION = 3.0;
 
 /** Converts a timestamp authored against the original 9s cut into the
  * current timeline, so each beat stays at the same fraction of the flight. */
