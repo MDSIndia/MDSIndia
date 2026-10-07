@@ -287,7 +287,7 @@ export function StorySection() {
             3 Core Values
           </h2>
           <p
-            className="mt-5 max-w-xl mx-auto"
+            className="mt-5 max-w-2xl mx-auto"
             style={{
               fontFamily: SG,
               fontSize: "clamp(0.95rem, 1.2vw, 1.1rem)",
@@ -295,7 +295,9 @@ export function StorySection() {
               color: "rgba(255,255,255,0.58)",
             }}
           >
-            The values that guide our decisions, shape our culture, and sustain MDS for the long term.
+            MDS is built on three core values that guide its decisions, shape its culture, support
+            the achievement of its strategic goals and contribute to the company&apos;s long-term
+            sustainability.
           </p>
         </motion.div>
 
@@ -308,9 +310,8 @@ export function StorySection() {
             headline="Innovation"
             subheading="Challenge the Status Quo"
             body={[
-              "At MDS, innovation is the driving force behind everything we do.",
-              "It is how we challenge the status quo, rethink traditional approaches, and create transformative change.",
-              "Breakthrough innovation is essential to disrupting markets, solving complex problems, and building technologies and products that leave a lasting impact on the world.",
+              "At MDS, innovation is the driving force behind everything we do. It is how we challenge the status quo, rethink traditional approaches, and create transformative change.",
+              "We believe that breakthrough innovation is essential to disrupting markets, solving complex problems, and building technologies and products that leave a lasting impact on the world.",
             ]}
             imageSrc="/MDSInnovation.png"
             imageAlt="Innovation — MDS Core Value"
@@ -331,9 +332,9 @@ export function StorySection() {
             headlineFontSize="clamp(2.2rem, 4.4vw, 4.8rem)"
             subheading="Exceptional Value. Memorable Experiences."
             body={[
-              "Everything we do is driven by a commitment to creating exceptional value and memorable experiences for our customers.",
-              "Great products begin with a deep understanding of human needs, so we place the customer experience at the heart of every decision, innovation, and interaction.",
-              "True differentiation is not what a product does — it is how it makes customers feel.",
+              "Everything we do at MDS is driven by a commitment to creating exceptional value and memorable experiences for our customers.",
+              "We believe that great products and technologies begin with a deep understanding of human needs. That is why we embrace a human-centered approach, placing customer experience at the heart of every decision, innovation, and interaction.",
+              "We believe true differentiation is achieved not by what a product does, but by how it makes customers feel. That is why we are committed to creating experiences that set new standards, strengthen customer relationships, and leave a lasting impact.",
             ]}
             imageSrc="/MDSVision.png"
             imageAlt="Exceptional Customer Experience — MDS Core Value"
@@ -352,8 +353,8 @@ export function StorySection() {
             headline="Winner's Spirit"
             subheading="Winning Is the Oxygen of MDS"
             body={[
-              "We approach every challenge, decision, product, and market with the determination to succeed, pursuing excellence through ambition, ownership, and accountability.",
-              "Winning is earned through rigorous research, calculated decision-making, preparation, relentless execution, continuous learning, and adaptability.",
+              "We approach every challenge, decision, product, and market with the determination to succeed, treating every opportunity as significant and pursuing excellence through ambition, ownership, and accountability.",
+              "We believe winning is earned through rigorous research, calculated decision-making, preparation, relentless execution, continuous learning, and adaptability.",
               "Once we commit, we pursue our objectives with determination, resilience, and an uncompromising commitment to winning.",
             ]}
             imageSrc="/MDSAmbition.png"

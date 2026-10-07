@@ -20,6 +20,7 @@ const navLinks = [
   { label: "Noorva",     href: "/#noorva",     id: "noorva" },
   { label: "Invest",     href: "/#invest",     id: "invest" },
   { label: "Team",       href: "/#team",       id: "team" },
+  { label: "Careers",    href: "/careers",     id: "careers" },
   { label: "Contact",    href: "/#contact",    id: "contact" },
 ];
 
@@ -99,7 +100,9 @@ export function Navbar() {
                 <a
                   key={link.label}
                   href={link.href}
-                  className="relative text-sm font-medium tracking-wide transition-colors duration-300 group py-1"
+                  className={`relative text-sm font-medium tracking-wide transition-colors duration-300 group py-1${
+                    link.id === "careers" ? " hidden lg:inline-block" : ""
+                  }`}
                   style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: isActive ? "#fff" : "rgba(255,255,255,0.55)" }}
                 >
                   {link.label}

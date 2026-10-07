@@ -5,53 +5,43 @@ import type { CSSProperties } from "react";
 import { motion } from "framer-motion";
 import { CalendarCheck, HandHeart, Lightbulb, Navigation } from "lucide-react";
 
-// Each card gets one clearly distinct accent so all four read apart
-// at a glance: blue and cyan come from Noorva's own orb/text-gradient
+// The areas of life Noorva Companion is designed to help people
+// navigate, grouped into four cards. Each card gets one clearly
+// distinct accent: blue and cyan come from Noorva's own orb/text-gradient
 // palette; violet and rose extend that same family into hues that
 // stay far enough apart to avoid the "two purples" look.
 const scenarios = [
   {
-    // Merged the old "Late Night Confidant" and "Emotional Anchor"
-    // cards into one at explicit request — both were the same
-    // underlying promise (Noorva as emotional support in a hard
-    // moment), just split across a time-of-day framing and a
-    // difficult-day framing. One card carrying both moments reads as a
-    // fuller, less repetitive statement of that same promise, and
-    // frees up a 4th slot for a genuinely different capability.
-    iconComponent: HandHeart,
-    title: "Your Emotional Confidant",
+    iconComponent: CalendarCheck,
+    title: "Daily Life & Productivity",
     description:
-      "At 2 AM when thoughts race, or on the days that are simply hard, Noorva is there — not with platitudes, but with presence, understanding, and the emotional intelligence to validate what you're feeling and guide you toward calm.",
+      "Noorva Companion helps people navigate daily life and stay productive, through deeply personalized and emotionally aware interactions.",
+    color: "#0055FF",
+    glow: "rgba(0,85,255,0.22)",
+  },
+  {
+    iconComponent: HandHeart,
+    title: "Relationships & Wellbeing",
+    description:
+      "Understanding emotions, behaviors, and personal experiences, Noorva supports people through relationships and everyday wellbeing.",
     color: "#EC4899",
     glow: "rgba(236,72,153,0.22)",
   },
   {
-    iconComponent: Navigation,
-    title: "Your Life Navigator",
-    description:
-      "Major decision? Career crossroads? Noorva helps you think through complexity with the depth of a trusted mentor and the patience of a best friend.",
-    color: "#00D4FF",
-    glow: "rgba(0,212,255,0.22)",
-  },
-  {
     iconComponent: Lightbulb,
-    title: "Your Growth Catalyst",
+    title: "Personal Growth & Learning",
     description:
-      "Noorva learns your patterns, your dreams, your blocks — and proactively helps you become who you're meant to be.",
+      "A companion that grows alongside you — supporting your personal growth and learning as your context and preferences evolve.",
     color: "#A855F7",
     glow: "rgba(168,85,247,0.22)",
   },
   {
-    // New 4th card, replacing the old "Emotional Anchor" slot now that
-    // it's merged above — a planner/organizer capability distinct from
-    // Life Navigator's big-picture mentorship: day-to-day structure
-    // rather than major decisions.
-    iconComponent: CalendarCheck,
-    title: "Your Personal Planner",
+    iconComponent: Navigation,
+    title: "Decision-Making",
     description:
-      "From daily to-dos to long-term goals, Noorva keeps your life organized — gentle reminders, smart scheduling, and a clear view of what matters, so nothing important slips through the cracks.",
-    color: "#0055FF",
-    glow: "rgba(0,85,255,0.22)",
+      "By understanding your context, emotions, and preferences, Noorva helps you make decisions with more natural, intuitive, and emotionally intelligent support.",
+    color: "#00D4FF",
+    glow: "rgba(0,212,255,0.22)",
   },
 ];
 
@@ -167,7 +157,7 @@ export function NoorvaSection() {
             className="text-xs font-medium tracking-[0.5em] uppercase"
             style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(139,92,246,0.90)" }}
           >
-            Project Noorva
+            The Noorva Ecosystem
           </span>
         </motion.div>
 
@@ -214,7 +204,8 @@ export function NoorvaSection() {
               color: "rgba(255,255,255,0.68)",
             }}
           >
-            Not an app. Not a chatbot. Not software.
+            From a tool people use, into a companion that genuinely understands, supports, and
+            grows alongside them.
           </p>
           <p
             className="font-semibold mt-2"
@@ -224,7 +215,7 @@ export function NoorvaSection() {
               color: "rgba(255,255,255,0.92)",
             }}
           >
-            A personal lifestyle companion.
+            Noorva Companion — a personal lifestyle companion.
           </p>
         </motion.div>
 
@@ -239,7 +230,7 @@ export function NoorvaSection() {
           <NoorvaOrb />
           {/* Label tags around orb — HUD status-readout chips */}
           <div className="flex items-center justify-center gap-3 flex-wrap mt-10">
-            {["Emotional AI", "Affective AI", "Human-Interactive AI", "Contextual Memory", "Always With You"].map((tag) => (
+            {["Emotional AI", "Affective AI", "Human-Interactive AI"].map((tag) => (
               <span
                 key={tag}
                 className="hud-tag px-3.5 py-1.5 rounded-full text-[0.7rem] font-medium uppercase"
@@ -333,9 +324,12 @@ export function NoorvaSection() {
           style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.52)" }}
         >
           Noorva Companion is the flagship of the Noorva Ecosystem — a new category of
-          human-centered AI that understands your context, emotions, behaviors, and preferences.
-          Our vision is to turn AI from a tool you use into a companion that genuinely understands,
-          supports, and grows alongside you.
+          human-centered AI powered by Emotional AI, Affective AI, and our proprietary
+          Human-Interactive AI, designed to understand context, emotions, behaviors, preferences,
+          and personal experiences. Our vision is to transform AI from a tool people use into a
+          companion that genuinely understands, supports, and grows alongside them — the world&apos;s
+          most human-centered AI ecosystem, where millions of people can form meaningful
+          relationships with AI that feel natural, trustworthy, and genuinely helpful.
         </motion.p>
       </div>
     </section>

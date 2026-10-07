@@ -1,48 +1,41 @@
 "use client";
 
-import { useRef } from "react";
-import type { CSSProperties } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { motion, useInView } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import type { CSSProperties, ReactNode } from "react";
+import { motion } from "framer-motion";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const SG = "var(--font-space-grotesk), 'Inter', sans-serif";
 const NM = "var(--font-display)";
 
-const pillars = [
-  {
-    number: "01",
-    title1: "Product",
-    title2: "Without Soul",
-    body: "The world's most advanced product still fails to understand a single human soul. It processes. It responds. But it does not truly know you.",
-    image: "/technlogy.png",
-    accentGradient: "linear-gradient(135deg, #C084FC 0%, #9333EA 100%)",
-    accentDot: "#A855F7",
-    glow: "168,85,247",
-  },
-  {
-    number: "02",
-    title1: "A World",
-    title2: "Left Alone",
-    body: "Billions of people navigate life's most important moments — career crossroads, personal struggles, late nights of doubt — without anyone truly there to help them think, grow, and thrive.",
-    image: "/worldleftalone.png",
-    accentGradient: "linear-gradient(135deg, #818CF8 0%, #6366F1 100%)",
-    accentDot: "#818CF8",
-    glow: "129,140,248",
-  },
-  {
-    number: "03",
-    title1: "The Gap",
-    title2: "We Fill",
-    body: "We exist to bridge the distance between human potential and human reality. Through AI that doesn't just respond — but remembers, understands, and grows alongside you.",
-    image: "/gapwefill.png",
-    accentGradient: "linear-gradient(135deg, #00D4FF 0%, #0099CC 100%)",
-    accentDot: "#00D4FF",
-    glow: "0,212,255",
-  },
-];
+/* Body paragraph used by the About page's long-form copy — same look as
+   the existing inline paragraphs, just not repeated for each one. */
+function BodyP({
+  children,
+  delay = 0.18,
+  style,
+}: {
+  children: ReactNode;
+  delay?: number;
+  style?: CSSProperties;
+}) {
+  return (
+    <motion.p
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.85, delay, ease: EASE }}
+      style={{
+        fontFamily: SG,
+        fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
+        lineHeight: 1.8,
+        color: "#FFFFFF",
+        ...style,
+      }}
+    >
+      {children}
+    </motion.p>
+  );
+}
 
 /* ── Orbit particle: rotates a container around center, particle sits at radius ── */
 function OrbitParticle({
@@ -144,173 +137,6 @@ function NoorvaOrbit() {
   );
 }
 
-/* ── Intention → Action SVG path ── */
-function IntentionToActionPath() {
-  const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: "-80px" });
-
-  return (
-    <div ref={ref} className="relative w-full py-2">
-      <svg viewBox="0 0 520 100" className="w-full" style={{ overflow: "visible" }}>
-        <defs>
-          <linearGradient id="pathGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#0055FF" />
-            <stop offset="50%" stopColor="#7AA4FF" />
-            <stop offset="100%" stopColor="#a855f7" />
-          </linearGradient>
-        </defs>
-
-        {/* Ghost dotted track */}
-        <path
-          d="M 30,50 C 90,15 150,85 210,50 C 270,15 330,85 390,50 C 430,28 460,46 490,50"
-          stroke="rgba(255,255,255,0.07)"
-          strokeWidth="1.5"
-          fill="none"
-          strokeDasharray="5 7"
-        />
-
-        {/* Animated main path */}
-        <motion.path
-          d="M 30,50 C 90,15 150,85 210,50 C 270,15 330,85 390,50 C 430,28 460,46 490,50"
-          stroke="url(#pathGrad)"
-          strokeWidth="2"
-          fill="none"
-          strokeLinecap="round"
-          initial={{ pathLength: 0, opacity: 0 }}
-          animate={isInView ? { pathLength: 1, opacity: 1 } : {}}
-          transition={{ duration: 2.2, ease: "easeInOut", delay: 0.2 }}
-        />
-
-        {/* Start dot */}
-        <motion.circle
-          cx="30"
-          cy="50"
-          r="5"
-          fill="#0055FF"
-          style={{ filter: "drop-shadow(0 0 6px #0055FF)" }}
-          initial={{ opacity: 0, scale: 0 }}
-          animate={isInView ? { opacity: 1, scale: 1 } : {}}
-          transition={{ duration: 0.4, ease: EASE, delay: 0.1 }}
-        />
-
-        {/* End dot */}
-        <motion.circle
-          cx="490"
-          cy="50"
-          r="5"
-          fill="#a855f7"
-          style={{ filter: "drop-shadow(0 0 8px #a855f7)" }}
-          initial={{ opacity: 0, scale: 0 }}
-          animate={isInView ? { opacity: 1, scale: [0, 1.5, 1] } : {}}
-          transition={{ duration: 0.5, ease: EASE, delay: 2.2 }}
-        />
-
-        {/* Labels */}
-        <text
-          x="30"
-          y="78"
-          textAnchor="middle"
-          fill="rgba(255,255,255,0.38)"
-          fontSize="10"
-          fontFamily="var(--font-space-grotesk),sans-serif"
-        >
-          Intention
-        </text>
-        <text
-          x="490"
-          y="78"
-          textAnchor="middle"
-          fill="rgba(168,85,247,0.75)"
-          fontSize="10"
-          fontFamily="var(--font-space-grotesk),sans-serif"
-        >
-          Action
-        </text>
-      </svg>
-    </div>
-  );
-}
-
-/* ── Decorative sphere for the teaser card ── */
-function AboutMDSSphere() {
-  return (
-    <div className="relative mx-auto" style={{ width: 300, aspectRatio: "1201 / 1309" }}>
-      {/* Pulsing ambient glow behind the artwork */}
-      <motion.div
-        className="absolute pointer-events-none"
-        style={{
-          inset: "8%",
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(0,120,255,0.30) 0%, rgba(123,47,190,0.16) 55%, transparent 75%)",
-          filter: "blur(34px)",
-        }}
-        animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.08, 1] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      <motion.div
-        className="relative w-full h-full"
-        animate={{ y: [0, -14, 0] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        style={{
-          maskImage:
-            "linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)",
-          maskComposite: "intersect",
-          WebkitMaskImage:
-            "linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)",
-          WebkitMaskComposite: "source-in",
-        } as CSSProperties}
-      >
-        {/* Static base — the podium, connecting beam, and a fallback
-            copy of the sphere itself. Never rotates: the podium is a
-            platform the sphere sits on, not part of the spinning body,
-            so it has to hold still while the sphere overlay above it
-            turns. Its copy of the sphere only shows through at the
-            rotating layer's feathered edge, where that layer fades to
-            transparent — since both layers share the same source image
-            at rotation 0, that seam is invisible rather than a visible
-            "second sphere" underneath. */}
-        <Image
-          src="/about.jpeg"
-          alt="MDS — a living planet of ideas"
-          fill
-          quality={100}
-          sizes="300px"
-          className="object-contain"
-        />
-        {/* Rotating overlay — a soft circular cutout of just the ball
-            itself, pre-masked in about-sphere.png tight to its own rim
-            so it excludes the ring entirely (the ring is far wider
-            than the ball and would otherwise have to be included or
-            cut off mid-band as it rotated out of alignment with its
-            own static remainder on the base layer below — visibly
-            "detaching" from the rest of the composition). Leaving the
-            ring on the static base means it stays put, Saturn-style,
-            while just the ball spins inside it. Pivots on the ball's
-            own center (not the full artwork's center, which sits
-            lower toward the podium) so it spins in place instead of
-            swinging in an arc. */}
-        <motion.div
-          className="absolute inset-0"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-          style={{ transformOrigin: "51.2% 39.7%" }}
-        >
-          <Image
-            src="/about-sphere.png"
-            alt=""
-            aria-hidden
-            fill
-            quality={100}
-            sizes="300px"
-            className="object-contain"
-          />
-        </motion.div>
-      </motion.div>
-    </div>
-  );
-}
-
 /* ─── Full expanded "About MDS" content ──────────────────────────────── */
 
 export function AboutMDSFullContent() {
@@ -357,54 +183,6 @@ export function AboutMDSFullContent() {
             PREMIUM BODY — replaces original 4-paragraph block
         ══════════════════════════════════════════════════════════════ */}
 
-        {/* 1 ── Hero quote */}
-        <motion.div
-          initial={{ opacity: 0, y: 32 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1, ease: EASE }}
-          className="mb-14 md:mb-18 text-center relative"
-        >
-          {/* Floating orb */}
-          <motion.div
-            className="absolute left-1/2 pointer-events-none"
-            animate={{ y: [0, -22, 0], scale: [1, 1.1, 1] }}
-            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-            style={{
-              width: 320,
-              height: 320,
-              background:
-                "radial-gradient(circle, rgba(0,85,255,0.13) 0%, rgba(123,47,190,0.08) 50%, transparent 70%)",
-              borderRadius: "50%",
-              filter: "blur(50px)",
-              top: "-100px",
-              transform: "translateX(-50%)",
-            }}
-          />
-
-          <motion.h3
-            initial={{ opacity: 0, y: 22 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, delay: 0.1, ease: EASE }}
-            style={{
-              fontFamily: NM,
-              fontSize: "clamp(1.7rem, 3.8vw, 3.2rem)",
-              lineHeight: 1.12,
-              letterSpacing: "0.01em",
-              background:
-                "linear-gradient(135deg, #FFFFFF 0%, #D8EEFF 40%, #7AA4FF 80%, #00D4FF 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-              position: "relative",
-            }}
-          >
-            &ldquo;We build for what people haven&apos;t done yet.&rdquo;
-          </motion.h3>
-
-        </motion.div>
-
         {/* 2 ── Why We Exist */}
         <motion.div
           initial={{ opacity: 0, y: 28 }}
@@ -446,7 +224,7 @@ export function AboutMDSFullContent() {
             }}
           >
             <span style={{ color: "rgba(255,255,255,0.93)" }}>
-              Architects of the future,{" "}
+              Human-centered technology{" "}
             </span>
             <br className="hidden sm:block" />
             <span
@@ -457,7 +235,7 @@ export function AboutMDSFullContent() {
                 backgroundClip: "text",
               }}
             >
-              not another tech company.
+              for a better future.
             </span>
           </motion.h3>
 
@@ -471,14 +249,83 @@ export function AboutMDSFullContent() {
               fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
               lineHeight: 1.8,
               color: "#FFFFFF",
-              maxWidth: 580,
+              maxWidth: 660,
               margin: "0 auto",
             }}
           >
-            MDS designs and develops innovative, human-centered technologies and products that
-            address real-world problems and evolving human needs — transforming existing markets
-            and creating new ones.
+            Mahadeva Digital Solutions (MDS) Private Limited is a technology company based in
+            Hyderabad, India. Established on May 8, 2025, and recognized under the Startup India
+            initiative, MDS&apos;s primary focus is to design and develop innovative,
+            human-centered technologies and products that address real-world problems and evolving
+            human needs, transform existing markets and create new ones.
           </motion.p>
+
+          <BodyP delay={0.26} style={{ maxWidth: 660, margin: "1rem auto 0" }}>
+            Our purpose is to develop and transform advanced, high-impact technologies into
+            human-centered solutions and products that better serve people, improve human
+            capabilities and quality of life at scale, and contribute to the better future of the
+            world.
+          </BodyP>
+        </motion.div>
+
+        <div className="my-12 md:my-16" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
+
+        {/* 2b ── Personal Humanized AI — what MDS is doing today */}
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, ease: EASE }}
+          className="mb-14 md:mb-18 text-center"
+        >
+          <span
+            style={{
+              fontFamily: SG,
+              fontSize: "0.62rem",
+              letterSpacing: "0.48em",
+              color: "rgba(122,164,255,0.60)",
+              textTransform: "uppercase" as const,
+              display: "block",
+              marginBottom: "0.75rem",
+            }}
+          >
+            What We&apos;re Building Today
+          </span>
+
+          <h3
+            style={{
+              fontFamily: NM,
+              fontSize: "clamp(1.35rem, 2.6vw, 2.3rem)",
+              lineHeight: 1.18,
+              letterSpacing: "0.01em",
+              marginBottom: "1rem",
+              fontWeight: 700,
+            }}
+          >
+            <span style={{ color: "rgba(255,255,255,0.93)" }}>Personal Humanized AI — </span>
+            <span
+              style={{
+                background: "linear-gradient(135deg, #7AA4FF 0%, #00D4FF 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              a tool becomes a companion.
+            </span>
+          </h3>
+
+          <BodyP style={{ maxWidth: 660, margin: "0 auto" }}>
+            Currently, MDS is pioneering the next generation of Personal Humanized AI with a mission
+            to make artificial intelligence a natural, trusted, and meaningful part of everyday
+            life.
+          </BodyP>
+          <BodyP delay={0.26} style={{ maxWidth: 660, margin: "1rem auto 0" }}>
+            While today&apos;s AI systems are primarily designed to answer questions and perform
+            tasks, MDS believes the future of AI lies in building deeper, more human relationships.
+            Our vision is to transform AI from a tool people use into a companion that genuinely
+            understands, supports, and grows alongside them.
+          </BodyP>
         </motion.div>
 
         <div className="my-12 md:my-16" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
@@ -530,7 +377,7 @@ export function AboutMDSFullContent() {
                 fontWeight: 700,
               }}
             >
-              <span style={{ color: "rgba(255,255,255,0.93)" }}>Noorva —&nbsp;</span>
+              <span style={{ color: "rgba(255,255,255,0.93)" }}>Noorva Companion —&nbsp;</span>
               <span
                 style={{
                   background:
@@ -540,9 +387,9 @@ export function AboutMDSFullContent() {
                   backgroundClip: "text",
                 }}
               >
-                a companion,
+                your personal
                 <br />
-                not an assistant.
+                lifestyle companion.
               </span>
             </motion.h3>
 
@@ -558,11 +405,17 @@ export function AboutMDSFullContent() {
                 color: "#FFFFFF",
               }}
             >
-              Noorva Companion is MDS&apos;s flagship personal lifestyle companion — helping people
-              navigate daily life, relationships, personal growth, productivity, wellbeing,
-              learning, and decision-making through deeply personalized and emotionally aware
-              interactions.
+              At the center of the Noorva Ecosystem is Noorva Companion, MDS&apos;s flagship product
+              and personal lifestyle companion. Noorva Companion is designed to help people navigate
+              daily life, relationships, personal growth, productivity, wellbeing, learning, and
+              decision-making through deeply personalized and emotionally aware interactions.
             </motion.p>
+
+            <BodyP delay={0.26} style={{ marginTop: "1rem" }}>
+              Our long-term vision is to create the world&apos;s most human-centered AI ecosystem,
+              one that enables millions of people to form meaningful relationships with AI that
+              feel natural, trustworthy, and genuinely helpful.
+            </BodyP>
           </div>
 
         </motion.div>
@@ -594,7 +447,7 @@ export function AboutMDSFullContent() {
                 marginBottom: "0.75rem",
               }}
             >
-              How It Works
+              The Noorva Ecosystem
             </motion.span>
 
             <motion.h3
@@ -612,7 +465,7 @@ export function AboutMDSFullContent() {
               }}
             >
               <span style={{ color: "rgba(255,255,255,0.92)" }}>
-                It grows the way you do —{" "}
+                A new category of{" "}
               </span>
               <span
                 style={{
@@ -622,7 +475,7 @@ export function AboutMDSFullContent() {
                   backgroundClip: "text",
                 }}
               >
-                unevenly, but forward.
+                human-centered AI.
               </span>
             </motion.h3>
 
@@ -638,33 +491,68 @@ export function AboutMDSFullContent() {
                 color: "#FFFFFF",
               }}
             >
-              Powered by Emotional AI, Affective AI, and our proprietary Human-Interactive AI,
-              Noorva understands context, emotions, behaviors, preferences, and personal
-              experiences — helping you move from intention to action, closing the gap between
-              what you aspire to and what you actually do.
-            </motion.p>
-
-            <motion.p
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.3, ease: EASE }}
-              style={{
-                fontFamily: SG,
-                fontSize: "clamp(0.82rem, 1vw, 0.92rem)",
-                lineHeight: 1.6,
-                color: "rgba(122,164,255,0.48)",
-                fontStyle: "italic",
-                marginTop: "0.75rem",
-              }}
-            >
-              Not a straight line. A real path, still moving up.
+              To achieve this, MDS is developing the Noorva Ecosystem, a new category of
+              human-centered AI powered by Emotional AI, Affective AI, and our proprietary
+              Human-Interactive AI technologies. These technologies are designed to understand
+              context, emotions, behaviors, preferences, and personal experiences, enabling more
+              natural, intuitive, and emotionally intelligent interactions.
             </motion.p>
           </div>
 
-          {/* Right — animated path */}
-          <div className="flex items-center justify-center">
-            <IntentionToActionPath />
+          {/* Right — the three technologies and what they understand */}
+          <div className="flex flex-col items-center md:items-start gap-6">
+            {[
+              {
+                label: "Powered by",
+                items: ["Emotional AI", "Affective AI", "Human-Interactive AI"],
+              },
+              {
+                label: "Understands",
+                items: ["Context", "Emotions", "Behaviors", "Preferences", "Personal Experiences"],
+              },
+            ].map((group, g) => (
+              <motion.div
+                key={group.label}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.2 + g * 0.12, ease: EASE }}
+                className="text-center md:text-left"
+              >
+                <span
+                  style={{
+                    fontFamily: SG,
+                    fontSize: "0.62rem",
+                    letterSpacing: "0.48em",
+                    color: "rgba(168,85,247,0.65)",
+                    textTransform: "uppercase" as const,
+                    display: "block",
+                    marginBottom: "0.75rem",
+                  }}
+                >
+                  {group.label}
+                </span>
+                <div className="flex flex-wrap justify-center md:justify-start gap-2.5">
+                  {group.items.map((t) => (
+                    <span
+                      key={t}
+                      className="px-4 py-2 rounded-full text-xs font-medium uppercase"
+                      style={{
+                        fontFamily: SG,
+                        letterSpacing: "0.12em",
+                        color: "rgba(216,238,255,0.92)",
+                        background: "rgba(255,255,255,0.05)",
+                        border: "1px solid rgba(255,255,255,0.14)",
+                        backdropFilter: "blur(14px) saturate(150%)",
+                        WebkitBackdropFilter: "blur(14px) saturate(150%)",
+                      }}
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
           </div>
         </motion.div>
 
@@ -756,7 +644,7 @@ export function AboutMDSFullContent() {
                 marginBottom: "1rem",
               }}
             >
-              <span style={{ color: "rgba(255,255,255,0.93)" }}>Not for the present </span>
+              <span style={{ color: "rgba(255,255,255,0.93)" }}>The most innovative technology company </span>
               <span
                 style={{
                   background: "linear-gradient(135deg, #a855f7 0%, #7B2FBE 100%)",
@@ -765,7 +653,7 @@ export function AboutMDSFullContent() {
                   backgroundClip: "text",
                 }}
               >
-                alone.
+                in the world.
               </span>
             </h3>
 
@@ -779,10 +667,86 @@ export function AboutMDSFullContent() {
               }}
             >
               Our long-term goal is to become the most innovative technology company in the world
-              within 10 years — accelerating progress that might otherwise take 30 years or more,
-              and helping transform the world into a more advanced, futuristic society.
+              within the next 10 years and to help transform the world into a more advanced and
+              futuristic society by accelerating progress that might otherwise take at least 30
+              years or more to achieve.
+            </p>
+
+            <p
+              style={{
+                fontFamily: SG,
+                fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
+                lineHeight: 1.8,
+                color: "rgba(255,255,255,0.78)",
+                maxWidth: 560,
+                marginTop: "0.9rem",
+              }}
+            >
+              The next 10 years at MDS will be defined not by following market trends, but by
+              creating them.
             </p>
           </div>
+        </motion.div>
+
+        {/* 5a ── Alan Kay quote + the innovation philosophy behind it */}
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, ease: EASE }}
+          className="mb-10 md:mb-14 text-center"
+        >
+          <p
+            style={{
+              fontFamily: NM,
+              fontSize: "clamp(1.4rem, 2.8vw, 2.4rem)",
+              lineHeight: 1.5,
+              letterSpacing: "0.01em",
+              color: "rgba(255,255,255,0.88)",
+              fontWeight: 700,
+              textAlign: "center",
+            }}
+          >
+            &ldquo;The best way to predict the future is to{" "}
+            <span
+              style={{
+                background:
+                  "linear-gradient(135deg, #a855f7 0%, #7AA4FF 50%, #00D4FF 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              invent it.
+            </span>
+            &rdquo;
+          </p>
+          <p
+            className="mt-4 mb-8"
+            style={{
+              fontFamily: SG,
+              fontSize: "0.72rem",
+              letterSpacing: "0.4em",
+              color: "rgba(255,255,255,0.35)",
+              textTransform: "uppercase",
+            }}
+          >
+            — Alan Kay
+          </p>
+
+          <BodyP style={{ maxWidth: 680, margin: "0 auto" }}>
+            At MDS, we believe true innovation goes beyond improving what already exists. It means
+            challenging assumptions, redefining standards, and creating entirely new possibilities.
+          </BodyP>
+          <BodyP delay={0.26} style={{ maxWidth: 680, margin: "1rem auto 0" }}>
+            By combining first-principles thinking with a relentless focus on solving meaningful
+            problems, we aim to create products, experiences, and markets that shape the future.
+          </BodyP>
+          <BodyP delay={0.34} style={{ maxWidth: 680, margin: "1rem auto 0" }}>
+            We do not aspire to be the best within the existing game. We aspire to redefine the game
+            itself. The next decade for MDS is about imagining what does not yet exist and turning
+            it into reality.
+          </BodyP>
         </motion.div>
 
         {/* 5b ── The next decade */}
@@ -838,9 +802,10 @@ export function AboutMDSFullContent() {
               margin: "0 auto 1.5rem",
             }}
           >
-            Over the next ten years, MDS will expand into Quantum Technology, Nano technology,
-            Automobiles, and Space tech — using Quantum as the foundation to advance the other
-            three, and bringing Quantum Intelligence into the Noorva Ecosystem.
+            Over the next ten years, MDS will expand its operations beyond artificial intelligence
+            into four new areas: Quantum Technology, Nano technology, Automobiles, and Space tech.
+            MDS plans to use Quantum Technology as a foundation to help advance the other three
+            technologies it wants to focus on.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             {["Quantum Technology", "Nano Technology", "Automobiles", "Space Tech"].map((t) => (
@@ -861,322 +826,36 @@ export function AboutMDSFullContent() {
               </span>
             ))}
           </div>
-        </motion.div>
 
-        {/* 6 ── Closing quote */}
-        <motion.div
-          initial={{ opacity: 0, y: 28 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1, ease: EASE }}
-          className="mb-10 md:mb-14 text-center"
-        >
-          <p
-            style={{
-              fontFamily: NM,
-              fontSize: "clamp(1.4rem, 2.8vw, 2.4rem)",
-              lineHeight: 1.5,
-              letterSpacing: "0.01em",
-              color: "rgba(255,255,255,0.88)",
-              fontWeight: 700,
-              textAlign: "center",
-            }}
-          >
-            &ldquo;The best way to predict the future is to{" "}
-            <span
-              style={{
-                background:
-                  "linear-gradient(135deg, #a855f7 0%, #7AA4FF 50%, #00D4FF 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              invent it.
-            </span>
-            &rdquo;
-          </p>
-          <p
-            className="mt-4"
-            style={{
-              fontFamily: SG,
-              fontSize: "0.72rem",
-              letterSpacing: "0.4em",
-              color: "rgba(255,255,255,0.35)",
-              textTransform: "uppercase",
-            }}
-          >
-            — Alan Kay
-          </p>
-        </motion.div>
-
-        {/* ══════════════════════════════════════════════════════════════
-            PILLARS
-        ══════════════════════════════════════════════════════════════ */}
-
-        {/* Pillars heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.9, ease: EASE }}
-          className="mt-10 mb-2 md:mt-14 text-center"
-        >
-          <span
-            style={{
-              fontFamily: SG,
-              fontSize: "0.62rem",
-              letterSpacing: "0.48em",
-              color: "rgba(0,212,255,0.55)",
-              textTransform: "uppercase" as const,
-              display: "block",
-              marginBottom: "0.75rem",
-            }}
-          >
-            Problems We Solve
-          </span>
-          <h2
-            style={{
-              fontFamily: NM,
-              fontSize: "clamp(2.4rem, 5.5vw, 5rem)",
-              lineHeight: 1.0,
-              letterSpacing: "0.02em",
-              fontWeight: 700,
-            }}
-          >
-            <span style={{ color: "rgba(255,255,255,0.95)" }}>Real problems, solved by </span>
-            <span
-              style={{
-                background: "linear-gradient(135deg, #a855f7 0%, #7AA4FF 50%, #00D4FF 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              MDS.
-            </span>
-          </h2>
-        </motion.div>
-
-        {pillars.map((pillar, i) => (
-          <motion.div
-            key={pillar.number}
-            initial={{ opacity: 0, y: 36 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.9, delay: i * 0.08, ease: EASE }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8 items-center py-5 md:py-6"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
-          >
-            {/* Left — text */}
-            <div className={i % 2 === 1 ? "md:order-2" : ""}>
-              <span
-                className="inline-flex items-center justify-center px-3 py-1 rounded-lg text-xs font-mono font-semibold tracking-[0.18em] mb-3 block w-fit"
-                style={{
-                  background: `rgba(${pillar.glow},0.13)`,
-                  border: `1px solid rgba(${pillar.glow},0.28)`,
-                  backdropFilter: "blur(10px) saturate(160%)",
-                  WebkitBackdropFilter: "blur(10px) saturate(160%)",
-                  color: pillar.accentDot,
-                }}
-              >
-                {pillar.number}
-              </span>
-
-              <h3
-                className="neue-machina mb-0"
-                style={{
-                  fontSize: "clamp(2rem, 4vw, 3.8rem)",
-                  lineHeight: 1.05,
-                  letterSpacing: "0.01em",
-                }}
-              >
-                <span style={{ color: "rgba(255,255,255,0.96)" }}>{pillar.title1}</span>
-                <br />
-                <span
-                  style={{
-                    background: pillar.accentGradient,
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
-                  }}
-                >
-                  {pillar.title2}
-                </span>
-              </h3>
-
-              <div
-                className="w-2 h-2 rounded-full mt-4 mb-5"
-                style={{
-                  background: pillar.accentDot,
-                  boxShadow: `0 0 8px ${pillar.accentDot}`,
-                }}
-              />
-
-              <p
-                style={{
-                  fontFamily: SG,
-                  fontSize: "clamp(0.88rem, 1.1vw, 1rem)",
-                  lineHeight: 1.8,
-                  color: "#FFFFFF",
-                }}
-              >
-                {pillar.body}
-              </p>
-            </div>
-
-            {/* Right — image */}
-            <div className={`relative ${i % 2 === 1 ? "md:order-1" : ""}`}>
-              <div
-                className="relative w-full"
-                style={{
-                  aspectRatio: "4/3",
-                  maskImage:
-                    "radial-gradient(ellipse 55% 60% at 50% 50%, black 0%, rgba(0,0,0,0.88) 22%, rgba(0,0,0,0.55) 44%, rgba(0,0,0,0.15) 62%, rgba(0,0,0,0.03) 76%, transparent 88%)",
-                  WebkitMaskImage:
-                    "radial-gradient(ellipse 55% 60% at 50% 50%, black 0%, rgba(0,0,0,0.88) 22%, rgba(0,0,0,0.55) 44%, rgba(0,0,0,0.15) 62%, rgba(0,0,0,0.03) 76%, transparent 88%)",
-                }}
-              >
-                <Image
-                  src={pillar.image}
-                  alt=""
-                  fill
-                  style={{
-                    objectFit: "contain",
-                    objectPosition: "center",
-                    mixBlendMode: "screen",
-                    filter: "contrast(1.2) brightness(1.0) saturate(1.5)",
-                  }}
-                />
-              </div>
-            </div>
-          </motion.div>
-        ))}
-
-        {/* Closing manifesto */}
-        <motion.div
-          initial={{ opacity: 0, y: 28 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.0, delay: 0.2, ease: EASE }}
-          className="mt-4 text-center"
-          style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "1.75rem" }}
-        >
-          <p
-            className="neue-machina"
-            style={{
-              fontSize: "clamp(1.3rem, 3vw, 2.6rem)",
-              lineHeight: 1.28,
-              letterSpacing: "0.01em",
-              color: "#FFFFFF",
-              maxWidth: "800px",
-              margin: "0 auto",
-            }}
-          >
-            &ldquo;The greatest Product is the one that{" "}
-            <span
-              style={{
-                background:
-                  "linear-gradient(135deg, #00D4FF 0%, #7AA4FF 50%, #a855f7 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              makes you feel more human.
-            </span>
-            &rdquo;
-          </p>
-          <p
-            className="mt-5"
-            style={{
-              fontFamily: SG,
-              fontSize: "0.72rem",
-              letterSpacing: "0.4em",
-              color: "rgba(255,255,255,0.35)",
-              textTransform: "uppercase",
-            }}
-          >
-            — Mahadeva Digital Solutions
-          </p>
+          <BodyP style={{ maxWidth: 680, margin: "2rem auto 0" }}>
+            Quantum technology aligns with MDS&apos;s mission of advancing humanity through
+            transformative innovation. Theoretically, it has the potential to revolutionize
+            industries and unlock possibilities far beyond today&apos;s conventional technologies,
+            including AI. Experts in this field believe that it can drive breakthroughs across
+            healthcare, energy, agriculture, and scientific research on a scale greater than ever
+            before, while creating entirely new industries, markets, and opportunities.
+          </BodyP>
+          <BodyP delay={0.26} style={{ maxWidth: 680, margin: "1rem auto 0" }}>
+            As the global quantum race accelerates, MDS is committed to being part of this next
+            technological frontier and helping shape the future rather than simply adapting to it.
+            MDS will focus specifically on Quantum Intelligence to integrate this technology into
+            its Noorva Ecosystem products and accelerate its market entry.
+          </BodyP>
         </motion.div>
 
       </div>
   );
 }
 
-/* ─── Section (teaser + expandable full content) ────────────────────── */
+/* ─── Homepage section — the full About MDS content, inline ─────────── */
 
 export function WhyWeExistSection() {
   return (
-    <section id="about-mds" className="section-padding relative overflow-hidden">
+    <section id="about-mds" className="section-padding relative overflow-hidden scroll-mt-24">
       <div className="scene-top-fade" />
       <div className="scene-bottom-fade" />
 
-      <div className="relative max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.9, ease: EASE }}
-          className="relative flex flex-col md:flex-row md:items-center md:justify-center md:gap-16"
-        >
-          {/* Left: text */}
-          <div className="order-2 md:order-1 text-center md:text-left">
-            <h2
-              className="neue-machina mb-5"
-              style={{
-                fontSize: "clamp(1.9rem, 3.8vw, 4.5rem)",
-                lineHeight: 1.1,
-                background: "linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 40%, #0055FF 70%, #00D4FF 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              About MDS
-            </h2>
-
-            <p
-              style={{
-                fontFamily: NM,
-                fontSize: "clamp(1.1rem, 2vw, 1.5rem)",
-                lineHeight: 1.4,
-                color: "rgba(255,255,255,0.92)",
-                marginBottom: "0.9rem",
-              }}
-            >
-              &ldquo;We build for what people haven&apos;t done yet.&rdquo;
-            </p>
-
-            <p
-              className="font-semibold mb-8"
-              style={{
-                fontFamily: SG,
-                fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
-                lineHeight: 1.7,
-                color: "rgba(255,255,255,0.80)",
-                letterSpacing: "0.02em",
-                maxWidth: 460,
-              }}
-            >
-              We&apos;re architects of the future, not another tech company.
-            </p>
-
-            <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-              <Link href="/about-mds" className="btn-primary text-sm">
-                <ArrowRight className="size-4" strokeWidth={2.25} />
-                Explore MDS
-              </Link>
-            </div>
-          </div>
-
-          {/* Right: sphere */}
-          <div className="order-1 md:order-2 flex-shrink-0 pt-16 md:pt-0">
-            <AboutMDSSphere />
-          </div>
-        </motion.div>
-      </div>
+      <AboutMDSFullContent />
     </section>
   );
 }

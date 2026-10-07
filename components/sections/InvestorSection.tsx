@@ -32,7 +32,6 @@ function AnimatedNumber({ target, suffix = "" }: { target: number; suffix?: stri
 }
 
 const metrics = [
-  { label: "AI Companion Market by 2030", value: 317.96, suffix: "B", prefix: "$", accent: "from-cyan-500 to-blue-500", textGradient: "from-cyan-400 to-blue-400", glow: "rgba(0,212,255,0.15)" },
   { label: "Annual Growth Rate", value: 28.4, suffix: "%", prefix: "", accent: "from-blue-500 to-indigo-500", textGradient: "from-blue-400 to-indigo-400", glow: "rgba(0,85,255,0.15)" },
   { label: "Potential Users Worldwide", value: 4.2, suffix: "B+", prefix: "", accent: "from-violet-500 to-purple-500", textGradient: "from-violet-400 to-purple-400", glow: "rgba(139,92,246,0.15)" },
   { label: "Year One Target Users", value: 100, suffix: "K", prefix: "", accent: "from-emerald-500 to-teal-400", textGradient: "from-emerald-400 to-teal-400", glow: "rgba(16,185,129,0.15)" },
@@ -49,8 +48,8 @@ const roadmap = [
 
 const whyPoints = [
   { title: "Emotional AI", desc: "Powered by Emotional AI, Affective AI, and our proprietary Human-Interactive AI — a companion that understands context, emotions, and preferences, and grows with you.", iconComponent: Brain },
-  { title: "First-Mover Advantage", desc: "In the emotional AI companion space, MDS is positioning at the exact moment the market is forming.", iconComponent: Zap },
-  { title: "Mission Alignment", desc: "We don't optimize for engagement metrics. We optimize for human flourishing.", iconComponent: Crosshair },
+  { title: "Winner's Spirit", desc: "Winning is the oxygen of MDS — earned through rigorous research, calculated decision-making, relentless execution, and an uncompromising commitment to winning.", iconComponent: Zap },
+  { title: "Human-Centered Mission", desc: "We build technologies that better serve people and improve human capabilities and quality of life at scale — creating new markets, not just following them.", iconComponent: Crosshair },
   { title: "Quantum Intelligence", desc: "Quantum technology is our foundation for the next decade — integrated into the Noorva Ecosystem to accelerate our market entry and advance Nano, Automobiles, and Space tech.", iconComponent: Microscope },
 ];
 
@@ -91,7 +90,7 @@ export function MarketOpportunityFullContent() {
         </motion.div>
 
         {/* Metrics */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           {metrics.map((metric, i) => (
             <motion.div
               key={metric.label}
@@ -265,7 +264,7 @@ export function MarketOpportunityFullContent() {
 /* ─── Condensed "Market Opportunity" teaser — homepage ──────────────── */
 
 const MARKET_STATEMENT =
-  "Artificial intelligence is redefining how the world lives, works, and creates. With billions of future users and a multi-trillion-dollar market ahead, MDS is building the Noorva Ecosystem — the world's most human-centered AI ecosystem.";
+  "MDS is building the Noorva Ecosystem — the world's most human-centered AI ecosystem, where millions of people can form meaningful relationships with AI — while expanding over the next decade into Quantum Technology, Nano technology, Automobiles, and Space tech.";
 
 export function InvestorSection() {
   return (

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   },
   title: "Mahadeva Digital Solutions | Think Beyond | AI Companion Noorva",
   description:
-    "Mahadeva Digital Solutions (MDS), a Startup India–recognized technology company in Hyderabad, designs human-centered technologies that solve real-world problems. Creators of the Noorva Ecosystem and Noorva Companion — a personal humanized AI built on Emotional AI, Affective AI, and Human-Interactive AI. Think Beyond.",
+    "Mahadeva Digital Solutions (MDS), a Startup India–recognized technology company in Hyderabad, designs human-centered technologies that address real-world problems and create new markets. Creators of the Noorva Ecosystem and Noorva Companion — a personal humanized AI built on Emotional AI, Affective AI, and Human-Interactive AI — with a decade-long path into Quantum Technology, Nano technology, Automobiles, and Space tech. Think Beyond.",
   keywords: [
     "Mahadeva Digital Solutions",
     "MDS India",
