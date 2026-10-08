@@ -3,7 +3,7 @@ import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-const COUNT = 150;
+const COUNT = 70;
 
 export function AmbientParticles() {
   const ref = useRef<THREE.Points>(null);

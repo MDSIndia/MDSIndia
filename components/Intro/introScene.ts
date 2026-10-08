@@ -15,6 +15,6 @@ export const INTRO_SCENE: IntroSceneKind = "star";
  * clock rather than INTRO_DURATION (which paces the city flythrough):
  * it needs a few seconds of approach, then room for the blast and the
  * cosmos to spread before the hand-off. */
-export const STAR_DURATION = 5.8;
+export const STAR_DURATION = 7.8;
 /** When the star detonates, in seconds from the start. */
 export const STAR_BLAST_AT = 3.0;
