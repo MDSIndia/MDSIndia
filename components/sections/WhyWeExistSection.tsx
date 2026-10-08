@@ -4,6 +4,7 @@ import type { CSSProperties, ReactNode } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { motion, useReducedMotion } from "framer-motion";
+import { StorySection } from "./StorySection";
 
 // Three.js only loads in the browser, and only once this section renders.
 const AboutGlobe = dynamic(() => import("@/components/three/AboutGlobe"), { ssr: false });
@@ -660,6 +661,13 @@ export function AboutMDSFullContent() {
             </div>
           </motion.div>
         </motion.div>
+
+        <div className="my-12 md:my-16" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
+
+        {/* 2a ── The 3 Core Values, between Why We Exist and what MDS is building */}
+        <div className="-mx-6 md:-mx-10">
+          <StorySection />
+        </div>
 
         <div className="my-12 md:my-16" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
 

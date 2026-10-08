@@ -2,7 +2,6 @@
 
 import { PageChrome } from "@/components/layout/PageChrome";
 import { AboutMDSFullContent } from "@/components/sections/WhyWeExistSection";
-import { StorySection } from "@/components/sections/StorySection";
 
 export default function AboutMDSPage() {
   return (
@@ -13,8 +12,6 @@ export default function AboutMDSPage() {
 
         <AboutMDSFullContent />
       </section>
-
-      <StorySection />
     </PageChrome>
   );
 }

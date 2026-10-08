@@ -7,7 +7,6 @@ import { useIntro } from "@/hooks/useIntro";
 import { getLenis } from "@/lib/lenis";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { WhyWeExistSection } from "@/components/sections/WhyWeExistSection";
-import { StorySection } from "@/components/sections/StorySection";
 import { InvestorSection } from "@/components/sections/InvestorSection";
 import { TeamSection } from "@/components/sections/TeamSection";
 import { ContactSection } from "@/components/sections/ContactSection";
@@ -71,7 +70,6 @@ export default function Home() {
         <PageChrome>
           <HeroSection />
           <WhyWeExistSection />
-          <StorySection />
           <InvestorSection />
           <TeamSection />
           <ContactSection />
