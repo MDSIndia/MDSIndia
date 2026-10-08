@@ -6,7 +6,7 @@ export type IntroPhase = "checking" | "gate" | "cinematic" | "transitioning" | "
 
 // Holds at full brightness (~0.5s) then a slow, layered light-dissolve
 // (~1.7s) — the glow itself is the transition, not a quick fade before it.
-const TRANSITION_MS = 2200;
+const TRANSITION_MS = 1000;
 
 function prefersReducedMotion() {
   return (

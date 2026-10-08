@@ -3,18 +3,29 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { STAR_BLAST_AT, STAR_DURATION } from "../introScene";
+import { STAR_BLAST_AT, STAR_DURATION, STAR_HANDOFF_AT } from "../introScene";
 import { getRadialGlowTexture, getRayTexture } from "./glowTexture";
 
 /** Where the star sits, dead ahead of the camera down -z. */
 const STAR_POS = new THREE.Vector3(0, 0, -90);
 const STAR_RADIUS = 0.6;
-/** Camera dolly: from the origin to just short of the star, then — once it
- * detonates — a pull-back to a wide view so the whole cosmos can be seen
- * spreading, instead of staying buried inside the burst. */
+/** Camera dive: the camera flies straight at the star, accelerating, and
+ * passes through its surface into the middle of it (z = star centre) at the
+ * moment of detonation, where the lens is filled with white. Under that
+ * white-out it cuts to a wide view of the burst from outside, which then
+ * drifts back slowly while the cosmos spreads — from inside the burst the
+ * particles just stream past the lens and you can't see it as a cosmos. */
 const CAM_START_Z = 0;
-const CAM_NEAR_Z = -76;
-const CAM_END_Z = -34;
+const CAM_CENTRE_Z = STAR_POS.z;
+const CAM_WIDE_Z = STAR_POS.z + 58;
+/** Seconds after the blast at which the cut to the wide view happens (the
+ * white-out is at full strength from just before the blast to ~0.1s after). */
+const CUT_AT = 0.05;
+/** After the burst has spread, the camera dives into the turning cloud: it
+ * starts at DIVE_START seconds after the blast and reaches the middle of the
+ * cloud at DIVE_END, where the closing white takes over for the hero. */
+const DIVE_START = 1.0;
+const DIVE_END = STAR_HANDOFF_AT - STAR_BLAST_AT + 0.3;
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 const smooth = (a: number, b: number, x: number) => {
@@ -106,7 +117,8 @@ const blastVertex = /* glsl */ `
 
     // Slow rotation about the vertical axis as it expands — the debris
     // winds into spiral arms instead of flying out as a plain sphere.
-    float ang = aSwirl * (1.0 - exp(-0.7 * age));
+    // Spiral winds up quickly, then the whole cloud keeps turning slowly.
+    float ang = aSwirl * (1.0 - exp(-0.7 * age)) + age * 0.22;
     float c = cos(ang), s = sin(ang);
     vec3 d = vec3(aDir.x * c - aDir.z * s, aDir.y, aDir.x * s + aDir.z * c);
 
@@ -118,7 +130,7 @@ const blastVertex = /* glsl */ `
     // never swells into a disc and far ones never vanish.
     float tw = 0.75 + 0.25 * sin(uAge * (2.0 + aSeed * 5.0) + aSeed * 40.0);
     float px = aSize * uPx * (260.0 / max(-mv.z, 0.5)) * tw;
-    gl_PointSize = clamp(px, 1.5, 22.0 * uPx);
+    gl_PointSize = clamp(px, 1.5, 11.0 * uPx);
 
     // Born with the flash, hold, then fade out slowly as they scatter.
     float born = smoothstep(0.0, 0.10, uAge);
@@ -126,7 +138,10 @@ const blastVertex = /* glsl */ `
     // Hot at birth, cooling to their own colour.
     vec3 hotCol = aColor;
     vColor = hotCol;
-    vAlpha = born * fade;
+    // Debris that is right on top of the lens fades out instead of smearing into
+    // a haze now that the camera flies through the middle of the burst.
+    float nearFade = smoothstep(0.8, 9.0, -mv.z);
+    vAlpha = born * fade * nearFade;
   }
 `;
 
@@ -136,9 +151,13 @@ const blastFragment = /* glsl */ `
   void main() {
     vec2 q = gl_PointCoord - 0.5;
     float d = length(q);
-    float a = 1.0 - smoothstep(0.0, 0.5, d);
-    a *= a;
-    gl_FragColor = vec4(vColor * 1.6, a * vAlpha);
+    // Pin-sharp core plus a short, soft halo: reads as a crisp point of light
+    // at any resolution instead of a blurry blob.
+    float core = 1.0 - smoothstep(0.0, 0.16, d);
+    float halo = (1.0 - smoothstep(0.0, 0.5, d));
+    halo *= halo * 0.38;
+    float a = clamp(core + halo, 0.0, 1.0);
+    gl_FragColor = vec4(vColor * 1.05, a * vAlpha);
   }
 `;
 
@@ -173,18 +192,23 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
   const cloudARef = useRef<THREE.Sprite>(null);
   const cloudBRef = useRef<THREE.Sprite>(null);
   const fwd = useMemo(() => new THREE.Vector3(), []);
+  const targetGlowRef = useRef<THREE.Sprite>(null);
+  const tgt = useMemo(() => new THREE.Vector3(), []);
+  const camPos = useMemo(() => new THREE.Vector3(), []);
+  const lookAtV = useMemo(() => new THREE.Vector3(), []);
+  const endPos = useMemo(() => new THREE.Vector3(), []);
 
   const glow = useMemo(() => getRadialGlowTexture(), []);
   const rays = useMemo(() => getRayTexture(), []);
 
-  const count = isMobile ? 2400 : 5200;
+  const count = isMobile ? 3200 : 9000;
 
   const starUniforms = useMemo(
     () => ({ uTime: { value: 0 }, uHeat: { value: 0 }, uFade: { value: 1 } }),
     []
   );
 
-  const { geometry, blastUniforms } = useMemo(() => {
+  const { geometry, blastUniforms, target } = useMemo(() => {
     const dir = new Float32Array(count * 3);
     const speed = new Float32Array(count);
     const size = new Float32Array(count);
@@ -234,6 +258,26 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
       color[i * 3 + 2] = tmp.b;
     }
 
+    // The one star the camera flies down to and the closing glow comes from:
+    // a big, bright, mid-speed particle in the disc, so it sits near the middle
+    // of the cloud. Its motion is replayed on the CPU (see targetAt) with the
+    // same formulas as the vertex shader.
+    let best = 0;
+    let bestScore = Infinity;
+    for (let i = 0; i < count; i++) {
+      if (size[i] < 1.6) continue;
+      const score = Math.abs(speed[i] - 14) - size[i] * 2 + Math.abs(dir[i * 3 + 1]) * 40;
+      if (score < bestScore) {
+        bestScore = score;
+        best = i;
+      }
+    }
+    const target = {
+      dir: new THREE.Vector3(dir[best * 3], dir[best * 3 + 1], dir[best * 3 + 2]),
+      speed: speed[best],
+      swirl: swirl[best],
+    };
+
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(count * 3), 3));
     geo.setAttribute("aDir", new THREE.BufferAttribute(dir, 3));
@@ -245,6 +289,7 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
     // Particles move far from the origin; never cull the cloud.
     geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e5);
     return {
+      target,
       geometry: geo,
       blastUniforms: {
         uAge: { value: -1 },
@@ -266,18 +311,54 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
     const tau = t - STAR_BLAST_AT; // seconds since the blast (negative before)
     const heat = smooth(STAR_BLAST_AT - 1.0, STAR_BLAST_AT, t);
 
-    /* ── camera: ease-in dolly toward the star, then drift into the cloud ── */
+    /* ── camera: dive into the star, then out through the burst ── */
     const approach = clamp01(t / STAR_BLAST_AT);
-    let z = CAM_START_Z + (CAM_NEAR_Z - CAM_START_Z) * Math.pow(approach, 2.6);
-    if (tau > 0) z = CAM_NEAR_Z + (CAM_END_Z - CAM_NEAR_Z) * (1 - Math.exp(-tau * 0.8));
-    const shake = heat * (tau < 0 ? 1 : Math.max(0, 1 - tau * 2.5)) * 0.07;
-    camera.position.set(
+    let z = CAM_START_Z + (CAM_CENTRE_Z - CAM_START_Z) * Math.pow(approach, 2.2);
+    if (tau > CUT_AT) {
+      const wideZ = CAM_WIDE_Z + (Math.min(tau, DIVE_START) - CUT_AT) * 3.5;
+      const d = clamp01((tau - DIVE_START) / (DIVE_END - DIVE_START));
+      // Eases in: the camera gathers speed as it falls into the cloud.
+      z = wideZ + (CAM_CENTRE_Z - wideZ) * d * d;
+    }
+    // Shudder builds as the star swallows the camera, then settles.
+    const shake = heat * (tau < 0 ? 1.6 : 0) * 0.09;
+    // Where the target star is right now (same maths as the vertex shader).
+    {
+      const age = Math.max(tau, 0);
+      const dist = (target.speed / 0.85) * (1 - Math.exp(-0.85 * age));
+      const ang = target.swirl * (1 - Math.exp(-0.7 * age)) + age * 0.22;
+      const c = Math.cos(ang);
+      const sn = Math.sin(ang);
+      tgt.set(
+        STAR_POS.x + (target.dir.x * c - target.dir.z * sn) * dist,
+        STAR_POS.y + target.dir.y * dist,
+        STAR_POS.z + (target.dir.x * sn + target.dir.z * c) * dist
+      );
+    }
+    camPos.set(
       Math.sin(t * 0.37) * 0.12 + Math.sin(t * 41) * shake,
       Math.cos(t * 0.29) * 0.08 + Math.cos(t * 37) * shake,
       z
     );
+    let dive = 0;
+    if (tau > CUT_AT) {
+      dive = clamp01((tau - DIVE_START) / (DIVE_END - DIVE_START));
+      if (dive > 0) {
+        // Fly right into the chosen star: it stays a small point of light and only
+        // grows through perspective as the camera gets close, ending with the
+        // camera practically inside it.
+        endPos.copy(tgt).sub(camPos).setLength(Math.max(0, camPos.distanceTo(tgt) - 0.3)).add(camPos);
+        camPos.lerp(endPos, dive * dive);
+      }
+    }
+    camera.position.copy(camPos);
     camera.up.set(0, 1, 0);
-    camera.lookAt(STAR_POS);
+    // Straight down the flight line while diving at the star; at the wide view
+    // of the burst look at the middle of it, easing onto the target star as the
+    // camera starts to fall toward it.
+    if (tau > CUT_AT) lookAtV.copy(STAR_POS).lerp(tgt, smooth(0, 0.5, dive));
+    else lookAtV.set(0, 0, z - 100);
+    camera.lookAt(lookAtV);
     if (camera instanceof THREE.PerspectiveCamera) {
       const fov = 46;
       if (camera.fov !== fov) {
@@ -293,9 +374,12 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
     const appear = smooth(0.15, 1.4, t);
     const pulse = 1 + Math.sin(t * 19) * 0.025 * heat + Math.sin(t * 7.3) * 0.015 * heat;
     const blastSwell = tau > 0 ? 1 + smooth(0, 0.25, tau) * 0.9 : 1;
-    const coreFade = tau > 0 ? 1 - smooth(0.05, 0.4, tau) : 1;
+    const coreFade = tau > 0 ? 1 - smooth(0.0, 0.5, tau) : 1;
     if (coreRef.current) {
-      coreRef.current.visible = coreFade > 0.002;
+      // No visible star before the blast: the camera flies through empty space
+      // and the blast simply happens ahead. (The mesh is kept only so the shader
+      // and refs stay valid; it is never shown.)
+      coreRef.current.visible = false;
       coreRef.current.scale.setScalar(STAR_RADIUS * pulse * blastSwell * (0.15 + 0.85 * appear));
     }
     const su = starMatRef.current?.uniforms;
@@ -312,6 +396,7 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
     haloRefs.current.forEach((h, i) => {
       if (!h) return;
       h.scale.setScalar(haloScales[i] * (1 + heat * 0.25) * pulse);
+      h.visible = false;
       (h.material as THREE.SpriteMaterial).opacity =
         haloBase[i] * appear * (0.8 + heat * 0.3) * (tau > 0 ? 1 - smooth(0.0, 0.6, tau) : 1);
     });
@@ -333,7 +418,11 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
     if (flashRef.current) {
       flashRef.current.position.copy(camera.position).addScaledVector(fwd, 3);
       const m = flashRef.current.material as THREE.SpriteMaterial;
-      m.opacity = tau > 0 ? smooth(0, 0.04, tau) * (1 - smooth(0.04, 0.6, tau)) * 0.9 : 0;
+      // The star's glow fills the lens as the camera dives in (full white at the
+      // centre), then lifts to reveal the burst all around.
+      // A short, softer pop rather than a long blown-out white screen: it only
+      // needs to be strong for the instant of the cut (CUT_AT), then fades fast.
+      m.opacity = tau >= 0 ? 0.8 * (1 - smooth(0.07, 0.42, tau)) : 0;
     }
 
     // Lingering colored nebula glow where the star was.
@@ -347,15 +436,30 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
         smooth(0, 0.15, tau) * (i === 0 ? 0.1 : 0.06) * (1 - p * 0.6);
     });
 
+    // The target star lights up as the camera closes on it: a bright core that
+    // swells until the hand-off glow (IntroTransition) takes over from the same
+    // spot (the camera is looking straight at it, so it is mid-screen).
+    if (targetGlowRef.current) {
+      targetGlowRef.current.position.copy(tgt);
+      const near = smooth(0.1, 0.6, dive);
+      // Fixed small size (the apparent growth is the camera closing in).
+      targetGlowRef.current.scale.setScalar(0.45);
+      (targetGlowRef.current.material as THREE.SpriteMaterial).opacity = near * 0.95;
+    }
+
     // Closing glow: a soft white centre fading up in the last beat so
     // the final frame matches the veil the homepage dissolves out of.
     if (finalRef.current) {
       finalRef.current.position.copy(camera.position).addScaledVector(fwd, 3);
       const m = finalRef.current.material as THREE.SpriteMaterial;
-      const k = smooth(STAR_DURATION - 1.1, STAR_DURATION - 0.15, t);
+      // Only a light wash at the very end (it used to climb to full white): the
+      // hand-off holds at this same level, so there is no jump.
+      // (No closing wash any more: the glow now starts from the centre in the
+      // hand-off layer, IntroTransition, so the scene stays clear until then.)
+      const k = 0;
       // Swells past the frame and reaches full opacity, so the last canvas
       // frame is solid white — the same white the hand-off veil starts from.
-      finalRef.current.scale.setScalar(14 + k * 110);
+      finalRef.current.scale.setScalar(14);
       m.opacity = k;
     }
   });
@@ -363,10 +467,11 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
   return (
     <group>
       {/* The star: plasma sphere + stacked glow + faint rays. */}
-      <mesh ref={coreRef} position={STAR_POS}>
+      <mesh ref={coreRef} position={STAR_POS} visible={false}>
         <sphereGeometry args={[1, 64, 48]} />
         <shaderMaterial
           ref={starMatRef}
+          side={THREE.DoubleSide}
           vertexShader={starVertex}
           fragmentShader={starFragment}
           uniforms={starUniforms}
@@ -451,8 +556,23 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
         />
       </sprite>
 
+      {/* The target star's own glow. */}
+      <sprite ref={targetGlowRef} scale={[0.5, 0.5, 1]} renderOrder={9}>
+        <spriteMaterial
+          map={glow}
+          color="#ffffff"
+          transparent
+          opacity={0}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          depthTest={false}
+          fog={false}
+          toneMapped={false}
+        />
+      </sprite>
+
       {/* Screen-space flash and closing glow. */}
-      <sprite ref={flashRef} scale={[34, 34, 1]} renderOrder={10}>
+      <sprite ref={flashRef} scale={[26, 26, 1]} renderOrder={10}>
         <spriteMaterial
           map={glow}
           color="#ffffff"

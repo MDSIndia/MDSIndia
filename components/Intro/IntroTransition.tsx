@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from "react";
 
-/** The white glow, rendered in CSS, IS the transition: it holds at
- * full brightness for a beat, then dissolves through explicit opacity
- * layers (mimicking light fog slowly clearing) rather than a single
- * quick fade — so the homepage feels like it's emerging from inside the
- * light rather than appearing after a cut. Uses a keyframe animation
- * (not a plain transition) so each stage of the dissolve can be timed
- * and shaped independently. */
+/** The hand-off from the star scene to the page. A soft light appears at the
+ * dead centre of the screen as the camera reaches the middle of the star
+ * cloud, spreads outward until it fills the frame, then clears to show the
+ * hero. The dark backdrop under it is the canvas wrapper (see
+ * IntroCinematic), which stays opaque while the light spreads and then fades
+ * away with it — so the light genuinely comes from the middle rather than the
+ * whole screen brightening at once.
+ *
+ * Quick by design: the spread takes the first ~42% of the duration, the
+ * clearing the rest. */
 export function IntroTransition({ durationMs }: { durationMs: number }) {
   const [playing, setPlaying] = useState(false);
 
@@ -31,71 +34,40 @@ export function IntroTransition({ durationMs }: { durationMs: number }) {
     >
       <style jsx>{`
         .intro-glow-veil {
-          /* Solid white, no coloured or dark falloff: the only glow on the
-             way out is white. */
-          background: #ffffff;
-          opacity: 1;
-          filter: blur(0px);
-          transform: scale(1);
+          /* Brightest at the centre, easing out to nothing before the edge of
+             the element; the element itself is scaled up to fill the screen. */
+          /* Starts as a small bright point at the middle of the screen, which is
+             where the camera is looking: the target star (see SpaceStar). */
+          /* closest-side: the gradient ends exactly at the element's edge, so no
+             hard box edge shows while the element is scaled down. */
+          background: radial-gradient(
+            circle closest-side at 50% 50%,
+            rgba(255, 255, 255, 0.98) 0%,
+            rgba(238, 242, 252, 0.78) 30%,
+            rgba(170, 188, 228, 0.35) 62%,
+            transparent 100%
+          );
+          opacity: 0;
+          transform: scale(0.06);
+          will-change: transform, opacity;
         }
         .intro-glow-veil--playing {
-          animation-name: introGlowDissolve;
-          animation-timing-function: linear;
+          animation-name: introGlowSpread;
+          animation-timing-function: ease-out;
           animation-fill-mode: forwards;
         }
-        /* Roughly: hold at full brightness for the first ~24% of the
-           duration (~0.4s of 1.7s), then dissolve through explicit
-           opacity/blur layers — eyes slowly adapting, not a wipe. */
-        @keyframes introGlowDissolve {
+        @keyframes introGlowSpread {
           0% {
             opacity: 1;
-            filter: blur(0px);
-            transform: scale(1);
+            transform: scale(0.06);
           }
-          24% {
+          42% {
             opacity: 1;
-            filter: blur(0px);
-            transform: scale(1.015);
-          }
-          36% {
-            opacity: 0.9;
-            filter: blur(0px);
-            transform: scale(1.04);
-          }
-          48% {
-            opacity: 0.75;
-            filter: blur(0px);
-            transform: scale(1.07);
-          }
-          58% {
-            opacity: 0.6;
-            filter: blur(0px);
-            transform: scale(1.09);
-          }
-          68% {
-            opacity: 0.45;
-            filter: blur(0px);
-            transform: scale(1.11);
-          }
-          78% {
-            opacity: 0.3;
-            filter: blur(0px);
-            transform: scale(1.14);
-          }
-          88% {
-            opacity: 0.15;
-            filter: blur(0px);
-            transform: scale(1.17);
-          }
-          96% {
-            opacity: 0.05;
-            filter: blur(0px);
-            transform: scale(1.19);
+            transform: scale(2.7);
           }
           100% {
             opacity: 0;
-            filter: blur(0px);
-            transform: scale(1.2);
+            transform: scale(3);
           }
         }
       `}</style>

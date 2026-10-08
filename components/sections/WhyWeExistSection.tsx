@@ -3,7 +3,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 // Three.js only loads in the browser, and only once this section renders.
 const AboutGlobe = dynamic(() => import("@/components/three/AboutGlobe"), { ssr: false });
@@ -312,6 +312,160 @@ function AboutMDSSphere() {
     </div>
   );
 }
+
+
+/* ── The Vision artwork, with restrained motion ──────────────────────────
+   The picture is split into four stacked layers cut from the one image: the
+   hand and everything else (base), and three soft-edged clusters. The
+   clusters drift only a few pixels, vertically, on slow, out-of-phase
+   cycles — enough to read as a living hologram hovering over a steady hand,
+   without anything tilting, swinging or travelling. The palm light breathes
+   softly, and a few small glints twinkle. Only transform/opacity animate, so
+   it stays cheap, and it is switched off for reduced-motion users. */
+const VISION_LAYER = (name: string) => `/images/why-we-exist/vision-v2-${name}.webp`;
+
+// Small bodies cut out of the artwork so they can orbit and spin on their own.
+// left/top/w/h are in the artwork's 1536x1024 space; rx/ry are the orbit's
+// radii in the same space; dur is seconds per revolution; spin is seconds per
+// turn of the body itself (0 = none); dir flips the orbit direction.
+const VISION_PARTS: {
+  name: string; left: number; top: number; w: number; h: number;
+  rx: number; ry: number; dur: number; spin: number; dir: 1 | -1; phase: number;
+}[] = [
+  { name: "orbA", left: 401, top: 38, w: 108, h: 108, rx: 30, ry: 12, dur: 16, spin: 0, dir: 1, phase: 0 },
+  { name: "orbB", left: 634, top: 307, w: 96, h: 96, rx: 22, ry: 14, dur: 19, spin: 46, dir: -1, phase: 0.3 },
+  { name: "orbC", left: 1381, top: 306, w: 78, h: 78, rx: 22, ry: 10, dur: 14, spin: 0, dir: 1, phase: 0.6 },
+  { name: "orbD", left: 1331, top: 365, w: 114, h: 114, rx: 26, ry: 12, dur: 18, spin: 55, dir: -1, phase: 0.1 },
+  { name: "orbE", left: 1150, top: 497, w: 150, h: 150, rx: 34, ry: 14, dur: 21, spin: 0, dir: 1, phase: 0.8 },
+  { name: "moon", left: 1008, top: 145, w: 174, h: 174, rx: 0, ry: 0, dur: 1, spin: 38, dir: 1, phase: 0 },
+];
+
+function VisionPart({ p, reduce }: { p: (typeof VISION_PARTS)[number]; reduce: boolean | null }) {
+  const steps = 16;
+  const pts = Array.from({ length: steps + 1 }, (_, i) => {
+    const t = ((i / steps) + p.phase) * Math.PI * 2 * p.dir;
+    const t0 = p.phase * Math.PI * 2 * p.dir;
+    // Offsets relative to the start so the body begins exactly where the
+    // artwork has it, then travels an ellipse and returns.
+    return {
+      x: ((Math.cos(t) - Math.cos(t0)) * p.rx / p.w) * 100,
+      y: ((Math.sin(t) - Math.sin(t0)) * p.ry / p.h) * 100,
+    };
+  });
+  const orbit = !reduce && p.rx > 0;
+  const spin = !reduce && p.spin > 0;
+  return (
+    <motion.div
+      className="absolute"
+      style={{ left: `${(p.left / 1536) * 100}%`, top: `${(p.top / 1024) * 100}%`, width: `${(p.w / 1536) * 100}%`, height: `${(p.h / 1024) * 100}%` }}
+      animate={orbit ? { x: pts.map((q) => `${q.x}%`), y: pts.map((q) => `${q.y}%`) } : undefined}
+      transition={orbit ? { duration: p.dur, repeat: Infinity, ease: "linear" } : undefined}
+    >
+      <motion.div
+        className="absolute inset-0"
+        animate={spin ? { rotate: 360 * p.dir } : undefined}
+        transition={spin ? { duration: p.spin, repeat: Infinity, ease: "linear" } : undefined}
+      >
+        <Image
+          src={VISION_LAYER(p.name)}
+          alt=""
+          aria-hidden
+          fill
+          quality={100}
+          sizes="200px"
+          className="object-contain"
+        />
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function VisionWorld() {
+  const reduce = useReducedMotion();
+  const layer = (name: string, priority = false) => (
+    <Image
+      src={VISION_LAYER(name)}
+      alt=""
+      aria-hidden
+      fill
+      quality={100}
+      priority={priority}
+      sizes="(max-width: 768px) 180vw, 1280px"
+      className="object-contain"
+    />
+  );
+  const float = (dy: number, dur: number, delay: number) =>
+    reduce
+      ? undefined
+      : {
+          animate: { y: [0, -dy, 0] },
+          transition: { duration: dur, delay, repeat: Infinity, ease: "easeInOut" as const },
+        };
+
+  return (
+    <div className="absolute inset-0" role="img" aria-label="A glowing world held in an open hand, surrounded by futuristic scenes of people, technology and nature">
+      <div className="absolute inset-0">{layer("base")}</div>
+
+      {/* Palm light: breathes in and out where the world meets the hand. */}
+      {!reduce && (
+        <motion.div
+          aria-hidden
+          className="absolute pointer-events-none"
+          style={{
+            left: "40%",
+            top: "46%",
+            width: "20%",
+            height: "13%",
+            borderRadius: "50%",
+            background: "radial-gradient(ellipse, rgba(190,225,255,0.55) 0%, rgba(90,150,255,0.25) 40%, transparent 70%)",
+            filter: "blur(10px)",
+            mixBlendMode: "screen",
+          }}
+          animate={{ opacity: [0.3, 0.7, 0.3] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        />
+      )}
+
+      <motion.div className="absolute inset-0" {...float(4, 8, 0)}>
+        {layer("globe")}
+      </motion.div>
+      <motion.div className="absolute inset-0" {...float(6, 10, 1.2)}>
+        {layer("left")}
+      </motion.div>
+      <motion.div className="absolute inset-0" {...float(5, 9, 2.4)}>
+        {layer("right")}
+      </motion.div>
+
+      {VISION_PARTS.map((p) => (
+        <VisionPart key={p.name} p={p} reduce={reduce} />
+      ))}
+
+      {/* Small glints that twinkle on the panels and globe. */}
+      {!reduce && (
+        <svg aria-hidden className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1536 1024" style={{ mixBlendMode: "screen" }}>
+          <defs>
+            <radialGradient id="visionSpark">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+              <stop offset="35%" stopColor="#9fd0ff" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#4a7bff" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          {VISION_TWINKLES.map(([x, y, d], i) => (
+            <circle key={`t${i}`} cx={x} cy={y} r="4" fill="url(#visionSpark)">
+              <animate attributeName="opacity" values="0;0.8;0" dur={`${3.6 + (i % 3) * 0.9}s`} begin={`${d}s`} repeatCount="indefinite" />
+              <animate attributeName="r" values="2;7;2" dur={`${3.6 + (i % 3) * 0.9}s`} begin={`${d}s`} repeatCount="indefinite" />
+            </circle>
+          ))}
+        </svg>
+      )}
+    </div>
+  );
+}
+
+// Glints, in the artwork's own 1536x1024 space: [x, y, start delay].
+const VISION_TWINKLES: [number, number, number][] = [
+  [455, 215, 0.4], [1090, 215, 1.8], [1330, 470, 1.1], [700, 330, 2.6], [850, 270, 0.9], [770, 470, 3.2],
+];
 
 /* ─── Full expanded "About MDS" content ──────────────────────────────── */
 
@@ -796,70 +950,17 @@ export function AboutMDSFullContent() {
           </div>
         </motion.div>
 
+        <div className="my-14 md:my-20" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
+
         {/* 5 ── Vision */}
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, ease: EASE }}
-          className="mb-10 md:mb-14 relative overflow-hidden rounded-2xl px-7 py-9 md:px-10 md:py-11"
-          style={{
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            backdropFilter: "blur(22px) saturate(150%)",
-            WebkitBackdropFilter: "blur(22px) saturate(150%)",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06)",
-          }}
+          className="mb-14 md:mb-20 relative grid grid-cols-1 md:grid-cols-[1fr_1.05fr] gap-8 md:gap-10 items-center"
         >
-          {/* Floating gradient sphere */}
-          <motion.div
-            className="absolute pointer-events-none"
-            animate={{ y: [0, -14, 0], x: [0, 7, 0] }}
-            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-            style={{
-              width: 280,
-              height: 280,
-              background:
-                "radial-gradient(circle, rgba(123,47,190,0.20) 0%, rgba(0,85,255,0.10) 50%, transparent 70%)",
-              borderRadius: "50%",
-              filter: "blur(48px)",
-              top: "-80px",
-              right: "-60px",
-            }}
-          />
-
-          {/* Wave line */}
-          <div
-            className="absolute bottom-0 left-0 right-0 pointer-events-none"
-            style={{ height: 50, opacity: 0.18 }}
-          >
-            <svg
-              viewBox="0 0 1000 50"
-              className="w-full h-full"
-              preserveAspectRatio="none"
-            >
-              <defs>
-                <linearGradient id="visionWave" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="transparent" />
-                  <stop offset="35%" stopColor="#7B2FBE" />
-                  <stop offset="65%" stopColor="#00D4FF" />
-                  <stop offset="100%" stopColor="transparent" />
-                </linearGradient>
-              </defs>
-              <motion.path
-                d="M 0,25 C 125,8 250,42 375,25 C 500,8 625,42 750,25 C 875,8 1000,42 1000,25"
-                stroke="url(#visionWave)"
-                strokeWidth="1.5"
-                fill="none"
-                initial={{ pathLength: 0 }}
-                whileInView={{ pathLength: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 3, ease: "easeInOut" }}
-              />
-            </svg>
-          </div>
-
-          {/* Content */}
+          {/* Text — sits directly on the page, no card */}
           <div className="relative z-10">
             <span
               style={{
@@ -926,6 +1027,44 @@ export function AboutMDSFullContent() {
               creating them.
             </p>
           </div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.2, ease: EASE }}
+            className="relative mx-auto w-full max-w-[640px] md:-mr-6"
+            style={{ aspectRatio: "3 / 2" }}
+          >
+            {/* Soft glow behind the artwork (a separate layer so it is not
+                clipped by the mask below). */}
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                left: "12%",
+                top: "4%",
+                width: "76%",
+                height: "76%",
+                borderRadius: "50%",
+                background:
+                  "radial-gradient(circle, rgba(90,140,255,0.26) 0%, rgba(123,47,190,0.12) 52%, transparent 72%)",
+                filter: "blur(40px)",
+              }}
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                // The wrist runs off the artwork's bottom-right corner and bottom
+                // edge; fade both into the page rather than ending in a flat cut.
+                maskImage: "linear-gradient(to top left, transparent 0%, rgba(0,0,0,0.6) 9%, black 24%), linear-gradient(to top, transparent 0%, rgba(0,0,0,0.5) 5%, black 16%)",
+                maskComposite: "intersect",
+                WebkitMaskImage: "linear-gradient(to top left, transparent 0%, rgba(0,0,0,0.6) 9%, black 24%), linear-gradient(to top, transparent 0%, rgba(0,0,0,0.5) 5%, black 16%)",
+                WebkitMaskComposite: "source-in",
+              }}
+            >
+              <VisionWorld />
+            </div>
+          </motion.div>
         </motion.div>
 
         {/* 5a ── Alan Kay quote + the innovation philosophy behind it */}

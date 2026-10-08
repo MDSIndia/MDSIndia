@@ -15,6 +15,12 @@ export const INTRO_SCENE: IntroSceneKind = "star";
  * clock rather than INTRO_DURATION (which paces the city flythrough):
  * it needs a few seconds of approach, then room for the blast and the
  * cosmos to spread before the hand-off. */
-export const STAR_DURATION = 7.8;
+export const STAR_DURATION = 6.0;
 /** When the star detonates, in seconds from the start. */
-export const STAR_BLAST_AT = 3.0;
+export const STAR_BLAST_AT = 2.5;
+/** When the hand-off glow starts, in seconds from the start. It begins while
+ * the camera is still deep inside the dense, turning star cloud (the cloud
+ * thins out and leaves empty black in the last ~0.7s of the dive), so the
+ * glow rises out of the stars with no empty gap before it. STAR_DURATION is
+ * the length of the 3D scene itself, which keeps running under the glow. */
+export const STAR_HANDOFF_AT = 5.3;

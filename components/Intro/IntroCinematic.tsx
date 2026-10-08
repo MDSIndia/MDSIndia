@@ -9,7 +9,7 @@ import { useMobile } from "@/hooks/useMobile";
 import { CameraRig } from "./scene/CameraRig";
 import { SkyDome } from "./scene/SkyDome";
 import { SpaceDust } from "./scene/SpaceDust";
-import { INTRO_SCENE, STAR_DURATION } from "./introScene";
+import { INTRO_SCENE, STAR_HANDOFF_AT } from "./introScene";
 import { SpaceStar } from "./scene/SpaceStar";
 import { Ground } from "./scene/Ground";
 import { HighwayRoad } from "./scene/HighwayRoad";
@@ -149,6 +149,15 @@ export function IntroCinematic({
   const firedRef = useRef(false);
   const [webglOk, setWebglOk] = useState(true);
   const [dissolving, setDissolving] = useState(false);
+  // The canvas stays mounted for a moment into the hand-off so the star field
+  // is still there while the centre glow spreads over it (otherwise the screen
+  // would go black first), then is unmounted once the glow covers it.
+  const [canvasGone, setCanvasGone] = useState(false);
+  useEffect(() => {
+    if (!dissolving) return;
+    const id = window.setTimeout(() => setCanvasGone(true), 220);
+    return () => window.clearTimeout(id);
+  }, [dissolving]);
 
   const fire = useCallback(() => {
     if (firedRef.current) return;
@@ -170,13 +179,14 @@ export function IntroCinematic({
       fire();
       return;
     }
-    const duration = INTRO_SCENE === "star" ? STAR_DURATION : INTRO_DURATION;
+    const duration = INTRO_SCENE === "star" ? STAR_HANDOFF_AT : INTRO_DURATION;
     const id = window.setTimeout(fire, duration * 1000);
     return () => window.clearTimeout(id);
   }, [active, webglOk, fire]);
 
   // Same "hold ~24%, then dissolve" shape as IntroTransition's keyframes.
-  const holdMs = dissolveMs * 0.24;
+  // Stays opaque while the centre glow spreads over it (first ~42%), then fades.
+  const holdMs = dissolveMs * 0.42;
   const fadeMs = Math.max(1, dissolveMs - holdMs);
 
   if (!webglOk) {
@@ -198,7 +208,7 @@ export function IntroCinematic({
         // White once the hand-off starts: the star scene ends in white, and
         // the veil above it is white too, so the whole dissolve is one
         // white fade onto the homepage (no dark or coloured layer showing).
-        background: dissolving ? "#ffffff" : "#020208",
+        background: "#020208",
         pointerEvents: "none",
         opacity: !active ? 0 : dissolving ? 0 : 1,
         transition: dissolving
@@ -220,7 +230,7 @@ export function IntroCinematic({
           faded — freeing its GPU context immediately, with no visible
           difference since nothing shows through the opaque veil at
           this instant anyway. */}
-      {!dissolving && (
+      {!canvasGone && (
         <div
           style={{
             position: "absolute",
@@ -243,7 +253,9 @@ export function IntroCinematic({
               near: 0.1,
               far: 400,
             }}
-            dpr={isMobile ? 1 : [1, 1.5]}
+            // Up to 2x on desktop (was 1.5x): the star scene is mostly fine point
+            // lights, which are where lower resolution shows first.
+            dpr={isMobile ? 1 : [1, 2]}
             gl={{
               antialias: !isMobile,
               alpha: false,
