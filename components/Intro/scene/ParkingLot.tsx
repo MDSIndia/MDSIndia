@@ -9,6 +9,8 @@ import {
   createCarCabinGeometry,
   getCarPaintTexture,
   CAR_SHELL_HEIGHT,
+  CAR_GROUND_CLEARANCE,
+  CAR_BODY_SIDE,
   CABIN_HEIGHT,
   CABIN_Z_START,
   CABIN_Z_END,
@@ -171,14 +173,14 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
       const facing = car.dir < 0 ? 0 : Math.PI;
       const backZ = car.z + (car.dir < 0 ? car.length / 2 : -car.length / 2);
 
-      dummy.position.set(car.laneX, CAR_SHELL_HEIGHT / 2, car.z);
+      dummy.position.set(car.laneX, CAR_GROUND_CLEARANCE + CAR_SHELL_HEIGHT / 2, car.z);
       dummy.rotation.set(0, facing, 0);
       dummy.scale.set(car.width, CAR_SHELL_HEIGHT, car.length);
       dummy.updateMatrix();
       shellMatrices.push(dummy.matrix.clone());
       bodyColors[i]?.set(CAR_COLORS[car.colorIndex]);
 
-      dummy.position.set(car.laneX, CAR_SHELL_HEIGHT + CABIN_HEIGHT / 2, car.z);
+      dummy.position.set(car.laneX, CAR_GROUND_CLEARANCE + CAR_SHELL_HEIGHT + CABIN_HEIGHT / 2, car.z);
       dummy.rotation.set(0, facing, 0);
       dummy.translateZ(((CABIN_Z_START + CABIN_Z_END) / 2) * car.length);
       // Widened 0.72 -> 0.85 at explicit "use this type of car"
@@ -216,30 +218,28 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
       });
 
       [-1, 1].forEach((wx) => {
-        dummy.position.set(car.laneX + wx * (car.width / 2 + 0.03), 0.4, car.z);
+        dummy.position.set(car.laneX + wx * (car.width / 2 + 0.03), CAR_GROUND_CLEARANCE + CAR_SHELL_HEIGHT * 0.98, car.z);
         dummy.rotation.set(0, facing, 0);
         dummy.scale.set(0.12, 0.05, 0.07);
         dummy.updateMatrix();
         mirrorMatrices.push(dummy.matrix.clone());
       });
 
-      const axleOff = car.length / 2 - 0.32;
-      const trackOff = car.width / 2 + 0.02;
+      // Wheels tucked into the body side — see StreetCars for the
+      // reasoning (tyre just inside the side, alloy cover on its face).
+      const axleOff = car.length / 2 - 0.34;
+      const bodySide = car.width * CAR_BODY_SIDE;
       [-1, 1].forEach((wx) => {
         [-1, 1].forEach((wz) => {
-          dummy.position.set(car.laneX + wx * trackOff, 0.2, car.z + wz * axleOff);
+          dummy.position.set(car.laneX + wx * (bodySide - 0.04), 0.17, car.z + wz * axleOff);
           dummy.rotation.set(car.wheelSpin, 0, Math.PI / 2);
-          dummy.scale.set(0.16, 0.14, 0.16);
+          dummy.scale.set(0.18, 0.14, 0.18);
           dummy.updateMatrix();
           wheelMatrices.push(dummy.matrix.clone());
 
-          dummy.position.set(
-            car.laneX + wx * (trackOff + 0.065),
-            0.2,
-            car.z + wz * axleOff
-          );
+          dummy.position.set(car.laneX + wx * (bodySide + 0.034), 0.17, car.z + wz * axleOff);
           dummy.rotation.set(0, 0, Math.PI / 2);
-          dummy.scale.set(0.14, 0.02, 0.14);
+          dummy.scale.set(0.12, 0.016, 0.12);
           dummy.updateMatrix();
           rimMatrices.push(dummy.matrix.clone());
         });
@@ -248,7 +248,7 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
       // Tail-light glow rather than the old dim "parked courtesy light"
       // — this car is actually driving now, so it gets the same kind
       // of active light StreetCars' own traffic shows.
-      dummy.position.set(car.laneX, 0.22, backZ);
+      dummy.position.set(car.laneX, CAR_GROUND_CLEARANCE + CAR_SHELL_HEIGHT * 0.52, backZ);
       dummy.rotation.set(0, facing, 0);
       dummy.scale.set(car.width * 0.62, 0.035, 0.025);
       dummy.updateMatrix();
@@ -328,7 +328,7 @@ export function ParkingLot({ isMobile }: { isMobile: boolean }) {
 
       {/* Glowing side character line — see StreetCars' own copy of this
           for why. */}
-      <instancedMesh ref={sideLineRef} args={[undefined, undefined, carCount * 2 * SIDE_LINE_SEGMENTS]}>
+      <instancedMesh ref={sideLineRef} visible={false} args={[undefined, undefined, carCount * 2 * SIDE_LINE_SEGMENTS]}>
         <boxGeometry args={[1, 1, 1]} />
         {/* Shifted from blue-cyan (#6fd6ff) to teal (#4fe8c8) at
             explicit "use this type of car" reference — see StreetCars'

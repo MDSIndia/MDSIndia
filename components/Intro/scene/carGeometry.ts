@@ -23,13 +23,24 @@ interface ProfilePoint {
 // continuous, egg-like cross-section so the whole body reads as one
 // flowing blob rather than a wedge with a distinct point at each end.
 const PROFILE: ProfilePoint[] = [
-  { z: -0.5, h: 0.3, w: 0.74 }, // tail — rounded, not pinched
-  { z: -0.34, h: 0.34, w: 0.92 }, // rear shoulder, into the cabin
-  { z: -0.14, h: 1.0, w: 1.0 }, // roof peak
-  { z: 0.14, h: 0.94, w: 0.96 }, // windshield base
-  { z: 0.32, h: 0.46, w: 0.86 }, // hood — fuller
-  { z: 0.5, h: 0.26, w: 0.68 }, // nose — rounded, blunter
+  { z: -0.5, h: 0.6, w: 0.84 }, // tail — a real (blunt, rounded) rear face, not a point
+  { z: -0.43, h: 0.84, w: 0.95 }, // boot lid edge
+  { z: -0.3, h: 0.92, w: 1.0 }, // rear deck
+  { z: -0.12, h: 1.0, w: 1.0 }, // roof peak / belt line under the glass
+  { z: 0.14, h: 1.0, w: 1.0 }, // windshield base
+  { z: 0.3, h: 0.86, w: 0.99 }, // bonnet starts to fall away
+  { z: 0.44, h: 0.72, w: 0.93 }, // nose
+  { z: 0.5, h: 0.54, w: 0.8 }, // front face, rounded off
 ];
+
+/** Half-width (as a fraction of the instance's full width) of the body
+ * side at the wheel stations — the wheels are tucked in so their outer
+ * face sits just proud of this surface instead of bolted on beyond it. */
+export const CAR_BODY_SIDE = 0.48;
+/** Gap between the road and the underside of the body. Without it the
+ * flat-bottomed shell sits directly on the asphalt and the whole car
+ * reads as a slab sliding along rather than a vehicle on wheels. */
+export const CAR_GROUND_CLEARANCE = 0.1;
 
 /** The roof-peak/cabin stretch of PROFILE above (roughly where h stays
  * above half height) — exported so callers can position a window band
@@ -96,8 +107,8 @@ export function createAeroCarBodyGeometry(): THREE.BufferGeometry {
  * a vehicle. A real silhouette break (the cabin box every consumer
  * adds on top, starting exactly at this height) is what actually
  * reads as "car" at a distance; CABIN_HEIGHT is that box's height. */
-export const CAR_SHELL_HEIGHT = 0.4;
-export const CABIN_HEIGHT = 0.22;
+export const CAR_SHELL_HEIGHT = 0.5;
+export const CABIN_HEIGHT = 0.24;
 
 let cachedCabinGeometry: THREE.BufferGeometry | null = null;
 

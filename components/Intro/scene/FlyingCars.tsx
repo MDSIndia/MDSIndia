@@ -28,7 +28,19 @@ function seeded(i: number, salt: number) {
 // not a loud paint job.
 // Pearl white weighted up (appears 3x) at explicit "use this type of
 // car" reference — see StreetCars' own copy of this comment for why.
-const CAR_COLORS = ["#eef1f3", "#eef1f3", "#eef1f3", "#15171b", "#7d838c", "#2a3550", "#3a3f45", "#5a6572"];
+// No near-black entries any more: against a dusk sky (see SkyDome) a
+// dark body is just a black rectangle with nothing to show it's a
+// vehicle. Lighter paint still catches the sky glow and reads as a car.
+const CAR_COLORS = ["#eef1f3", "#eef1f3", "#eef1f3", "#c9cdd3", "#9aa3ad", "#7d838c", "#6f8ab8"];
+
+// Aerial traffic runs in lanes, like the ground traffic beneath it:
+// fixed lateral slots over the road, three altitude layers (adjacent
+// lanes sit on different layers so they never visually stack), left-side
+// lanes flowing one way and right-side lanes the other. Randomly
+// scattered heights, positions and directions were what made the fleet
+// read as debris hanging in the sky rather than traffic.
+const AIR_LANES_X = [-7.2, -4.2, -1.6, 1.6, 4.2, 7.2];
+const AIR_LAYERS_Y = [7.5, 11, 14.5];
 // Small abstract hover drones stay in the same techie blue family the
 // buildings already use, just pulled back from full saturation so
 // they read as lit hardware rather than a solid glowing toy block.
@@ -116,27 +128,30 @@ export function FlyingCars({ isMobile }: { isMobile: boolean }) {
     // tying its sign to alternating slots (like the z stratification
     // below) guarantees both sides stay populated instead of leaving
     // it to chance.
-    const slotsPerSide = Math.ceil(carCount / 2);
+    const laneCount = AIR_LANES_X.length;
+    const carsPerLane = Math.ceil(carCount / laneCount);
     cars.current = Array.from({ length: carCount }, (_, i) => {
-      const side: 1 | -1 = i % 2 === 0 ? -1 : 1;
-      const dir: 1 | -1 = seeded(i, 211) > 0.5 ? -1 : 1;
-      const sideSlot = Math.floor(i / 2);
+      const laneIndex = i % laneCount;
+      const laneSlot = Math.floor(i / laneCount);
+      const laneX = AIR_LANES_X[laneIndex];
+      // Same convention as StreetCars: negative-x lanes run one way,
+      // positive-x lanes the other.
+      const dir: 1 | -1 = laneX < 0 ? -1 : 1;
       return {
-        x: side * (1.5 + seeded(i, 201) * 6),
-        y: 4 + seeded(i, 202) * 11,
-        z: 40 - ((sideSlot + seeded(i, 203) * 0.8) / slotsPerSide) * 170,
+        // A hair of lateral wander, as drivers/autopilots never hold an
+        // exact centreline.
+        x: laneX + (seeded(i, 201) - 0.5) * 0.3,
+        y: AIR_LAYERS_Y[laneIndex % AIR_LAYERS_Y.length] + (seeded(i, 202) - 0.5) * 0.6,
+        z: 34 - ((laneSlot + seeded(i, 203) * 0.6) / carsPerLane) * 110,
         dir,
-        speed: 7 + seeded(i, 204) * 6,
-        // Slow, shallow drift rather than a bouncy bob — real vehicle
-        // suspension/hover stabilization damps out fast oscillation,
-        // and a fast bob is one of the things that read as a toy
-        // bobbing on an invisible string rather than something with
-        // real mass cruising through the air.
-        bobAmp: 0.1 + seeded(i, 205) * 0.16,
-        bobFreq: 0.3 + seeded(i, 206) * 0.3,
+        // Each lane has its own cruising speed, with only slight
+        // per-car variation — traffic in a lane moves together.
+        speed: 8 + (laneIndex % 3) * 1.6 + seeded(i, 204) * 1.2,
+        // Slow, shallow drift: a hovering vehicle's stabilisers damp
+        // out quick oscillation.
+        bobAmp: 0.05 + seeded(i, 205) * 0.08,
+        bobFreq: 0.25 + seeded(i, 206) * 0.2,
         phase: seeded(i, 207) * Math.PI * 2,
-        // Sized up ~50%, matching StreetCars' own pass, at explicit
-        // "cars look so small, make them big" request.
         length: 2.3 + seeded(i, 208) * 0.6,
         width: 1.05 + seeded(i, 209) * 0.18,
         colorIndex: Math.floor(seeded(i, 210) * CAR_COLORS.length),
@@ -240,7 +255,7 @@ export function FlyingCars({ isMobile }: { isMobile: boolean }) {
       // faint repulsor haze instead of a glowing toy light-up base.
       dummy.position.set(car.x, bobY - CAR_SHELL_HEIGHT / 2 - 0.06, car.z);
       dummy.rotation.set(0, facing, 0);
-      dummy.scale.set(car.width * 0.7, 0.04, car.length * 0.7);
+      dummy.scale.set(car.width * 0.85, 0.05, car.length * 0.85);
       dummy.updateMatrix();
       padMatrices.push(dummy.matrix.clone());
 
@@ -260,13 +275,13 @@ export function FlyingCars({ isMobile }: { isMobile: boolean }) {
       // recognizable "car of the future" design cue.
       dummy.position.set(car.x, bobY - CAR_SHELL_HEIGHT * 0.32, frontZ);
       dummy.rotation.set(0, facing, 0);
-      dummy.scale.set(car.width * 0.78, 0.05, 0.03);
+      dummy.scale.set(car.width * 0.8, 0.09, 0.05);
       dummy.updateMatrix();
       headlightMatrices.push(dummy.matrix.clone());
 
       dummy.position.set(car.x, bobY - CAR_SHELL_HEIGHT * 0.28, backZ);
       dummy.rotation.set(0, facing, 0);
-      dummy.scale.set(car.width * 0.7, 0.045, 0.03);
+      dummy.scale.set(car.width * 0.74, 0.085, 0.05);
       dummy.updateMatrix();
       taillightMatrices.push(dummy.matrix.clone());
 
@@ -411,9 +426,9 @@ export function FlyingCars({ isMobile }: { isMobile: boolean }) {
       <instancedMesh ref={padRef} args={[undefined, undefined, carCount]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshBasicMaterial
-          color="#bfe0f0"
+          color="#8fdcff"
           transparent
-          opacity={0.3}
+          opacity={0.55}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           fog={false}
@@ -423,7 +438,7 @@ export function FlyingCars({ isMobile }: { isMobile: boolean }) {
       {/* Glowing side character line — see StreetCars' own copy of this
           for why (the one design cue every reference concept car
           shared). */}
-      <instancedMesh ref={sideLineRef} args={[undefined, undefined, carCount * 2 * SIDE_LINE_SEGMENTS]}>
+      <instancedMesh ref={sideLineRef} visible={false} args={[undefined, undefined, carCount * 2 * SIDE_LINE_SEGMENTS]}>
         <boxGeometry args={[1, 1, 1]} />
         {/* Shifted from blue-cyan (#6fd6ff) to teal (#4fe8c8) at
             explicit "use this type of car" reference — see StreetCars'
@@ -470,7 +485,7 @@ export function FlyingCars({ isMobile }: { isMobile: boolean }) {
 
       {/* Light-trail segments — brightness comes entirely from
           instanceColor (see trailColors above). */}
-      <instancedMesh ref={trailRef} args={[undefined, undefined, carCount * TRAIL_SEGMENTS]}>
+      <instancedMesh ref={trailRef} visible={false} args={[undefined, undefined, carCount * TRAIL_SEGMENTS]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshBasicMaterial
           transparent
@@ -487,12 +502,11 @@ export function FlyingCars({ isMobile }: { isMobile: boolean }) {
           of the skyline. */}
       <instancedMesh ref={droneBodyRef} args={[undefined, undefined, droneCount]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshBasicMaterial vertexColors fog={false} />
+        <meshBasicMaterial fog={false} />
       </instancedMesh>
       <instancedMesh ref={droneGlowRef} args={[undefined, undefined, droneCount]}>
         <sphereGeometry args={[1, 8, 8]} />
         <meshBasicMaterial
-          vertexColors
           transparent
           opacity={0.2}
           blending={THREE.AdditiveBlending}
@@ -507,7 +521,6 @@ export function FlyingCars({ isMobile }: { isMobile: boolean }) {
       <instancedMesh ref={droneRingRef} args={[undefined, undefined, droneCount]}>
         <torusGeometry args={[1, 0.03, 6, 20]} />
         <meshBasicMaterial
-          vertexColors
           transparent
           opacity={0.5}
           blending={THREE.AdditiveBlending}

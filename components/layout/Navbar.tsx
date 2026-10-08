@@ -80,7 +80,7 @@ export function Navbar() {
 
         <div className="relative max-w-7xl mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-2.5 group">
+          <a href="/#hero" className="flex items-center gap-2.5 group">
             <Image
               src="/fevicon.png"
               alt="MDS"
@@ -145,12 +145,14 @@ export function Navbar() {
 
           {/* Mobile toggle */}
           <button
-            className="md:hidden flex items-center justify-center rounded-full transition-transform duration-300 hover:scale-105"
+            className="md:hidden flex items-center justify-center rounded-full focus-visible:rounded-full transition-transform duration-300 hover:scale-105"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
             style={{
-              width: 42,
-              height: 42,
+              // 44 matches the global mobile `button { min-height: 44px }`
+              // — at 42 wide that rule stretched it into a slight oval.
+              width: 44,
+              height: 44,
               background: "rgba(255,255,255,0.07)",
               border: "1px solid rgba(255,255,255,0.18)",
               backdropFilter: "blur(14px) saturate(160%)",

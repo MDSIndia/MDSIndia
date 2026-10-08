@@ -55,7 +55,16 @@ function buildArcPath(seed: number, r0: number, r1: number, baseAngle: number) {
  * built to read as an actual piece of hardware generating the light
  * rather than a flat decorative glow, so it lands as a real gateway to
  * arrive at instead of a distant special effect. */
-export function Star({ isMobile }: { isMobile: boolean }) {
+export function Star({
+  isMobile,
+  growthStart = at(5.0),
+}: {
+  isMobile: boolean;
+  /** Time (s) at which the portal starts growing out of the distance. The
+   * city cut keeps it hidden until late in the flight; the star-only intro
+   * passes 0 so it is visible from the first frame. */
+  growthStart?: number;
+}) {
   const groupRef = useRef<THREE.Group>(null);
   const coreRef = useRef<THREE.Sprite>(null);
   const innerGlowRef = useRef<THREE.Sprite>(null);
@@ -110,7 +119,7 @@ export function Star({ isMobile }: { isMobile: boolean }) {
     // the whole frame including the buildings around it) so the
     // skyline stays visible right up to the end instead of the glow
     // doing all the work alone.
-    const growth = windowProgress(t, at(5.0), INTRO_DURATION, easeInQuad);
+    const growth = windowProgress(t, growthStart, INTRO_DURATION, easeInQuad);
     const scale = 0.1 + growth * growth * 13;
     group.visible = growth > 0.002;
     group.scale.setScalar(scale);

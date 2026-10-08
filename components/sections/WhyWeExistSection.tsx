@@ -1,7 +1,12 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
+import Image from "next/image";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
+
+// Three.js only loads in the browser, and only once this section renders.
+const AboutGlobe = dynamic(() => import("@/components/three/AboutGlobe"), { ssr: false });
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const SG = "var(--font-space-grotesk), 'Inter', sans-serif";
@@ -13,13 +18,16 @@ function BodyP({
   children,
   delay = 0.18,
   style,
+  className = "text-left md:text-justify",
 }: {
   children: ReactNode;
   delay?: number;
   style?: CSSProperties;
+  className?: string;
 }) {
   return (
     <motion.p
+      className={className}
       initial={{ opacity: 0, y: 12 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -137,6 +145,169 @@ function NoorvaOrbit() {
   );
 }
 
+/* ── Decorative rotating sphere for the About MDS header — stays fixed in
+   place; the only motion is the globe's own rotation. ── */
+
+// Ring geometry in the artwork's own 1201×1309 space, centred on the
+// ball (the artwork's baked-in ring is centred well below the ball, so
+// it's masked out and replaced by this symmetric one).
+const RING_CX = 615;
+const RING_CY = 520;
+const RING_TILT = -7;
+const RING_STRANDS = [
+  { rx: 520, ry: 122, w: 5,   o: 1 },
+  { rx: 545, ry: 128, w: 2.5, o: 0.7 },
+  { rx: 498, ry: 116, w: 2,   o: 0.55 },
+];
+
+function RingHalf({ front }: { front: boolean }) {
+  return (
+    <svg
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      viewBox="0 0 1201 1309"
+      preserveAspectRatio="none"
+      aria-hidden
+      style={{ mixBlendMode: "screen" }}
+    >
+      {front && (
+        <defs>
+          <linearGradient id="aboutRingGrad" gradientUnits="userSpaceOnUse" x1="-560" y1="0" x2="560" y2="0">
+            <stop offset="0%" stopColor="#6FB0FF" />
+            <stop offset="50%" stopColor="#8F9BFF" />
+            <stop offset="100%" stopColor="#B58CFF" />
+          </linearGradient>
+          <filter id="aboutRingGlow" x="-10%" y="-60%" width="120%" height="220%">
+            <feGaussianBlur stdDeviation="10" />
+          </filter>
+        </defs>
+      )}
+      <g
+        transform={`translate(${RING_CX} ${RING_CY}) rotate(${RING_TILT})`}
+        fill="none"
+        strokeLinecap="round"
+        opacity={front ? 1 : 0.6}
+      >
+        {/* sweep-flag 0 = lower (front) half, 1 = upper (back) half */}
+        {[
+          ...RING_STRANDS.map((s) => ({ ...s, glow: false })),
+          { ...RING_STRANDS[0], w: 14, o: 0.7, glow: true },
+        ].map((s, i) => (
+          <path
+            key={i}
+            d={`M ${-s.rx} 0 A ${s.rx} ${s.ry} 0 0 ${front ? 0 : 1} ${s.rx} 0`}
+            stroke="url(#aboutRingGrad)"
+            strokeWidth={s.w}
+            opacity={s.o}
+            filter={s.glow ? "url(#aboutRingGlow)" : undefined}
+          />
+        ))}
+      </g>
+    </svg>
+  );
+}
+
+// Podium size relative to the artwork (1 = original).
+const PODIUM_SCALE = 0.75;
+
+function AboutMDSSphere() {
+  // Vertical: starts below the ring, fades out at the bottom. Horizontal:
+  // fades at both sides — the scaled artwork's edges now sit inside the
+  // frame, so without this its near-black backdrop shows as a faint box.
+  const podiumMask =
+    "linear-gradient(to bottom, transparent 0%, transparent 64%, black 69%, black 88%, transparent 96%), linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)";
+
+  return (
+    <div className="relative mx-auto" style={{ width: "min(100%, 400px)", aspectRatio: "1201 / 1309" }}>
+      {/* Ambient glow behind the artwork */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          inset: "8%",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(0,120,255,0.30) 0%, rgba(123,47,190,0.16) 55%, transparent 75%)",
+          filter: "blur(34px)",
+          opacity: 0.8,
+        }}
+      />
+
+      <div
+        className="relative w-full h-full"
+        style={{
+          maskImage:
+            "linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)",
+          maskComposite: "intersect",
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)",
+          WebkitMaskComposite: "source-in",
+        } as CSSProperties}
+      >
+        {/* Static base — only the podium and beam survive from the
+            artwork now (the ball itself is the 3D planet below, and the
+            artwork's own off-centre ring is masked out; the replacement
+            ring is centred on the ball). Never rotates. */}
+        {/* Podium + beam — shrunk toward the beam's glow point (the spot
+            directly under the ball) so it stays centred beneath the
+            globe. The mask lives on the inner div so it scales with the
+            artwork. */}
+        <div
+          className="absolute inset-0"
+          style={{ transform: `scale(${PODIUM_SCALE})`, transformOrigin: "50.8% 73%" }}
+        >
+          <div
+            className="absolute inset-0"
+            style={{
+              maskImage: podiumMask,
+              maskComposite: "intersect",
+              WebkitMaskImage: podiumMask,
+              WebkitMaskComposite: "source-in",
+            } as CSSProperties}
+          >
+            <Image
+              src="/about.jpeg"
+              alt=""
+              aria-hidden
+              fill
+              quality={100}
+              sizes="400px"
+              className="object-contain"
+            />
+          </div>
+        </div>
+
+        {/* Back half of the ring — behind the ball */}
+        <RingHalf front={false} />
+
+        {/* The ball — a real 3D Earth-like planet (see AboutGlobe) spinning
+            left to right about its vertical axis. The canvas is a square
+            exactly covering the ball's disc in the artwork (centre
+            613,525 / radius 335 in the 1201×1309 space). Opaque, so it
+            hides the back half of the ring. */}
+        <div
+          className="absolute"
+          style={{
+            left: "23.15%",
+            top: "14.51%",
+            width: "55.8%",
+            aspectRatio: "1",
+            borderRadius: "50%",
+            // Atmosphere halo outside the planet's edge.
+            boxShadow:
+              "0 0 28px 4px rgba(70,150,255,0.35), 0 0 70px 14px rgba(60,110,255,0.18)",
+          }}
+        >
+          <div className="absolute inset-0 overflow-hidden" style={{ borderRadius: "50%" }}>
+            <AboutGlobe />
+          </div>
+        </div>
+
+        {/* Front half of the ring — in front of the ball, so the ring
+            wraps around the globe. Static; the ball turns beneath it. */}
+        <RingHalf front />
+      </div>
+    </div>
+  );
+}
+
 /* ─── Full expanded "About MDS" content ──────────────────────────────── */
 
 export function AboutMDSFullContent() {
@@ -149,10 +320,10 @@ export function AboutMDSFullContent() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: EASE }}
-          className="text-center mb-8 md:mb-12"
+          className="flex flex-col md:flex-row items-center justify-center gap-5 md:gap-10 text-center md:text-left mb-8 md:mb-12"
         >
           <h2
-            className="neue-machina"
+            className="neue-machina md:shrink-0"
             style={{
               fontSize: "clamp(2.4rem, 6vw, 6rem)",
               lineHeight: 0.92,
@@ -166,17 +337,30 @@ export function AboutMDSFullContent() {
             About MDS
           </h2>
           <p
-            className="mt-5"
+            className="md:pl-10 md:border-l md:border-white/15"
             style={{
               fontFamily: SG,
-              fontSize: "0.68rem",
-              letterSpacing: "0.32em",
-              color: "rgba(255,255,255,0.45)",
-              textTransform: "uppercase",
+              fontSize: "clamp(calc(0.9rem + 2px), calc(1.2vw + 2px), calc(1.05rem + 2px))",
+              lineHeight: 1.7,
+              color: "rgba(255,255,255,0.85)",
+              maxWidth: 460,
             }}
           >
-            Hyderabad, India · Est. May 8, 2025 · Startup India Recognized
+            Mahadeva Digital Solutions (MDS) Private Limited is a technology company based in
+            Hyderabad, India. Established on May 8, 2025, and recognized under the Startup India
+            initiative.
           </p>
+        </motion.div>
+
+        {/* Rotating globe */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, ease: EASE }}
+          className="mb-10 md:mb-14"
+        >
+          <AboutMDSSphere />
         </motion.div>
 
         {/* ══════════════════════════════════════════════════════════════
@@ -189,7 +373,7 @@ export function AboutMDSFullContent() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, ease: EASE }}
-          className="mb-14 md:mb-18 text-center"
+          className="mb-14 md:mb-18 text-left"
         >
           <motion.span
             initial={{ opacity: 0 }}
@@ -224,7 +408,7 @@ export function AboutMDSFullContent() {
             }}
           >
             <span style={{ color: "rgba(255,255,255,0.93)" }}>
-              Human-centered technology{" "}
+              Human-centered Products{" "}
             </span>
             <br className="hidden sm:block" />
             <span
@@ -244,23 +428,20 @@ export function AboutMDSFullContent() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.85, delay: 0.18, ease: EASE }}
+            className="text-left md:text-justify"
             style={{
               fontFamily: SG,
               fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
               lineHeight: 1.8,
               color: "#FFFFFF",
-              maxWidth: 660,
-              margin: "0 auto",
             }}
           >
-            Mahadeva Digital Solutions (MDS) Private Limited is a technology company based in
-            Hyderabad, India. Established on May 8, 2025, and recognized under the Startup India
-            initiative, MDS&apos;s primary focus is to design and develop innovative,
+             MDS&apos;s primary focus is to design and develop innovative,
             human-centered technologies and products that address real-world problems and evolving
             human needs, transform existing markets and create new ones.
           </motion.p>
 
-          <BodyP delay={0.26} style={{ maxWidth: 660, margin: "1rem auto 0" }}>
+          <BodyP delay={0.26} style={{ marginTop: "1rem" }}>
             Our purpose is to develop and transform advanced, high-impact technologies into
             human-centered solutions and products that better serve people, improve human
             capabilities and quality of life at scale, and contribute to the better future of the
@@ -276,7 +457,7 @@ export function AboutMDSFullContent() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, ease: EASE }}
-          className="mb-14 md:mb-18 text-center"
+          className="mb-14 md:mb-18 text-left"
         >
           <span
             style={{
@@ -302,7 +483,7 @@ export function AboutMDSFullContent() {
               fontWeight: 700,
             }}
           >
-            <span style={{ color: "rgba(255,255,255,0.93)" }}>Personal Humanized AI — </span>
+            <span style={{ color: "rgba(255,255,255,0.93)" }}>Noorva — </span>
             <span
               style={{
                 background: "linear-gradient(135deg, #7AA4FF 0%, #00D4FF 100%)",
@@ -311,20 +492,14 @@ export function AboutMDSFullContent() {
                 backgroundClip: "text",
               }}
             >
-              a tool becomes a companion.
+              an AI becomes a companion.
             </span>
           </h3>
 
-          <BodyP style={{ maxWidth: 660, margin: "0 auto" }}>
+          <BodyP>
             Currently, MDS is pioneering the next generation of Personal Humanized AI with a mission
             to make artificial intelligence a natural, trusted, and meaningful part of everyday
             life.
-          </BodyP>
-          <BodyP delay={0.26} style={{ maxWidth: 660, margin: "1rem auto 0" }}>
-            While today&apos;s AI systems are primarily designed to answer questions and perform
-            tasks, MDS believes the future of AI lies in building deeper, more human relationships.
-            Our vision is to transform AI from a tool people use into a companion that genuinely
-            understands, supports, and grows alongside them.
           </BodyP>
         </motion.div>
 
@@ -387,9 +562,7 @@ export function AboutMDSFullContent() {
                   backgroundClip: "text",
                 }}
               >
-                your personal
-                <br />
-                lifestyle companion.
+                your personal lifestyle companion.
               </span>
             </motion.h3>
 
@@ -404,6 +577,7 @@ export function AboutMDSFullContent() {
                 lineHeight: 1.8,
                 color: "#FFFFFF",
               }}
+              className="text-left md:text-justify"
             >
               At the center of the Noorva Ecosystem is Noorva Companion, MDS&apos;s flagship product
               and personal lifestyle companion. Noorva Companion is designed to help people navigate
@@ -490,10 +664,11 @@ export function AboutMDSFullContent() {
                 lineHeight: 1.8,
                 color: "#FFFFFF",
               }}
+              className="text-left md:text-justify"
             >
               To achieve this, MDS is developing the Noorva Ecosystem, a new category of
               human-centered AI powered by Emotional AI, Affective AI, and our proprietary
-              Human-Interactive AI technologies. These technologies are designed to understand
+              Human-centered AI technologies. These technologies are designed to understand
               context, emotions, behaviors, preferences, and personal experiences, enabling more
               natural, intuitive, and emotionally intelligent interactions.
             </motion.p>
@@ -663,8 +838,8 @@ export function AboutMDSFullContent() {
                 fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
                 lineHeight: 1.8,
                 color: "#FFFFFF",
-                maxWidth: 560,
               }}
+              className="text-left md:text-justify"
             >
               Our long-term goal is to become the most innovative technology company in the world
               within the next 10 years and to help transform the world into a more advanced and
@@ -678,9 +853,9 @@ export function AboutMDSFullContent() {
                 fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
                 lineHeight: 1.8,
                 color: "rgba(255,255,255,0.78)",
-                maxWidth: 560,
                 marginTop: "0.9rem",
               }}
+              className="text-left md:text-justify"
             >
               The next 10 years at MDS will be defined not by following market trends, but by
               creating them.
@@ -694,7 +869,7 @@ export function AboutMDSFullContent() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 1, ease: EASE }}
-          className="mb-10 md:mb-14 text-center"
+          className="mb-10 md:mb-14 text-left"
         >
           <p
             style={{
@@ -704,7 +879,7 @@ export function AboutMDSFullContent() {
               letterSpacing: "0.01em",
               color: "rgba(255,255,255,0.88)",
               fontWeight: 700,
-              textAlign: "center",
+              textAlign: "left",
             }}
           >
             &ldquo;The best way to predict the future is to{" "}
@@ -734,15 +909,15 @@ export function AboutMDSFullContent() {
             — Alan Kay
           </p>
 
-          <BodyP style={{ maxWidth: 680, margin: "0 auto" }}>
+          <BodyP>
             At MDS, we believe true innovation goes beyond improving what already exists. It means
             challenging assumptions, redefining standards, and creating entirely new possibilities.
           </BodyP>
-          <BodyP delay={0.26} style={{ maxWidth: 680, margin: "1rem auto 0" }}>
+          <BodyP delay={0.26} style={{ marginTop: "1rem" }}>
             By combining first-principles thinking with a relentless focus on solving meaningful
             problems, we aim to create products, experiences, and markets that shape the future.
           </BodyP>
-          <BodyP delay={0.34} style={{ maxWidth: 680, margin: "1rem auto 0" }}>
+          <BodyP delay={0.34} style={{ marginTop: "1rem" }}>
             We do not aspire to be the best within the existing game. We aspire to redefine the game
             itself. The next decade for MDS is about imagining what does not yet exist and turning
             it into reality.
@@ -755,7 +930,7 @@ export function AboutMDSFullContent() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, ease: EASE }}
-          className="mb-10 md:mb-14 text-center"
+          className="mb-10 md:mb-14 text-left"
         >
           <span
             style={{
@@ -793,13 +968,13 @@ export function AboutMDSFullContent() {
             </span>
           </h3>
           <p
+            className="text-left md:text-justify"
             style={{
               fontFamily: SG,
               fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
               lineHeight: 1.8,
               color: "#FFFFFF",
-              maxWidth: 640,
-              margin: "0 auto 1.5rem",
+              margin: "0 0 1.5rem",
             }}
           >
             Over the next ten years, MDS will expand its operations beyond artificial intelligence
@@ -807,7 +982,7 @@ export function AboutMDSFullContent() {
             MDS plans to use Quantum Technology as a foundation to help advance the other three
             technologies it wants to focus on.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="flex flex-wrap items-center justify-start gap-3">
             {["Quantum Technology", "Nano Technology", "Automobiles", "Space Tech"].map((t) => (
               <span
                 key={t}
@@ -827,15 +1002,8 @@ export function AboutMDSFullContent() {
             ))}
           </div>
 
-          <BodyP style={{ maxWidth: 680, margin: "2rem auto 0" }}>
-            Quantum technology aligns with MDS&apos;s mission of advancing humanity through
-            transformative innovation. Theoretically, it has the potential to revolutionize
-            industries and unlock possibilities far beyond today&apos;s conventional technologies,
-            including AI. Experts in this field believe that it can drive breakthroughs across
-            healthcare, energy, agriculture, and scientific research on a scale greater than ever
-            before, while creating entirely new industries, markets, and opportunities.
-          </BodyP>
-          <BodyP delay={0.26} style={{ maxWidth: 680, margin: "1rem auto 0" }}>
+         
+          <BodyP delay={0.26} style={{ marginTop: "1.5rem" }}>
             As the global quantum race accelerates, MDS is committed to being part of this next
             technological frontier and helping shape the future rather than simply adapting to it.
             MDS will focus specifically on Quantum Intelligence to integrate this technology into

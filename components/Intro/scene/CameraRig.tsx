@@ -58,8 +58,8 @@ export function CameraRig({ isMobile, active }: { isMobile: boolean; active: boo
   // Deep midnight navy/graphite rather than violet — restrained,
   // luxury-tech atmosphere per explicit direction rather than a
   // purple-leaning haze.
-  const baseColor = useMemo(() => new THREE.Color("#060810"), []);
-  const portalColor = useMemo(() => new THREE.Color("#7fd8ff"), []);
+  const baseColor = useMemo(() => new THREE.Color("#0a1224"), []);
+  const portalColor = useMemo(() => new THREE.Color("#5aa6d2"), []);
   const engulfColor = useMemo(() => new THREE.Color("#f4fbff"), []);
   const tangent = useMemo(() => new THREE.Vector3(), []);
   const targetPos = useMemo(() => new THREE.Vector3(), []);
@@ -139,6 +139,11 @@ export function CameraRig({ isMobile, active }: { isMobile: boolean; active: boo
     // the look target, so the camera angle stays level and stable from
     // the very first frame instead of pitching up toward the skyline.
     const lookPos = curve.getPointAt(uLook);
+    // Dead level: aim at the same height as the camera so the view never
+    // pitches up or down as the path's altitude drifts (it eases between
+    // ~1.5 and ~2.6 units). The horizon then sits at a fixed point in the
+    // frame for the whole flight instead of swaying with the path.
+    lookPos.y = targetPos.y;
 
     // Gentle decelerating coast past the end of the path, so the
     // camera is still softly moving forward through the whole

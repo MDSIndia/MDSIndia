@@ -9,6 +9,8 @@ import {
   createCarCabinGeometry,
   getCarPaintTexture,
   CAR_SHELL_HEIGHT,
+  CAR_GROUND_CLEARANCE,
+  CAR_BODY_SIDE,
   CABIN_HEIGHT,
   CABIN_Z_START,
   CABIN_Z_END,
@@ -145,7 +147,11 @@ export function StreetCars({ isMobile }: { isMobile: boolean }) {
         laneX,
         dir,
         speed: 6 + seeded(i, 81) * 5,
-        z: 40 - ((laneSlot + seeded(i, 82) * 0.8) / carsPerLane) * 170,
+        // Spread over the stretch the camera actually flies through (the
+        // first ~100 units), not the whole 170-unit road: with the far
+        // end of it never reached during the shot, most of the traffic
+        // sat out of sight and the boulevard read as empty.
+        z: 34 - ((laneSlot + seeded(i, 82) * 0.8) / carsPerLane) * 100,
         // Sized up ~50% (was 1.5-2.0 x 0.78-0.92) at explicit "cars
         // look so small, make them big" request.
         length: 2.3 + seeded(i, 83) * 0.6,
@@ -188,7 +194,7 @@ export function StreetCars({ isMobile }: { isMobile: boolean }) {
       const frontZ = car.z + (car.dir < 0 ? -car.length / 2 : car.length / 2);
       const backZ = car.z + (car.dir < 0 ? car.length / 2 : -car.length / 2);
 
-      dummy.position.set(car.laneX, CAR_SHELL_HEIGHT / 2, car.z);
+      dummy.position.set(car.laneX, CAR_GROUND_CLEARANCE + CAR_SHELL_HEIGHT / 2, car.z);
       dummy.rotation.set(0, facing, 0);
       dummy.scale.set(car.width, CAR_SHELL_HEIGHT, car.length);
       dummy.updateMatrix();
@@ -202,7 +208,7 @@ export function StreetCars({ isMobile }: { isMobile: boolean }) {
       // greenhouse even from far away. Positioned via translateZ (not
       // a manual world-axis offset) so it lands over the body's own
       // bulge regardless of which way the car is facing.
-      dummy.position.set(car.laneX, CAR_SHELL_HEIGHT + CABIN_HEIGHT / 2, car.z);
+      dummy.position.set(car.laneX, CAR_GROUND_CLEARANCE + CAR_SHELL_HEIGHT + CABIN_HEIGHT / 2, car.z);
       dummy.rotation.set(0, facing, 0);
       dummy.translateZ(((CABIN_Z_START + CABIN_Z_END) / 2) * car.length);
       // Widened 0.72 -> 0.85 at explicit "use this type of car"
@@ -248,15 +254,21 @@ export function StreetCars({ isMobile }: { isMobile: boolean }) {
       // most immediately recognizable "this is a real car" cues.
       const mirrorZ = car.z + (car.dir < 0 ? -car.length * 0.06 : car.length * 0.06);
       [-1, 1].forEach((wx) => {
-        dummy.position.set(car.laneX + wx * (car.width / 2 + 0.03), 0.4, mirrorZ);
+        dummy.position.set(car.laneX + wx * (car.width / 2 + 0.03), CAR_GROUND_CLEARANCE + CAR_SHELL_HEIGHT * 0.98, mirrorZ);
         dummy.rotation.set(0, facing, 0);
         dummy.scale.set(0.07, 0.05, 0.12);
         dummy.updateMatrix();
         mirrorMatrices.push(dummy.matrix.clone());
       });
 
-      const wheelXOff = car.width / 2 + 0.02;
-      const wheelZOff = car.length / 2 - 0.32;
+      // Wheels sit tucked into the body: tyre centred just inside the
+      // body side so its outer face is a hair proud of it, a dark disc
+      // slightly larger than the tyre set flush on the body side behind
+      // it (reads as the wheel arch), and a smaller alloy cover on the
+      // tyre face. Previously the wheels hung outside the body on
+      // glowing cyan hubs, which is what made these look like go-karts.
+      const bodySide = car.width * CAR_BODY_SIDE;
+      const wheelZOff = car.length / 2 - 0.34;
       [-1, 1].forEach((wx) => {
         [-1, 1].forEach((wz) => {
           // rotation.x carries the rolling spin (accumulated in
@@ -265,44 +277,23 @@ export function StreetCars({ isMobile }: { isMobile: boolean }) {
           // the first place — Euler 'XYZ' order applies z first, so
           // the x spin ends up rotating the disc around its own axle
           // rather than tumbling it end over end.
-          dummy.position.set(car.laneX + wx * wheelXOff, 0.2, car.z + wz * wheelZOff);
+          dummy.position.set(car.laneX + wx * (bodySide - 0.04), WHEEL_RADIUS - 0.01, car.z + wz * wheelZOff);
           dummy.rotation.set(car.wheelSpin, 0, Math.PI / 2);
           dummy.scale.set(WHEEL_RADIUS, 0.14, WHEEL_RADIUS);
           dummy.updateMatrix();
           wheelMatrices.push(dummy.matrix.clone());
 
-          // A thin glowing disc set into the wheel face, behind and
-          // slightly larger than the cover that sits on top of it — the
-          // illuminated-wheel-hub cue the reference concept cars carry
-          // (a lit ring built into the wheel design, its edge visible
-          // all the way around the cover rather than hidden behind it),
-          // reusing this scene's own "everything has an accent light"
-          // language rather than a plain painted hubcap. Pushed before
-          // the cover below so its slightly larger radius peeks out
-          // from behind it.
-          dummy.position.set(
-            car.laneX + wx * (wheelXOff + 0.05),
-            0.2,
-            car.z + wz * wheelZOff
-          );
-          dummy.scale.setScalar(WHEEL_RADIUS * 0.95);
+          // Wheel arch: dark disc on the body side, larger than the tyre.
+          dummy.position.set(car.laneX + wx * (bodySide + 0.006), WHEEL_RADIUS - 0.01, car.z + wz * wheelZOff);
+          dummy.rotation.set(0, 0, Math.PI / 2);
+          dummy.scale.set(WHEEL_RADIUS * 1.2, 0.012, WHEEL_RADIUS * 1.2);
           dummy.updateMatrix();
           wheelGlowMatrices.push(dummy.matrix.clone());
 
-          // A large aero cover disc nearly flush with the tire, the
-          // closed-off wheel look common to EV/concept-car design
-          // rather than an exposed spoked rim. Sized up alongside the
-          // wheel's own radius increase (was a fixed 0.14 regardless of
-          // WHEEL_RADIUS, which left a noticeably thick dark tire lip
-          // once the wheel itself grew — now a thin lip instead,
-          // matching the reference's own glowing-hub-with-a-slim-tire-
-          // ring wheel design).
-          dummy.position.set(
-            car.laneX + wx * (wheelXOff + 0.075),
-            0.2,
-            car.z + wz * wheelZOff
-          );
-          dummy.scale.set(WHEEL_RADIUS * 0.75, 0.02, WHEEL_RADIUS * 0.75);
+          // Alloy cover on the tyre's outer face.
+          dummy.position.set(car.laneX + wx * (bodySide + 0.034), WHEEL_RADIUS - 0.01, car.z + wz * wheelZOff);
+          dummy.rotation.set(0, 0, Math.PI / 2);
+          dummy.scale.set(WHEEL_RADIUS * 0.68, 0.016, WHEEL_RADIUS * 0.68);
           dummy.updateMatrix();
           rimMatrices.push(dummy.matrix.clone());
         });
@@ -312,13 +303,13 @@ export function StreetCars({ isMobile }: { isMobile: boolean }) {
       // discrete lamp clusters — the continuous strip is itself a
       // recognizable "car of the future" design cue (the same move
       // real EV/concept vehicles make).
-      dummy.position.set(car.laneX, 0.2, frontZ);
+      dummy.position.set(car.laneX, CAR_GROUND_CLEARANCE + CAR_SHELL_HEIGHT * 0.44, frontZ);
       dummy.rotation.set(0, facing, 0);
-      dummy.scale.set(car.width * 0.78, 0.05, 0.03);
+      dummy.scale.set(car.width * 0.62, 0.04, 0.03);
       dummy.updateMatrix();
       headlightMatrices.push(dummy.matrix.clone());
 
-      dummy.position.set(car.laneX, 0.24, backZ);
+      dummy.position.set(car.laneX, CAR_GROUND_CLEARANCE + CAR_SHELL_HEIGHT * 0.52, backZ);
       dummy.rotation.set(0, facing, 0);
       dummy.scale.set(car.width * 0.7, 0.045, 0.03);
       dummy.updateMatrix();
@@ -442,7 +433,7 @@ export function StreetCars({ isMobile }: { isMobile: boolean }) {
           the rig light and show it as an actual 3D wheel. */}
       <instancedMesh ref={wheelRef} args={[undefined, undefined, wheelCount]}>
         <cylinderGeometry args={[1, 1, 1, 12]} />
-        <meshPhongMaterial color="#1c1e22" specular="#3a3d42" shininess={16} fog={false} />
+        <meshPhongMaterial color="#1c1e22" specular="#3a3d42" shininess={16} fog />
       </instancedMesh>
 
       {/* Aero wheel cover — a lighter, near-flush disc so the wheel
@@ -450,7 +441,7 @@ export function StreetCars({ isMobile }: { isMobile: boolean }) {
           cylinder or an exposed spoked rim. */}
       <instancedMesh ref={rimRef} args={[undefined, undefined, wheelCount]}>
         <cylinderGeometry args={[1, 1, 1, 16]} />
-        <meshPhongMaterial color="#8a8f96" specular="#cfd4da" shininess={70} fog={false} />
+        <meshPhongMaterial color="#6d737b" specular="#cfd4da" shininess={70} fog />
       </instancedMesh>
 
       {/* A thin glowing disc set just behind the wheel cover, its rim
@@ -460,21 +451,16 @@ export function StreetCars({ isMobile }: { isMobile: boolean }) {
           accent light" language rather than a plain painted hubcap. */}
       <instancedMesh ref={wheelGlowRef} args={[undefined, undefined, wheelCount]}>
         <cylinderGeometry args={[1, 1, 1, 20]} />
-        <meshBasicMaterial
-          color="#6fd6ff"
-          transparent
-          opacity={0.8}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-          fog={false}
-          toneMapped={false}
-        />
+        {/* Wheel arch: a near-black disc flush on the body side, just
+            larger than the tyre — gives the wheel a shadowed recess to
+            sit in. (Was an additive cyan "lit hub" ring.) */}
+        <meshBasicMaterial color="#03050a" fog />
       </instancedMesh>
 
       {/* Glowing side character line — see the layout comment above for
           why this is here: the one design cue shared across every
           reference concept car. */}
-      <instancedMesh ref={sideLineRef} args={[undefined, undefined, count * 2 * SIDE_LINE_SEGMENTS]}>
+      <instancedMesh ref={sideLineRef} visible={false} args={[undefined, undefined, count * 2 * SIDE_LINE_SEGMENTS]}>
         <boxGeometry args={[1, 1, 1]} />
         {/* Shifted from blue-cyan (#6fd6ff) to teal (#4fe8c8) at
             explicit "use this type of car" reference — its own glowing
@@ -522,7 +508,7 @@ export function StreetCars({ isMobile }: { isMobile: boolean }) {
       {/* Light-trail segments — brightness comes entirely from
           instanceColor (see trailColors above), so the base material
           color stays plain white here. */}
-      <instancedMesh ref={trailRef} args={[undefined, undefined, count * TRAIL_SEGMENTS]}>
+      <instancedMesh ref={trailRef} visible={false} args={[undefined, undefined, count * TRAIL_SEGMENTS]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshBasicMaterial
           transparent

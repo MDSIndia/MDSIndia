@@ -47,8 +47,8 @@ export function RoadDetails({ isMobile }: { isMobile: boolean }) {
     for (let i = 0; i < chevronCount; i++) {
       const z = 40 - (i / chevronCount) * 160;
       dummy.position.set(0, 0.03, z);
-      dummy.scale.set(0.16, 0.03, 0.16);
-      dummy.rotation.set(0, Math.PI / 4, 0);
+      dummy.scale.set(0.085, 0.02, 0.085);
+      dummy.rotation.set(0, 0, 0);
       dummy.updateMatrix();
       matrices.push(dummy.matrix.clone());
     }

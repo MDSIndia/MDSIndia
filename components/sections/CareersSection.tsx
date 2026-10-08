@@ -557,7 +557,7 @@ export function CareersPageContent() {
       <div className="scene-bottom-fade" />
 
       <div className="relative max-w-5xl mx-auto mb-10">
-        <Link href="/" className="btn-secondary group text-sm">
+        <Link href="/#hero" className="btn-secondary group text-sm">
           <ArrowLeft
             className="size-4 transition-transform duration-300 group-hover:-translate-x-1"
             strokeWidth={2.25}

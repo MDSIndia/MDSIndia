@@ -46,7 +46,13 @@ export function useIntro() {
   const [phase, setPhase] = useState<IntroPhase>("checking");
 
   useEffect(() => {
-    if (prefersReducedMotion() || hasSeenIntro()) {
+    // A hash in the URL ("/#hero" from the navbar's Home link, "Back to
+    // Home" buttons, etc.) means the visitor is deliberately heading to
+    // a section. The navbar uses plain <a> tags, so from another page
+    // that's a full page load which resets hasPlayedThisRuntime — without
+    // this check "Home" replayed the intro gate instead of landing on
+    // the hero.
+    if (prefersReducedMotion() || hasSeenIntro() || window.location.hash) {
       setPhase("done");
     } else {
       setPhase("gate");

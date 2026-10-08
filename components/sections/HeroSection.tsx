@@ -81,20 +81,28 @@ export function HeroSection() {
         animate="show"
         variants={{ hidden: {}, show: { transition: { staggerChildren: 0.14, delayChildren: 0.15 } } }}
       >
-        <div className="text-center md:text-left mx-auto md:mx-0" style={{ maxWidth: "620px" }}>
+        <div className="text-center md:text-left mx-auto md:mx-0" style={{ maxWidth: "880px" }}>
           <motion.h1
             variants={fadeUp}
             className="neue-machina mb-5"
             style={{
-              fontSize: "clamp(1.9rem, 3.8vw, 4.5rem)",
+              fontSize: "clamp(1.9rem, 3.1vw, 3.75rem)",
               lineHeight: 1.1,
+              fontWeight: 700,
               background: "linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 40%, #FFFFFF 70%, #FFFFFF 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
             }}
           >
-            Building Products<br />that Make an Impact
+            {/* Four deliberate lines on desktop (block spans) so the
+                headline reads as balanced phrases instead of wrapping
+                arbitrarily; on mobile the spans stay inline and wrap
+                naturally to the narrow viewport. */}
+            <span className="md:block">Building Advanced,</span>{" "}
+            <span className="md:block">High-Impact Technologies</span>{" "}
+            <span className="md:block">that Enhance Human Capability</span>{" "}
+            <span className="md:block">and Quality of Life</span>
           </motion.h1>
 
           <motion.p
@@ -107,7 +115,7 @@ export function HeroSection() {
               letterSpacing: "0.02em",
             }}
           >
-            Human-Centered Technology for a Better Future
+            Human-Centered Products for a Better Future
           </motion.p>
 
           <motion.div variants={fadeUp} className="flex flex-wrap gap-3.5 justify-center md:justify-start">

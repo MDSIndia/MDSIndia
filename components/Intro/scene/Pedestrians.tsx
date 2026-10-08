@@ -10,6 +10,10 @@ function seeded(i: number, salt: number) {
   return v - Math.floor(v);
 }
 
+// Limbs and torso are capsules rather than boxes (unit capsule is 1 wide
+// x 2 tall, hence the halved Y scales in layout()): rounded silhouettes
+// read as bodies, where hard-cornered boxes read as mannequins/robots.
+
 // Small glowing wrist/chest accents — the one "futuristic" tell that
 // separates these from plain silhouettes, echoing the skyline's own
 // blue/cyan/purple/warm accent mix rather than a flat uniform color.
@@ -154,7 +158,7 @@ export function Pedestrians({ isMobile }: { isMobile: boolean }) {
 
       dummy.position.set(p.x, HIP_Y + TORSO_HEIGHT / 2 + bounce, z);
       dummy.rotation.set(0, p.dir > 0 ? 0 : Math.PI, 0);
-      dummy.scale.set(0.34, TORSO_HEIGHT, 0.2);
+      dummy.scale.set(0.38, TORSO_HEIGHT / 2, 0.24);
       dummy.updateMatrix();
       torsoMatrices.push(dummy.matrix.clone());
 
@@ -192,7 +196,7 @@ export function Pedestrians({ isMobile }: { isMobile: boolean }) {
         const legPhase = li === 0 ? swing : -swing;
         dummy.position.set(p.x + side * 0.09, HIP_Y / 2, z + legPhase * p.legSwing);
         dummy.rotation.set(0, 0, 0);
-        dummy.scale.set(0.11, LEG_LENGTH, 0.11);
+        dummy.scale.set(0.12, LEG_LENGTH / 2, 0.12);
         dummy.updateMatrix();
         (li === 0 ? legLMatrices : legRMatrices).push(dummy.matrix.clone());
 
@@ -203,7 +207,7 @@ export function Pedestrians({ isMobile }: { isMobile: boolean }) {
           z + armPhase * p.armSwing
         );
         dummy.rotation.set(0, 0, 0);
-        dummy.scale.set(0.08, 0.42, 0.08);
+        dummy.scale.set(0.085, 0.21, 0.085);
         dummy.updateMatrix();
         (li === 0 ? armLMatrices : armRMatrices).push(dummy.matrix.clone());
       });
@@ -256,7 +260,7 @@ export function Pedestrians({ isMobile }: { isMobile: boolean }) {
           any real distance, which is why these read as invisible
           rather than as people in dark coats. */}
       <instancedMesh ref={torsoRef} args={[undefined, undefined, count]}>
-        <boxGeometry args={[1, 1, 1]} />
+        <capsuleGeometry args={[0.5, 1, 4, 10]} />
         <meshPhongMaterial specular="#3a4048" shininess={18} fog />
       </instancedMesh>
       <instancedMesh ref={headRef} args={[undefined, undefined, count]}>
@@ -264,19 +268,19 @@ export function Pedestrians({ isMobile }: { isMobile: boolean }) {
         <meshPhongMaterial specular="#4a4038" shininess={12} fog />
       </instancedMesh>
       <instancedMesh ref={legLRef} args={[undefined, undefined, count]}>
-        <boxGeometry args={[1, 1, 1]} />
+        <capsuleGeometry args={[0.5, 1, 4, 10]} />
         <meshPhongMaterial specular="#2a3038" shininess={16} fog />
       </instancedMesh>
       <instancedMesh ref={legRRef} args={[undefined, undefined, count]}>
-        <boxGeometry args={[1, 1, 1]} />
+        <capsuleGeometry args={[0.5, 1, 4, 10]} />
         <meshPhongMaterial specular="#2a3038" shininess={16} fog />
       </instancedMesh>
       <instancedMesh ref={armLRef} args={[undefined, undefined, count]}>
-        <boxGeometry args={[1, 1, 1]} />
+        <capsuleGeometry args={[0.5, 1, 4, 10]} />
         <meshPhongMaterial specular="#3a4048" shininess={18} fog />
       </instancedMesh>
       <instancedMesh ref={armRRef} args={[undefined, undefined, count]}>
-        <boxGeometry args={[1, 1, 1]} />
+        <capsuleGeometry args={[0.5, 1, 4, 10]} />
         <meshPhongMaterial specular="#3a4048" shininess={18} fog />
       </instancedMesh>
       <instancedMesh ref={accentRef} args={[undefined, undefined, count]}>

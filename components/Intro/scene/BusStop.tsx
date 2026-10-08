@@ -262,7 +262,7 @@ export function BusStop({ isMobile }: { isMobile: boolean }) {
 
       dummy.position.set(world.x + sway, legLength + torsoHeight / 2, world.z);
       dummy.rotation.set(0, stop.facing, 0);
-      dummy.scale.set(0.34, torsoHeight, 0.2);
+      dummy.scale.set(0.38, torsoHeight / 2, 0.24);
       dummy.updateMatrix();
       torsoMatrices.push(dummy.matrix.clone());
 
@@ -274,7 +274,7 @@ export function BusStop({ isMobile }: { isMobile: boolean }) {
 
       dummy.position.set(world.x + sway, legLength / 2, world.z);
       dummy.rotation.set(0, stop.facing, 0);
-      dummy.scale.set(0.11, legLength, 0.11);
+      dummy.scale.set(0.12, legLength / 2, 0.12);
       dummy.updateMatrix();
       legLMatrices.push(dummy.matrix.clone());
 
@@ -381,7 +381,7 @@ export function BusStop({ isMobile }: { isMobile: boolean }) {
           Pedestrians.tsx and for the same reason: those were nearly
           invisible against a night scene. */}
       <instancedMesh ref={torsoRef} args={[undefined, undefined, peopleCount]}>
-        <boxGeometry args={[1, 1, 1]} />
+        <capsuleGeometry args={[0.5, 1, 4, 10]} />
         <meshPhongMaterial specular="#3a4048" shininess={18} fog />
       </instancedMesh>
       <instancedMesh ref={headRef} args={[undefined, undefined, peopleCount]}>
@@ -389,11 +389,11 @@ export function BusStop({ isMobile }: { isMobile: boolean }) {
         <meshPhongMaterial specular="#4a4038" shininess={12} fog />
       </instancedMesh>
       <instancedMesh ref={legLRef} args={[undefined, undefined, peopleCount]}>
-        <boxGeometry args={[1, 1, 1]} />
+        <capsuleGeometry args={[0.5, 1, 4, 10]} />
         <meshPhongMaterial specular="#2a3038" shininess={16} fog />
       </instancedMesh>
       <instancedMesh ref={legRRef} args={[undefined, undefined, peopleCount]}>
-        <boxGeometry args={[1, 1, 1]} />
+        <capsuleGeometry args={[0.5, 1, 4, 10]} />
         <meshPhongMaterial specular="#2a3038" shininess={16} fog />
       </instancedMesh>
       <instancedMesh ref={accentRef} args={[undefined, undefined, peopleCount]}>

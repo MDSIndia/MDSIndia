@@ -7,6 +7,10 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { useMobile } from "@/hooks/useMobile";
 import { CameraRig } from "./scene/CameraRig";
+import { SkyDome } from "./scene/SkyDome";
+import { SpaceDust } from "./scene/SpaceDust";
+import { INTRO_SCENE, STAR_DURATION } from "./introScene";
+import { SpaceStar } from "./scene/SpaceStar";
 import { Ground } from "./scene/Ground";
 import { HighwayRoad } from "./scene/HighwayRoad";
 import { Sidewalk } from "./scene/Sidewalk";
@@ -166,7 +170,8 @@ export function IntroCinematic({
       fire();
       return;
     }
-    const id = window.setTimeout(fire, INTRO_DURATION * 1000);
+    const duration = INTRO_SCENE === "star" ? STAR_DURATION : INTRO_DURATION;
+    const id = window.setTimeout(fire, duration * 1000);
     return () => window.clearTimeout(id);
   }, [active, webglOk, fire]);
 
@@ -190,7 +195,10 @@ export function IntroCinematic({
       style={{
         position: "absolute",
         inset: 0,
-        background: "#020208",
+        // White once the hand-off starts: the star scene ends in white, and
+        // the veil above it is white too, so the whole dissolve is one
+        // white fade onto the homepage (no dark or coloured layer showing).
+        background: dissolving ? "#ffffff" : "#020208",
         pointerEvents: "none",
         opacity: !active ? 0 : dissolving ? 0 : 1,
         transition: dissolving
@@ -281,50 +289,66 @@ export function IntroCinematic({
                   See SceneLighting above for the gentle per-light
                   breathing animation. */}
               <SceneLighting isMobile={isMobile} />
-              <CameraRig isMobile={isMobile} active={active} />
-              <Ground />
-              <HighwayRoad />
-              <Sidewalk />
-              <RoadDetails isMobile={isMobile} />
-              <CrossStreets isMobile={isMobile} />
-              <CityScape isMobile={isMobile} />
-              <SecondRowSkyline isMobile={isMobile} />
-              <SkylineFiller isMobile={isMobile} />
-              <FinaleSkyline isMobile={isMobile} />
-              <DistantSkyline isMobile={isMobile} />
-              <SkyBridges isMobile={isMobile} />
-              <LightShafts isMobile={isMobile} />
-              <OrbitalRing isMobile={isMobile} />
-              <ElevatedTrain isMobile={isMobile} />
-              <StreetLights isMobile={isMobile} />
-              <StreetTrees isMobile={isMobile} />
-              <Pedestrians isMobile={isMobile} />
-              <BusStop isMobile={isMobile} />
-              <ParticleField isMobile={isMobile} />
-              <Star isMobile={isMobile} />
-              <CosmicBlast isMobile={isMobile} />
-              {/* Textured elements get their own boundary so a slow image
-                  load never blanks the rest of the (already-running) scene —
-                  this now includes the vehicles, since their cabins load the
-                  SVG glass texture. */}
-              <Suspense fallback={null}>
-                <ParkingLot isMobile={isMobile} />
-                <StreetCars isMobile={isMobile} />
-                <FlyingCars isMobile={isMobile} />
-                <StreetKiosks isMobile={isMobile} />
-                <FloatingLogo />
-                <Landmark />
-                <MDSOfficeTower />
-                <OfficePark />
-                <TwinSpireBrace />
-                <NoorvaTower />
-                <Waterfall isMobile={isMobile} />
-                <Biodome />
-                <SkyPlaza />
-                <HolographicMonument />
-                <FuturisticPark />
-                <TreeOfLife />
-              </Suspense>
+              {/* The city flythrough drives the camera along its own path;
+                  the star scene moves it itself (see SpaceStar). */}
+              {INTRO_SCENE === "city" && <CameraRig isMobile={isMobile} active={active} />}
+              {INTRO_SCENE === "star" ? (
+                <>
+                  {/* Star portal + cosmic blast: a flight through deep
+                      space toward the portal. The city scene below is
+                      untouched, just not mounted (see introScene.ts). */}
+                  <SkyDome variant="space" />
+                  <SpaceDust isMobile={isMobile} />
+                  <SpaceStar isMobile={isMobile} />
+                </>
+              ) : (
+                <>
+                  <SkyDome />
+                  <Ground />
+                  <HighwayRoad />
+                  <Sidewalk />
+                  <RoadDetails isMobile={isMobile} />
+                  <CrossStreets isMobile={isMobile} />
+                  <CityScape isMobile={isMobile} />
+                  <SecondRowSkyline isMobile={isMobile} />
+                  <SkylineFiller isMobile={isMobile} />
+                  <FinaleSkyline isMobile={isMobile} />
+                  <DistantSkyline isMobile={isMobile} />
+                  <SkyBridges isMobile={isMobile} />
+                  <LightShafts isMobile={isMobile} />
+                  <OrbitalRing isMobile={isMobile} />
+                  <ElevatedTrain isMobile={isMobile} />
+                  <StreetLights isMobile={isMobile} />
+                  <StreetTrees isMobile={isMobile} />
+                  <Pedestrians isMobile={isMobile} />
+                  <BusStop isMobile={isMobile} />
+                  <ParticleField isMobile={isMobile} />
+                  <Star isMobile={isMobile} />
+                  <CosmicBlast isMobile={isMobile} />
+                  {/* Textured elements get their own boundary so a slow image
+                      load never blanks the rest of the (already-running) scene —
+                      this now includes the vehicles, since their cabins load the
+                      SVG glass texture. */}
+                  <Suspense fallback={null}>
+                    <ParkingLot isMobile={isMobile} />
+                    <StreetCars isMobile={isMobile} />
+                    <FlyingCars isMobile={isMobile} />
+                    <StreetKiosks isMobile={isMobile} />
+                    <FloatingLogo />
+                    <Landmark />
+                    <MDSOfficeTower />
+                    <OfficePark />
+                    <TwinSpireBrace />
+                    <NoorvaTower />
+                    <Waterfall isMobile={isMobile} />
+                    <Biodome />
+                    <SkyPlaza />
+                    <HolographicMonument />
+                    <FuturisticPark />
+                    <TreeOfLife />
+                  </Suspense>
+                </>
+              )}
             </Suspense>
 
             {/* Real bloom rather than relying on additive-blended

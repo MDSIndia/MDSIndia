@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { at, windowProgress } from "./timeline";
@@ -55,15 +55,6 @@ function buildWetSheenTexture() {
   // reading as a "blocky, tiled" road surface instead of continuous
   // wet asphalt. Both edges now match (transparent), so the tile wraps
   // with no discontinuity.
-  const grad = ctx.createLinearGradient(0, canvas.height, 0, 0);
-  grad.addColorStop(0, "rgba(80,130,190,0)");
-  grad.addColorStop(0.35, "rgba(90,160,220,0.035)");
-  grad.addColorStop(0.5, "rgba(130,200,255,0.07)");
-  grad.addColorStop(0.65, "rgba(90,160,220,0.035)");
-  grad.addColorStop(1, "rgba(80,130,190,0)");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
   // Scattered reflected-light streaks — short, thin vertical smears in
   // a mix of cool and warm hues, the "mirrored signage/headlight" cue
   // real wet asphalt shows that a single flat gradient can't. Kept
@@ -75,11 +66,11 @@ function buildWetSheenTexture() {
     "rgba(210,150,255,0.18)",
     "rgba(255,120,120,0.16)",
   ];
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 26; i++) {
     const x = seededRoad(i, 951) * canvas.width;
-    const w = 1 + seededRoad(i, 952) * 1.5;
+    const w = 0.7 + seededRoad(i, 952) * 1.3;
     const yStart = seededRoad(i, 953) * canvas.height;
-    const len = canvas.height * (0.025 + seededRoad(i, 954) * 0.035);
+    const len = canvas.height * (0.09 + seededRoad(i, 954) * 0.2);
     const streakGrad = ctx.createLinearGradient(0, yStart, 0, yStart - len);
     const color = streakColors[i % streakColors.length];
     streakGrad.addColorStop(0, color);
@@ -125,7 +116,6 @@ function buildEnergyLineTexture() {
 
   drawGlowLine(14);
   drawGlowLine(canvas.width - 14);
-  drawGlowLine(canvas.width / 2);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
@@ -138,41 +128,97 @@ function buildEnergyLineTexture() {
 function buildRoadTexture() {
   const canvas = document.createElement("canvas");
   canvas.width = 256;
-  // 480 rather than 512 — the dash pattern below is [34, 26], a 60px
-  // repeat; 512 isn't a multiple of that (512/60 leaves a 32px
-  // remainder), so the dash rhythm restarted out of phase at every
-  // texture-repeat wrap instead of continuing smoothly. 480 = 8 x 60
-  // divides evenly, so the dashes line up across every tile boundary.
+  // One tile = 4.58 world units of road (220 / 48 repeats). Real
+  // highway dashes are ~3 m long with ~9 m gaps; at this scene's scale
+  // (a car is ~2.5 units for ~4.5 m) that is roughly one 1.7-unit dash
+  // per 4.6-unit tile. The old pattern was a 0.3-unit dash every 0.55
+  // units — a zipper/runway look. 480px height with a 178+302 dash
+  // pattern keeps the rhythm continuous across tile wraps.
   canvas.height = 480;
   const ctx = canvas.getContext("2d")!;
+  const W = canvas.width;
+  const H = canvas.height;
 
-  // Plain dark asphalt rather than glossy black glass — a real road
-  // surface is matte and slightly uneven, not a mirrored panel. Same
-  // shared color/grain every paved surface in the scene uses, so the
-  // highway and the cross streets read as one continuous material.
+  // Asphalt base + the shared grain every paved surface uses.
   ctx.fillStyle = ASPHALT_COLOR;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  paintAsphaltGrain(ctx, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, W, H);
+  paintAsphaltGrain(ctx, W, H);
 
-  // Solid white shoulder lines along both edges of the two-lane carriageway.
+  // Tyre wear: real roads are polished slightly lighter and smoother
+  // where wheels run, in two tracks per lane. Soft, low contrast.
+  // Lanes sit at x = +-1.5 and +-3.4 units (the traffic lanes) which on
+  // this 256px / 16-unit texture is 128 +- 24 and 128 +- 54.
+  const laneCenters = [128 - 54, 128 - 24, 128 + 24, 128 + 54];
+  for (const cx of laneCenters) {
+    for (const off of [-9, 9]) {
+      const g = ctx.createLinearGradient(cx + off - 7, 0, cx + off + 7, 0);
+      g.addColorStop(0, "rgba(120,140,170,0)");
+      g.addColorStop(0.5, "rgba(120,140,170,0.05)");
+      g.addColorStop(1, "rgba(120,140,170,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(cx + off - 7, 0, 14, H);
+    }
+  }
+
+  // Repair patches and darker oil/rubber stains — uneven, never perfectly
+  // uniform. Seeded so every tile is the same (it repeats down the road).
+  for (let i = 0; i < 9; i++) {
+    const x = seededRoad(i, 701) * (W - 40) + 10;
+    const y = seededRoad(i, 702) * H;
+    const w = 14 + seededRoad(i, 703) * 46;
+    const h = 20 + seededRoad(i, 704) * 70;
+    const lighter = seededRoad(i, 705) > 0.5;
+    ctx.fillStyle = lighter ? "rgba(70,80,100,0.07)" : "rgba(0,0,0,0.22)";
+    ctx.fillRect(x, y, w, h);
+  }
+  // Hairline cracks.
+  ctx.strokeStyle = "rgba(0,0,0,0.5)";
+  ctx.lineWidth = 0.8;
+  for (let i = 0; i < 7; i++) {
+    let x = seededRoad(i, 711) * W;
+    let y = seededRoad(i, 712) * H;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    for (let k = 0; k < 6; k++) {
+      x += (seededRoad(i * 9 + k, 713) - 0.5) * 12;
+      y += 8 + seededRoad(i * 9 + k, 714) * 16;
+      ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  // Solid white shoulder lines along both edges.
   ctx.strokeStyle = ROAD_EDGE_LINE_COLOR;
-  ctx.lineWidth = 5;
+  ctx.lineWidth = 4;
   ctx.beginPath();
   ctx.moveTo(14, 0);
-  ctx.lineTo(14, canvas.height);
-  ctx.moveTo(canvas.width - 14, 0);
-  ctx.lineTo(canvas.width - 14, canvas.height);
+  ctx.lineTo(14, H);
+  ctx.moveTo(W - 14, 0);
+  ctx.lineTo(W - 14, H);
   ctx.stroke();
 
-  // Dashed white lane divider down the center — standard highway
-  // road-marking proportions rather than an "energy" line.
-  ctx.strokeStyle = ROAD_DASH_LINE_COLOR;
-  ctx.lineWidth = 4;
-  ctx.setLineDash([34, 26]);
+  // Centre: a double solid line separating the two directions, as on a
+  // real undivided two-way road (warm yellow-white, not the same white
+  // as the lane dashes).
+  ctx.strokeStyle = "rgba(235,205,120,0.82)";
+  ctx.lineWidth = 2.6;
   ctx.beginPath();
-  ctx.moveTo(canvas.width / 2, 0);
-  ctx.lineTo(canvas.width / 2, canvas.height);
+  ctx.moveTo(W / 2 - 3.2, 0);
+  ctx.lineTo(W / 2 - 3.2, H);
+  ctx.moveTo(W / 2 + 3.2, 0);
+  ctx.lineTo(W / 2 + 3.2, H);
   ctx.stroke();
+
+  // White dashed lane dividers between the two lanes on each side.
+  ctx.strokeStyle = ROAD_DASH_LINE_COLOR;
+  ctx.lineWidth = 3.2;
+  ctx.setLineDash([178, 302]);
+  for (const x of [128 - 39, 128 + 39]) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, H);
+    ctx.stroke();
+  }
   ctx.setLineDash([]);
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -183,14 +229,31 @@ function buildRoadTexture() {
   return texture;
 }
 
-// A raised, physical center median rather than just a painted dash —
-// a row of metal plate segments (like a cable-trench/grate divider),
-// each catching the rig light as real geometry and topped with a thin
-// glowing seam, the "premium boulevard median" cue instead of flat
-// paint. Spaced every ~2.4 units down the same 220-unit road span.
-const MEDIAN_SEGMENT_LENGTH = 1.5;
-const MEDIAN_GAP = 0.9;
-const MEDIAN_COUNT = Math.floor(220 / (MEDIAN_SEGMENT_LENGTH + MEDIAN_GAP));
+/** A single, non-repeating wet-horizon gradient over the whole road:
+ * dark at the camera end, brightening toward the vanishing point the way
+ * a wet road mirrors the glowing sky and city low on the horizon. It
+ * deliberately does not tile — the earlier per-tile sheen gradient
+ * repeated every ~7 units, which showed as regular horizontal light/dark
+ * bands across the road. */
+function buildHorizonSheenTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 4;
+  canvas.height = 256;
+  const ctx = canvas.getContext("2d")!;
+  // v=0 (canvas bottom after flipY) is the near end of the plane that
+  // maps to z=+80; the far end is the top. The plane is rotated -90deg
+  // about X so texture-top maps to -z (far). Gradient runs far -> near.
+  const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  g.addColorStop(0, "rgba(120,150,210,0.30)"); // far / horizon
+  g.addColorStop(0.35, "rgba(100,130,190,0.14)");
+  g.addColorStop(0.7, "rgba(80,110,170,0.04)");
+  g.addColorStop(1, "rgba(60,90,150,0)"); // near the camera
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
 
 export function HighwayRoad() {
   const texture = useMemo(() => buildRoadTexture(), []);
@@ -234,6 +297,20 @@ export function HighwayRoad() {
     [wetSheenTexture]
   );
 
+  const horizonSheenTexture = useMemo(() => buildHorizonSheenTexture(), []);
+  const horizonSheenMaterial = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        map: horizonSheenTexture,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        fog: false,
+        toneMapped: false,
+      }),
+    [horizonSheenTexture]
+  );
+
   const energyLineTexture = useMemo(() => buildEnergyLineTexture(), []);
   const energyLineMaterial = useMemo(
     () =>
@@ -248,33 +325,6 @@ export function HighwayRoad() {
       }),
     [energyLineTexture]
   );
-
-  const medianData = useMemo(() => {
-    const dummy = new THREE.Object3D();
-    const plateMatrices: THREE.Matrix4[] = [];
-    const seamMatrices: THREE.Matrix4[] = [];
-    for (let i = 0; i < MEDIAN_COUNT; i++) {
-      const z = 110 - i * (MEDIAN_SEGMENT_LENGTH + MEDIAN_GAP);
-      dummy.position.set(0, 0.05, z);
-      dummy.scale.set(0.46, 0.09, MEDIAN_SEGMENT_LENGTH);
-      dummy.updateMatrix();
-      plateMatrices.push(dummy.matrix.clone());
-
-      dummy.position.set(0, 0.096, z);
-      dummy.scale.set(0.08, 0.006, MEDIAN_SEGMENT_LENGTH * 0.86);
-      dummy.updateMatrix();
-      seamMatrices.push(dummy.matrix.clone());
-    }
-    return { plateMatrices, seamMatrices };
-  }, []);
-  const medianPlateRef = useRef<THREE.InstancedMesh>(null);
-  const medianSeamRef = useRef<THREE.InstancedMesh>(null);
-  useLayoutEffect(() => {
-    medianData.plateMatrices.forEach((m, i) => medianPlateRef.current?.setMatrixAt(i, m));
-    if (medianPlateRef.current) medianPlateRef.current.instanceMatrix.needsUpdate = true;
-    medianData.seamMatrices.forEach((m, i) => medianSeamRef.current?.setMatrixAt(i, m));
-    if (medianSeamRef.current) medianSeamRef.current.instanceMatrix.needsUpdate = true;
-  }, [medianData]);
 
   useFrame((state, delta) => {
     const t = state.clock.getElapsedTime();
@@ -333,6 +383,15 @@ export function HighwayRoad() {
         <planeGeometry args={[16, 220]} />
       </mesh>
 
+      {/* One non-tiling wet-horizon gradient over the whole road. */}
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, 0.0275, -30]}
+        material={horizonSheenMaterial}
+      >
+        <planeGeometry args={[16, 220]} />
+      </mesh>
+
       {/* Glowing "intelligent lane marking" pinstripes — see
           buildEnergyLineTexture above. Sits highest of the three road
           layers so its glow reads on top of both the paint and the wet
@@ -344,27 +403,6 @@ export function HighwayRoad() {
       >
         <planeGeometry args={[16, 220]} />
       </mesh>
-
-      {/* Raised metal median plates — real geometry standing proud of
-          the road surface (see MEDIAN_SEGMENT_LENGTH/MEDIAN_GAP above),
-          so the divider catches the rig light and reads as a physical
-          boulevard median rather than more flat paint. */}
-      <instancedMesh ref={medianPlateRef} args={[undefined, undefined, MEDIAN_COUNT]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshPhongMaterial color="#2a2d33" specular="#9aa4b0" shininess={85} fog={false} />
-      </instancedMesh>
-      <instancedMesh ref={medianSeamRef} args={[undefined, undefined, MEDIAN_COUNT]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshBasicMaterial
-          color="#7fe0ff"
-          transparent
-          opacity={0.7}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-          fog={false}
-          toneMapped={false}
-        />
-      </instancedMesh>
     </group>
   );
 }

@@ -469,24 +469,9 @@ export function FuturisticPark() {
               );
             })
           )}
-          <mesh
-            position={[0, tree.trunkHeight + tree.canopyRadius * 0.8, 0]}
-            ref={(el) => {
-              canopyGlowRefs.current[i] = el;
-            }}
-          >
-            <sphereGeometry args={[tree.canopyRadius * 1.2, 10, 10]} />
-            <meshBasicMaterial
-              color={tree.color}
-              transparent
-              opacity={0.18}
-              blending={THREE.AdditiveBlending}
-              depthWrite={false}
-              fog={false}
-              toneMapped={false}
-              side={THREE.BackSide}
-            />
-          </mesh>
+          {/* (A pulsing additive glow sphere used to wrap each canopy here —
+              it read as a translucent green balloon floating around the
+              tree, the least natural thing about it, so it's gone.) */}
           {/* A couple of small glowing crystal-leaf accents nested in
               the canopy — the same bioluminescent-tech detail
               StreetTrees/TreeOfLife carry, extended here so this park's
