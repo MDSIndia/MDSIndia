@@ -315,7 +315,9 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
     const approach = clamp01(t / STAR_BLAST_AT);
     let z = CAM_START_Z + (CAM_CENTRE_Z - CAM_START_Z) * Math.pow(approach, 2.2);
     if (tau > CUT_AT) {
-      const wideZ = CAM_WIDE_Z + (Math.min(tau, DIVE_START) - CUT_AT) * 3.5;
+      // A phone is tall and narrow, so the same wide shot crops the cloud
+      // sideways: stand further back there.
+      const wideZ = CAM_WIDE_Z + (isMobile ? 34 : 0) + (Math.min(tau, DIVE_START) - CUT_AT) * 3.5;
       const d = clamp01((tau - DIVE_START) / (DIVE_END - DIVE_START));
       // Eases in: the camera gathers speed as it falls into the cloud.
       z = wideZ + (CAM_CENTRE_Z - wideZ) * d * d;
@@ -360,7 +362,8 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
     else lookAtV.set(0, 0, z - 100);
     camera.lookAt(lookAtV);
     if (camera instanceof THREE.PerspectiveCamera) {
-      const fov = 46;
+      // Portrait screens get a much wider lens so the burst still fits across.
+      const fov = isMobile ? 66 : 46;
       if (camera.fov !== fov) {
         camera.fov = fov;
         camera.updateProjectionMatrix();
