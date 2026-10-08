@@ -100,27 +100,26 @@ const blastVertex = /* glsl */ `
   uniform float uAge;      // seconds since the blast
   uniform float uPx;       // pixel-ratio-scaled point size scale
   uniform float uLife;     // seconds before particles begin to fade
-  attribute vec3 aDir;
-  attribute float aSpeed;
-  attribute float aSize;
-  attribute float aSwirl;
-  attribute float aSeed;
-  attribute vec3 aColor;
-  varying vec3 vColor;
+  // Two attributes only, both used: position carries each particle's outward
+  // direction, aParams packs (speed, size, swirl, seed). Earlier this had
+  // seven attributes with position unused (all zeros) plus a colour
+  // attribute; iOS Safari mis-bound them, so particles got garbage sizes and
+  // colours (huge blurry red/green/blue/cyan/magenta/yellow blobs).
+  attribute vec4 aParams;
   varying float vAlpha;
 
   void main() {
     float age = max(uAge, 0.0);
     // Fast burst that eases off (drag): distance = v/k * (1 - e^(-k*age)).
     float k = 0.85;
-    float dist = aSpeed / k * (1.0 - exp(-k * age));
+    float dist = aParams.x / k * (1.0 - exp(-k * age));
 
     // Slow rotation about the vertical axis as it expands — the debris
     // winds into spiral arms instead of flying out as a plain sphere.
     // Spiral winds up quickly, then the whole cloud keeps turning slowly.
-    float ang = aSwirl * (1.0 - exp(-0.7 * age)) + age * 0.22;
+    float ang = aParams.z * (1.0 - exp(-0.7 * age)) + age * 0.22;
     float c = cos(ang), s = sin(ang);
-    vec3 d = vec3(aDir.x * c - aDir.z * s, aDir.y, aDir.x * s + aDir.z * c);
+    vec3 d = vec3(position.x * c - position.z * s, position.y, position.x * s + position.z * c);
 
     vec3 pos = d * dist;
     vec4 mv = modelViewMatrix * vec4(pos, 1.0);
@@ -128,16 +127,14 @@ const blastVertex = /* glsl */ `
 
     // Size: perspective-scaled, but clamped so a mote passing the lens
     // never swells into a disc and far ones never vanish.
-    float tw = 0.75 + 0.25 * sin(uAge * (2.0 + aSeed * 5.0) + aSeed * 40.0);
-    float px = aSize * uPx * (260.0 / max(-mv.z, 0.5)) * tw;
+    float tw = 0.75 + 0.25 * sin(uAge * (2.0 + aParams.w * 5.0) + aParams.w * 40.0);
+    float px = aParams.y * uPx * (260.0 / max(-mv.z, 0.5)) * tw;
     gl_PointSize = clamp(px, 1.5, 11.0 * uPx);
 
     // Born with the flash, hold, then fade out slowly as they scatter.
     float born = smoothstep(0.0, 0.10, uAge);
     float fade = 1.0 - smoothstep(uLife, uLife + 1.6, uAge) * 0.55;
     // Hot at birth, cooling to their own colour.
-    vec3 hotCol = aColor;
-    vColor = hotCol;
     // Debris that is right on top of the lens fades out instead of smearing into
     // a haze now that the camera flies through the middle of the burst.
     float nearFade = smoothstep(0.8, 9.0, -mv.z);
@@ -146,7 +143,6 @@ const blastVertex = /* glsl */ `
 `;
 
 const blastFragment = /* glsl */ `
-  varying vec3 vColor;
   varying float vAlpha;
   void main() {
     vec2 q = gl_PointCoord - 0.5;
@@ -157,13 +153,10 @@ const blastFragment = /* glsl */ `
     float halo = (1.0 - smoothstep(0.0, 0.5, d));
     halo *= halo * 0.38;
     float a = clamp(core + halo, 0.0, 1.0);
-    gl_FragColor = vec4(vColor * 1.05, a * vAlpha);
+    gl_FragColor = vec4(vec3(1.05), a * vAlpha);
   }
 `;
 
-// Pure white only: with additive blending, tinted particles can sum into
-// visibly different hues where they overlap (and Safari shows it).
-const PALETTE = ["#ffffff"];
 
 /**
  * Deep-space opening: a star hangs in the dark far ahead, the camera
@@ -216,8 +209,7 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
     const size = new Float32Array(count);
     const swirl = new Float32Array(count);
     const seed = new Float32Array(count);
-    const color = new Float32Array(count * 3);
-    const tmp = new THREE.Color();
+    const params = new Float32Array(count * 4);
 
     for (let i = 0; i < count; i++) {
       // 62% of the debris is thrown into a tilted galactic disc (so the
@@ -254,10 +246,10 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
       // Faster debris winds less; the disc winds more than the halo.
       swirl[i] = (inDisc ? 1.5 : 0.5) * (1.1 - sp / 90) * (seeded(i, 7) > 0.5 ? 1 : 0.8);
       seed[i] = seeded(i, 8);
-      tmp.set(PALETTE[Math.floor(seeded(i, 9) * PALETTE.length)]);
-      color[i * 3] = tmp.r;
-      color[i * 3 + 1] = tmp.g;
-      color[i * 3 + 2] = tmp.b;
+      params[i * 4] = speed[i];
+      params[i * 4 + 1] = size[i];
+      params[i * 4 + 2] = swirl[i];
+      params[i * 4 + 3] = seed[i];
     }
 
     // The one star the camera flies down to and the closing glow comes from:
@@ -281,13 +273,8 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
     };
 
     const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(count * 3), 3));
-    geo.setAttribute("aDir", new THREE.BufferAttribute(dir, 3));
-    geo.setAttribute("aSpeed", new THREE.BufferAttribute(speed, 1));
-    geo.setAttribute("aSize", new THREE.BufferAttribute(size, 1));
-    geo.setAttribute("aSwirl", new THREE.BufferAttribute(swirl, 1));
-    geo.setAttribute("aSeed", new THREE.BufferAttribute(seed, 1));
-    geo.setAttribute("aColor", new THREE.BufferAttribute(color, 3));
+    geo.setAttribute("position", new THREE.BufferAttribute(dir, 3));
+    geo.setAttribute("aParams", new THREE.BufferAttribute(params, 4));
     // Particles move far from the origin; never cull the cloud.
     geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e5);
     return {

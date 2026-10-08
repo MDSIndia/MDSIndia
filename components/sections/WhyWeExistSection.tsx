@@ -543,7 +543,7 @@ export function AboutMDSFullContent() {
             transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
             style={{
               fontFamily: SG,
-              fontSize: "0.62rem",
+              fontSize: "calc(0.62rem + 1px)",
               letterSpacing: "0.48em",
               color: "rgba(0,212,255,0.55)",
               textTransform: "uppercase" as const,
@@ -682,7 +682,7 @@ export function AboutMDSFullContent() {
           <span
             style={{
               fontFamily: SG,
-              fontSize: "0.62rem",
+              fontSize: "calc(0.62rem + 1px)",
               letterSpacing: "0.48em",
               color: "rgba(122,164,255,0.60)",
               textTransform: "uppercase" as const,
@@ -747,7 +747,7 @@ export function AboutMDSFullContent() {
               transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
               style={{
                 fontFamily: SG,
-                fontSize: "0.62rem",
+                fontSize: "calc(0.62rem + 1px)",
                 letterSpacing: "0.48em",
                 color: "rgba(168,85,247,0.65)",
                 textTransform: "uppercase" as const,
@@ -833,7 +833,7 @@ export function AboutMDSFullContent() {
               transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
               style={{
                 fontFamily: SG,
-                fontSize: "0.62rem",
+                fontSize: "calc(0.62rem + 1px)",
                 letterSpacing: "0.48em",
                 color: "rgba(122,164,255,0.60)",
                 textTransform: "uppercase" as const,
@@ -917,7 +917,7 @@ export function AboutMDSFullContent() {
                 <span
                   style={{
                     fontFamily: SG,
-                    fontSize: "0.62rem",
+                    fontSize: "calc(0.62rem + 1px)",
                     letterSpacing: "0.48em",
                     color: "rgba(168,85,247,0.65)",
                     textTransform: "uppercase" as const,
@@ -973,7 +973,7 @@ export function AboutMDSFullContent() {
             <span
               style={{
                 fontFamily: SG,
-                fontSize: "0.62rem",
+                fontSize: "calc(0.62rem + 1px)",
                 letterSpacing: "0.48em",
                 color: "rgba(168,85,247,0.65)",
                 textTransform: "uppercase" as const,
@@ -1163,7 +1163,7 @@ export function AboutMDSFullContent() {
           <span
             style={{
               fontFamily: SG,
-              fontSize: "0.62rem",
+              fontSize: "calc(0.62rem + 1px)",
               letterSpacing: "0.48em",
               color: "rgba(0,212,255,0.55)",
               textTransform: "uppercase" as const,
