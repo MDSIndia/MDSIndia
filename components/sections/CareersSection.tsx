@@ -1,11 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import type { FormEvent, ReactNode } from "react";
-import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft,
   ArrowRight,
   Check,
   Handshake,
@@ -21,14 +20,14 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-const EASE = [0.22, 1, 0.36, 1] as const;
-const SG = "var(--font-space-grotesk), Inter, sans-serif";
-const NM = "var(--font-display)";
+export const EASE = [0.22, 1, 0.36, 1] as const;
+export const SG = "var(--font-space-grotesk), Inter, sans-serif";
+export const NM = "var(--font-display)";
 
 // Applications go to the same Formspree endpoint as the contact form;
 // the notification address is configured on that form in Formspree.
-const APPLY_ENDPOINT = "https://formspree.io/f/mdavpjog";
-const APPLY_EMAIL = "services@mdsindia.in";
+export const APPLY_ENDPOINT = "https://formspree.io/f/mdavpjog";
+export const APPLY_EMAIL = "services@mdsindia.in";
 
 const lookingFor = [
   "Thinks big and isn't afraid to take bold bets.",
@@ -137,7 +136,7 @@ const qualifications = [
   "This opportunity is not for someone who makes promises without following through. Greatness is not built on great words alone, but on consistent action, commitment, and execution.",
 ];
 
-const glass = {
+export const glass = {
   background: "rgba(255,255,255,0.06)",
   border: "1px solid rgba(255,255,255,0.14)",
   backdropFilter: "blur(20px) saturate(150%)",
@@ -145,7 +144,7 @@ const glass = {
   boxShadow: "0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.07)",
 } as const;
 
-function Eyebrow({ children, color = "rgba(0,212,255,0.8)" }: { children: ReactNode; color?: string }) {
+export function Eyebrow({ children, color = "rgba(0,212,255,0.8)" }: { children: ReactNode; color?: string }) {
   return (
     <span
       className="text-xs font-medium tracking-[0.5em] uppercase block"
@@ -156,7 +155,7 @@ function Eyebrow({ children, color = "rgba(0,212,255,0.8)" }: { children: ReactN
   );
 }
 
-function SectionTitle({ children }: { children: ReactNode }) {
+export function SectionTitle({ children }: { children: ReactNode }) {
   return (
     <h2
       className="mb-6"
@@ -173,7 +172,7 @@ function SectionTitle({ children }: { children: ReactNode }) {
   );
 }
 
-function BulletList({ items }: { items: string[] }) {
+export function BulletList({ items }: { items: string[] }) {
   return (
     <ul className="space-y-3">
       {items.map((item) => (
@@ -200,7 +199,7 @@ function BulletList({ items }: { items: string[] }) {
 
 /* ─── Application form ──────────────────────────────────────────────── */
 
-const availabilityOptions = ["Immediately", "Within a month", "Need more time"];
+export const availabilityOptions = ["Immediately", "Within a month", "Need more time"];
 const investOptions = ["Yes, I'm willing", "Open to discussing", "Not at this time"];
 
 const initialForm = {
@@ -224,12 +223,12 @@ const initialForm = {
 
 type FormState = typeof initialForm;
 
-const labelStyle = { fontFamily: SG, color: "rgba(255,255,255,0.6)" } as const;
-const focusIn = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+export const labelStyle = { fontFamily: SG, color: "rgba(255,255,255,0.6)" } as const;
+export const focusIn = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
   e.target.style.borderColor = "rgba(255,255,255,0.32)";
   e.target.style.background = "rgba(255,255,255,0.075)";
 };
-const focusOut = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+export const focusOut = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
   e.target.style.borderColor = "rgba(255,255,255,0.14)";
   e.target.style.background = "rgba(255,255,255,0.045)";
 };
@@ -542,9 +541,9 @@ function ApplicationForm() {
   );
 }
 
-/* ─── Page content ──────────────────────────────────────────────────── */
+/* ─── Co-Founder role page (/careers/co-founder) ────────────────────── */
 
-export function CareersPageContent() {
+export function CoFounderRoleContent() {
   return (
     <section className="section-padding relative overflow-hidden" style={{ paddingTop: "8rem" }}>
       <div
@@ -556,16 +555,6 @@ export function CareersPageContent() {
       <div className="scene-top-fade" />
       <div className="scene-bottom-fade" />
 
-      <div className="relative max-w-5xl mx-auto mb-10">
-        <Link href="/#hero" className="btn-secondary group text-sm">
-          <ArrowLeft
-            className="size-4 transition-transform duration-300 group-hover:-translate-x-1"
-            strokeWidth={2.25}
-          />
-          Back to Home
-        </Link>
-      </div>
-
       <div className="relative max-w-5xl mx-auto">
         {/* Header */}
         <motion.div
@@ -574,7 +563,9 @@ export function CareersPageContent() {
           transition={{ duration: 0.9, ease: EASE }}
           className="text-center mb-14"
         >
-          <Eyebrow>Careers at MDS</Eyebrow>
+          <Link href="/careers" className="inline-block hover:opacity-80 transition-opacity">
+            <Eyebrow>Careers at MDS</Eyebrow>
+          </Link>
           <h1
             className="neue-machina mt-4"
             style={{ fontSize: "clamp(2.8rem, 7vw, 6.5rem)", lineHeight: 0.95, letterSpacing: "0.01em" }}

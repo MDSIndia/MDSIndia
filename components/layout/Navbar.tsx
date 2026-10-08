@@ -17,7 +17,6 @@ import { useScrollProgress } from "@/hooks/useScrollProgress";
 const navLinks = [
   { label: "Home",       href: "/#hero",       id: "hero" },
   { label: "About MDS",  href: "/#about-mds",  id: "about-mds" },
-  { label: "Noorva",     href: "/#noorva",     id: "noorva" },
   { label: "Invest",     href: "/#invest",     id: "invest" },
   { label: "Team",       href: "/#team",       id: "team" },
   { label: "Careers",    href: "/careers",     id: "careers" },

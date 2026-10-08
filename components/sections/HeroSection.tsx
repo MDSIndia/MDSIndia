@@ -99,10 +99,9 @@ export function HeroSection() {
                 headline reads as balanced phrases instead of wrapping
                 arbitrarily; on mobile the spans stay inline and wrap
                 naturally to the narrow viewport. */}
-            <span className="md:block">Building Advanced,</span>{" "}
-            <span className="md:block">High-Impact Technologies</span>{" "}
-            <span className="md:block">that Enhance Human Capability</span>{" "}
-            <span className="md:block">and Quality of Life</span>
+            <span className="md:block">Building Future</span>{" "}
+            <span className="md:block">through Advanced Technologies</span>{" "}
+            
           </motion.h1>
 
           <motion.p

@@ -12,6 +12,11 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 const SG = "var(--font-space-grotesk), 'Inter', sans-serif";
 const NM = "var(--font-display)";
 
+// Bright accent colours for the "Powered by" / "Understands" chips — one each,
+// drawn from the site's blue / cyan / violet / pink family plus teal and amber
+// so eight chips stay distinguishable.
+const CHIP_COLORS = ["#00D4FF", "#7AA4FF", "#A855F7", "#2DD4BF", "#FBBF24", "#F472B6", "#4ADE80", "#FB923C"];
+
 /* Body paragraph used by the About page's long-form copy — same look as
    the existing inline paragraphs, just not repeated for each one. */
 function BodyP({
@@ -342,7 +347,7 @@ export function AboutMDSFullContent() {
               fontFamily: SG,
               fontSize: "clamp(calc(0.9rem + 2px), calc(1.2vw + 2px), calc(1.05rem + 2px))",
               lineHeight: 1.7,
-              color: "rgba(255,255,255,0.85)",
+              color: "#FFFFFF",
               maxWidth: 460,
             }}
           >
@@ -373,8 +378,9 @@ export function AboutMDSFullContent() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, ease: EASE }}
-          className="mb-14 md:mb-18 text-left"
+          className="mb-14 md:mb-18 text-left grid grid-cols-1 md:grid-cols-[1.35fr_1fr] gap-8 md:gap-12 items-center"
         >
+          <div>
           <motion.span
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -408,7 +414,7 @@ export function AboutMDSFullContent() {
             }}
           >
             <span style={{ color: "rgba(255,255,255,0.93)" }}>
-              Human-centered Products{" "}
+              To create human-centered products{" "}
             </span>
             <br className="hidden sm:block" />
             <span
@@ -447,6 +453,58 @@ export function AboutMDSFullContent() {
             capabilities and quality of life at scale, and contribute to the better future of the
             world.
           </BodyP>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.2, ease: EASE }}
+            className="relative mx-auto w-full max-w-[540px]"
+            style={{ aspectRatio: "1479 / 1063" }}
+          >
+            {/* Soft glow behind the artwork. It is a separate, unmasked layer:
+                the glow used to be a drop-shadow on the image itself, which the
+                mask below clipped into a visible rectangle. */}
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                left: "30%",
+                top: "6%",
+                width: "55%",
+                height: "80%",
+                borderRadius: "50%",
+                background:
+                  "radial-gradient(circle, rgba(90,140,255,0.28) 0%, rgba(123,47,190,0.12) 50%, transparent 72%)",
+                filter: "blur(34px)",
+              }}
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                // The arm runs past the artwork's frame at the left and bottom, so
+                // its cut ends read as the edge of a picture. Fade the left side
+                // and the bottom smoothly into the page background; the orb,
+                // beam, palm and fingers all sit inside the fully opaque area.
+                maskImage: "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.35) 9%, rgba(0,0,0,0.75) 19%, black 32%), linear-gradient(to top, transparent 0%, rgba(0,0,0,0.35) 7%, rgba(0,0,0,0.75) 14%, black 24%)",
+                maskComposite: "intersect",
+                WebkitMaskImage: "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.35) 9%, rgba(0,0,0,0.75) 19%, black 32%), linear-gradient(to top, transparent 0%, rgba(0,0,0,0.35) 7%, rgba(0,0,0,0.75) 14%, black 24%)",
+                WebkitMaskComposite: "source-in",
+              }}
+            >
+              <Image
+                src="/images/why-we-exist/orb-in-hand.png"
+                alt="A glowing AI companion floating above an open hand"
+                fill
+                // Served at full quality and at up to 2x the displayed width: the default
+                // (q75, 1x) recompression softened the orb's glints and the beam's
+                // sparkle detail, which are the fine details of this artwork.
+                quality={100}
+                sizes="(max-width: 768px) 180vw, 1080px"
+                className="object-contain"
+              />
+            </div>
+          </motion.div>
         </motion.div>
 
         <div className="my-12 md:my-16" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
@@ -492,7 +550,7 @@ export function AboutMDSFullContent() {
                 backgroundClip: "text",
               }}
             >
-              an AI becomes a companion.
+              an AI becomes a human companion.
             </span>
           </h3>
 
@@ -670,7 +728,7 @@ export function AboutMDSFullContent() {
               human-centered AI powered by Emotional AI, Affective AI, and our proprietary
               Human-centered AI technologies. These technologies are designed to understand
               context, emotions, behaviors, preferences, and personal experiences, enabling more
-              natural, intuitive, and emotionally intelligent interactions.
+              natural, intuitive, and emotionally intelligent interactions in a way No AI Technology did before.
             </motion.p>
           </div>
 
@@ -679,13 +737,13 @@ export function AboutMDSFullContent() {
             {[
               {
                 label: "Powered by",
-                items: ["Emotional AI", "Affective AI", "Human-Interactive AI"],
+                items: ["Emotional AI", "Affective AI", "MDS's Human-Centered AI"],
               },
               {
                 label: "Understands",
                 items: ["Context", "Emotions", "Behaviors", "Preferences", "Personal Experiences"],
               },
-            ].map((group, g) => (
+            ].map((group, g, groups) => (
               <motion.div
                 key={group.label}
                 initial={{ opacity: 0, y: 16 }}
@@ -708,23 +766,30 @@ export function AboutMDSFullContent() {
                   {group.label}
                 </span>
                 <div className="flex flex-wrap justify-center md:justify-start gap-2.5">
-                  {group.items.map((t) => (
-                    <span
-                      key={t}
-                      className="px-4 py-2 rounded-full text-xs font-medium uppercase"
-                      style={{
-                        fontFamily: SG,
-                        letterSpacing: "0.12em",
-                        color: "rgba(216,238,255,0.92)",
-                        background: "rgba(255,255,255,0.05)",
-                        border: "1px solid rgba(255,255,255,0.14)",
-                        backdropFilter: "blur(14px) saturate(150%)",
-                        WebkitBackdropFilter: "blur(14px) saturate(150%)",
-                      }}
-                    >
-                      {t}
-                    </span>
-                  ))}
+                  {group.items.map((t, k) => {
+                    // One colour per chip, continuing through the second group
+                    // so no two neighbouring chips match.
+                    const offset = groups.slice(0, g).reduce((n, grp) => n + grp.items.length, 0);
+                    const c = CHIP_COLORS[(offset + k) % CHIP_COLORS.length];
+                    return (
+                      <span
+                        key={t}
+                        className="px-4 py-2 rounded-full text-xs font-semibold uppercase"
+                        style={{
+                          fontFamily: SG,
+                          letterSpacing: "0.12em",
+                          color: c,
+                          background: `${c}1c`,
+                          border: `1px solid ${c}66`,
+                          boxShadow: `0 0 18px ${c}22, inset 0 1px 0 ${c}22`,
+                          backdropFilter: "blur(14px) saturate(150%)",
+                          WebkitBackdropFilter: "blur(14px) saturate(150%)",
+                        }}
+                      >
+                        {t}
+                      </span>
+                    );
+                  })}
                 </div>
               </motion.div>
             ))}
@@ -819,7 +884,7 @@ export function AboutMDSFullContent() {
                 marginBottom: "1rem",
               }}
             >
-              <span style={{ color: "rgba(255,255,255,0.93)" }}>The most innovative technology company </span>
+              <span style={{ color: "rgba(255,255,255,0.93)" }}>To be the most innovative technology company </span>
               <span
                 style={{
                   background: "linear-gradient(135deg, #a855f7 0%, #7B2FBE 100%)",
@@ -852,7 +917,7 @@ export function AboutMDSFullContent() {
                 fontFamily: SG,
                 fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
                 lineHeight: 1.8,
-                color: "rgba(255,255,255,0.78)",
+                color: "#FFFFFF",
                 marginTop: "0.9rem",
               }}
               className="text-left md:text-justify"
@@ -871,43 +936,59 @@ export function AboutMDSFullContent() {
           transition={{ duration: 1, ease: EASE }}
           className="mb-10 md:mb-14 text-left"
         >
+          {/* The quote, highlighted through the type alone — no box. Larger
+              and brighter than the body, with a soft white glow, the key
+              phrase in a glowing gradient, and a gradient rule under it. */}
           <p
             style={{
               fontFamily: NM,
-              fontSize: "clamp(1.4rem, 2.8vw, 2.4rem)",
-              lineHeight: 1.5,
-              letterSpacing: "0.01em",
-              color: "rgba(255,255,255,0.88)",
-              fontWeight: 700,
+              fontSize: "clamp(1.9rem, 4.2vw, 3.8rem)",
+              lineHeight: 1.25,
+              letterSpacing: "0.005em",
+              color: "#FFFFFF",
+              fontWeight: 800,
               textAlign: "left",
+              textShadow: "0 0 34px rgba(255,255,255,0.28)",
             }}
           >
             &ldquo;The best way to predict the future is to{" "}
             <span
               style={{
-                background:
-                  "linear-gradient(135deg, #a855f7 0%, #7AA4FF 50%, #00D4FF 100%)",
+                background: "linear-gradient(135deg, #c084fc 0%, #7AA4FF 50%, #22E0FF 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
+                filter: "drop-shadow(0 0 18px rgba(122,164,255,0.6))",
               }}
             >
               invent it.
             </span>
             &rdquo;
           </p>
-          <p
-            className="mt-4 mb-8"
-            style={{
-              fontFamily: SG,
-              fontSize: "0.72rem",
-              letterSpacing: "0.4em",
-              color: "rgba(255,255,255,0.35)",
-              textTransform: "uppercase",
-            }}
-          >
-            — Alan Kay
-          </p>
+          <div className="mt-6 mb-8 flex items-center gap-4">
+            <span
+              aria-hidden
+              style={{
+                display: "block",
+                width: 72,
+                height: 3,
+                borderRadius: 2,
+                background: "linear-gradient(to right, #a855f7, #7AA4FF, #00D4FF)",
+                boxShadow: "0 0 14px rgba(122,164,255,0.6)",
+              }}
+            />
+            <p
+              style={{
+                fontFamily: SG,
+                fontSize: "0.8rem",
+                letterSpacing: "0.4em",
+                color: "rgba(216,238,255,0.85)",
+                textTransform: "uppercase",
+              }}
+            >
+              Alan Kay
+            </p>
+          </div>
 
           <BodyP>
             At MDS, we believe true innovation goes beyond improving what already exists. It means
@@ -1003,12 +1084,7 @@ export function AboutMDSFullContent() {
           </div>
 
          
-          <BodyP delay={0.26} style={{ marginTop: "1.5rem" }}>
-            As the global quantum race accelerates, MDS is committed to being part of this next
-            technological frontier and helping shape the future rather than simply adapting to it.
-            MDS will focus specifically on Quantum Intelligence to integrate this technology into
-            its Noorva Ecosystem products and accelerate its market entry.
-          </BodyP>
+          
         </motion.div>
 
       </div>

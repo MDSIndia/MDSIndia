@@ -49,7 +49,13 @@ export function Footer() {
               {["Noorva", "Future AI", "Careers"].map((item) => (
                 <li key={item}>
                   <a
-                    href={item === "Careers" ? "/careers" : `/#${item.toLowerCase().replace(" ", "-")}`}
+                    href={
+                      item === "Careers"
+                        ? "/careers"
+                        : item === "Noorva"
+                          ? "https://noorva.ai"
+                          : `/#${item.toLowerCase().replace(" ", "-")}`
+                    }
                     className="text-white/35 hover:text-white/80 text-sm transition-colors duration-300"
                   >
                     {item}

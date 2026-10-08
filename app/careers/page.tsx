@@ -1,12 +1,12 @@
 "use client";
 
 import { PageChrome } from "@/components/layout/PageChrome";
-import { CareersPageContent } from "@/components/sections/CareersSection";
+import { CareersOverview } from "@/components/sections/CareersOverview";
 
 export default function CareersPage() {
   return (
     <PageChrome>
-      <CareersPageContent />
+      <CareersOverview />
     </PageChrome>
   );
 }

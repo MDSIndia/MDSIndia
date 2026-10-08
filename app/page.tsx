@@ -8,7 +8,6 @@ import { getLenis } from "@/lib/lenis";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { WhyWeExistSection } from "@/components/sections/WhyWeExistSection";
 import { StorySection } from "@/components/sections/StorySection";
-import { NoorvaSection } from "@/components/sections/NoorvaSection";
 import { InvestorSection } from "@/components/sections/InvestorSection";
 import { TeamSection } from "@/components/sections/TeamSection";
 import { ContactSection } from "@/components/sections/ContactSection";
@@ -73,7 +72,6 @@ export default function Home() {
           <HeroSection />
           <WhyWeExistSection />
           <StorySection />
-          <NoorvaSection />
           <InvestorSection />
           <TeamSection />
           <ContactSection />
