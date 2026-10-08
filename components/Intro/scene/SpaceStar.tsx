@@ -161,7 +161,9 @@ const blastFragment = /* glsl */ `
   }
 `;
 
-const PALETTE = ["#ffffff", "#f4f7ff", "#e8edff", "#ffffff"];
+// Pure white only: with additive blending, tinted particles can sum into
+// visibly different hues where they overlap (and Safari shows it).
+const PALETTE = ["#ffffff"];
 
 /**
  * Deep-space opening: a star hangs in the dark far ahead, the camera

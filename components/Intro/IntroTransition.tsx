@@ -38,14 +38,17 @@ export function IntroTransition({ durationMs }: { durationMs: number }) {
              the element; the element itself is scaled up to fill the screen. */
           /* Starts as a small bright point at the middle of the screen, which is
              where the camera is looking: the target star (see SpaceStar). */
+          /* Pure white throughout, and the last stop is white at 0 alpha rather
+             than the keyword "transparent": Safari fades toward transparent
+             BLACK, which shows up as a dark/coloured ring around the glow. */
           /* closest-side: the gradient ends exactly at the element's edge, so no
              hard box edge shows while the element is scaled down. */
           background: radial-gradient(
             circle closest-side at 50% 50%,
             rgba(255, 255, 255, 0.98) 0%,
-            rgba(238, 242, 252, 0.78) 30%,
-            rgba(170, 188, 228, 0.35) 62%,
-            transparent 100%
+            rgba(255, 255, 255, 0.8) 30%,
+            rgba(255, 255, 255, 0.34) 62%,
+            rgba(255, 255, 255, 0) 100%
           );
           opacity: 0;
           transform: scale(0.06);

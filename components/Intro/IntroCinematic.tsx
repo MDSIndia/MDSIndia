@@ -243,7 +243,10 @@ export function IntroCinematic({
             // direction — a "luxury tech" grade stays controlled rather
             // than punchy/neon; contrast alone still keeps blacks rich
             // enough for the additive accents to read as lit.
-            filter: "contrast(1.1) saturate(1.02) brightness(1.0)",
+            // Not applied to the star scene: a CSS filter on a WebGL canvas is a
+            // known source of colour/banding artifacts in iOS Safari, and that
+            // scene is pure white on black, so it has nothing to grade anyway.
+            filter: INTRO_SCENE === "city" ? "contrast(1.1) saturate(1.02) brightness(1.0)" : undefined,
           }}
         >
           <Canvas
