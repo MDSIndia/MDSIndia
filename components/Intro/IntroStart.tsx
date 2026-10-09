@@ -240,15 +240,17 @@ export function IntroStart({
           width: 56px;
           height: 56px;
           object-fit: contain;
-          animation: introLogoFloat 5.5s ease-in-out infinite,
-            introLogoBreathe 4.2s ease-in-out infinite;
-          filter: drop-shadow(0 0 10px rgba(0, 217, 255, 0.55))
-            drop-shadow(0 0 26px rgba(0, 150, 255, 0.3));
+          /* Fixed in place: it only zooms in and out, it never moves. */
+          animation: introLogoZoom 2.6s ease-in-out infinite;
+          /* brightness/saturate lift the artwork itself (it reads dull on the
+             dark gate); the glow is stronger and tighter around it. */
+          filter: brightness(1.5) saturate(1.2) drop-shadow(0 0 8px rgba(120, 235, 255, 0.85))
+            drop-shadow(0 0 22px rgba(0, 190, 255, 0.55)) drop-shadow(0 0 44px rgba(0, 120, 255, 0.35));
           transition: filter 0.5s ease;
         }
         .intro-gate:hover :global(.intro-gate-logo) {
-          filter: drop-shadow(0 0 14px rgba(0, 217, 255, 0.8))
-            drop-shadow(0 0 38px rgba(0, 150, 255, 0.45));
+          filter: brightness(1.7) saturate(1.25) drop-shadow(0 0 10px rgba(140, 240, 255, 0.95))
+            drop-shadow(0 0 30px rgba(0, 190, 255, 0.7)) drop-shadow(0 0 56px rgba(0, 120, 255, 0.45));
         }
 
         .intro-gate-quote {
@@ -384,22 +386,13 @@ export function IntroStart({
             transform: scale(1.06) translate3d(1.5%, -1.5%, 0);
           }
         }
-        @keyframes introLogoFloat {
+        @keyframes introLogoZoom {
           0%,
           100% {
-            transform: translateY(0);
+            transform: scale(1);
           }
           50% {
-            transform: translateY(-6px);
-          }
-        }
-        @keyframes introLogoBreathe {
-          0%,
-          100% {
-            opacity: 0.92;
-          }
-          50% {
-            opacity: 1;
+            transform: scale(1.16);
           }
         }
         @keyframes introCaretBlink {
