@@ -10,6 +10,7 @@ import { CameraRig } from "./scene/CameraRig";
 import { SkyDome } from "./scene/SkyDome";
 import { SpaceDust } from "./scene/SpaceDust";
 import { INTRO_SCENE, STAR_HANDOFF_AT } from "./introScene";
+import { Star2D } from "./Star2D";
 import { SpaceStar } from "./scene/SpaceStar";
 import { Ground } from "./scene/Ground";
 import { HighwayRoad } from "./scene/HighwayRoad";
@@ -49,6 +50,18 @@ import { TreeOfLife } from "./scene/TreeOfLife";
 import { Star } from "./scene/Star";
 import { CosmicBlast } from "./scene/CosmicBlast";
 import { INTRO_DURATION } from "./scene/timeline";
+
+/** iPhone / iPad (including iPadOS, which reports as a Mac). */
+function isAppleTouchDevice() {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  return (
+    /iPad|iPhone|iPod/.test(ua) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
+    // Test hook: ?canvas2d=1 forces the 2D version on any device.
+    new URLSearchParams(window.location.search).get("canvas2d") === "1"
+  );
+}
 
 function hasWebGL() {
   try {
@@ -148,6 +161,8 @@ export function IntroCinematic({
   const isMobile = useMobile();
   const firedRef = useRef(false);
   const [webglOk, setWebglOk] = useState(true);
+  // The star scene is drawn with a plain 2D canvas on iOS (see Star2D).
+  const [use2d, setUse2d] = useState(false);
   const [dissolving, setDissolving] = useState(false);
   // The canvas stays mounted for a moment into the hand-off so the star field
   // is still there while the centre glow spreads over it (otherwise the screen
@@ -167,7 +182,9 @@ export function IntroCinematic({
   }, [onComplete]);
 
   useEffect(() => {
-    setWebglOk(hasWebGL());
+    const two = INTRO_SCENE === "star" && isAppleTouchDevice();
+    setUse2d(two);
+    setWebglOk(two || hasWebGL());
   }, []);
 
   // The story's own duration timer only starts once the user has
@@ -249,6 +266,9 @@ export function IntroCinematic({
             filter: INTRO_SCENE === "city" ? "contrast(1.1) saturate(1.02) brightness(1.0)" : undefined,
           }}
         >
+          {use2d ? (
+            <Star2D active={active} isMobile={isMobile} />
+          ) : (
           <Canvas
             camera={{
               position: [0, 2.4, 46],
@@ -400,6 +420,7 @@ export function IntroCinematic({
               </EffectComposer>
             )}
           </Canvas>
+          )}
         </div>
       )}
 
