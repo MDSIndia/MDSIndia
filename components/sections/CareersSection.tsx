@@ -24,9 +24,11 @@ export const EASE = [0.22, 1, 0.36, 1] as const;
 export const SG = "var(--font-space-grotesk), Inter, sans-serif";
 export const NM = "var(--font-display)";
 
-// Applications go to the same Formspree endpoint as the contact form;
-// the notification address is configured on that form in Formspree.
+// Other roles' applications go to the same Formspree endpoint as the contact
+// form; the notification address is configured on that form in Formspree.
 export const APPLY_ENDPOINT = "https://formspree.io/f/mdavpjog";
+// The Co-Founder application has its own Formspree form.
+export const COFOUNDER_ENDPOINT = "https://formspree.io/f/mrpeprjo";
 export const APPLY_EMAIL = "services@mdsindia.in";
 
 const lookingFor = [
@@ -328,7 +330,7 @@ function ApplicationForm() {
 
     setSending(true);
     try {
-      const res = await fetch(APPLY_ENDPOINT, {
+      const res = await fetch(COFOUNDER_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
