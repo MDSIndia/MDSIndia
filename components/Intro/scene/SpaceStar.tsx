@@ -8,7 +8,6 @@ import { getRadialGlowTexture, getRayTexture } from "./glowTexture";
 
 /** Where the star sits, dead ahead of the camera down -z. */
 const STAR_POS = new THREE.Vector3(0, 0, -90);
-const STAR_RADIUS = 0.6;
 /** Camera dive: the camera flies straight at the star, accelerating, and
  * passes through its surface into the middle of it (z = star centre) at the
  * moment of detonation, where the lens is filled with white. Under that
@@ -38,125 +37,36 @@ function seeded(i: number, salt: number) {
   return v - Math.floor(v);
 }
 
-/* ───────────────────────── star surface shader ───────────────────────── */
+/* ───────────────────────── blast particles ───────────────────────────── */
 
-const starVertex = /* glsl */ `
-  varying vec3 vPos;
-  varying vec3 vN;
-  varying vec3 vV;
-  void main() {
-    vPos = normalize(position);
-    vN = normalize(normalMatrix * normal);
-    vec4 mv = modelViewMatrix * vec4(position, 1.0);
-    vV = normalize(-mv.xyz);
-    gl_Position = projectionMatrix * mv;
-  }
-`;
+// The blast is drawn with plain three.js points (PointsMaterial) whose motion
+// is computed in JavaScript each frame, not with a custom shader. A custom
+// GPU shader here rendered as huge blurry red/green/blue/cyan/magenta/yellow
+// blobs on iPhones (attribute/precision mishandling in iOS Safari). Standard
+// points are the path three.js has already proven on iOS — the same kind the
+// background star dust uses.
+const BLAST_BUCKETS = [
+  { max: 0.8, size: 0.55 },
+  { max: 1.4, size: 1.0 },
+  { max: 99, size: 1.7 },
+] as const;
 
-const starFragment = /* glsl */ `
-  uniform float uTime;
-  uniform float uHeat;
-  uniform float uFade;
-  varying vec3 vPos;
-  varying vec3 vN;
-  varying vec3 vV;
-
-  float hash(vec3 p) {
-    p = fract(p * 0.3183099 + 0.1);
-    p *= 17.0;
-    return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
-  }
-  float noise(vec3 x) {
-    vec3 i = floor(x);
-    vec3 f = fract(x);
-    f = f * f * (3.0 - 2.0 * f);
-    return mix(
-      mix(mix(hash(i + vec3(0,0,0)), hash(i + vec3(1,0,0)), f.x),
-          mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
-      mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
-          mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y),
-      f.z);
-  }
-  float fbm(vec3 p) {
-    float a = 0.5, s = 0.0;
-    for (int i = 0; i < 4; i++) { s += a * noise(p); p = p * 2.1 + 3.7; a *= 0.5; }
-    return s;
-  }
-
-  void main() {
-    // A plain white sun. A little brightness variation across the face
-    // (slow noise) keeps it from reading as a flat disc, nothing more.
-    vec3 p = normalize(vPos);
-    float n = noise(p * 3.0 + vec3(uTime * 0.2));
-    float facing = clamp(dot(normalize(vN), normalize(vV)), 0.0, 1.0);
-    float v = 0.88 + 0.12 * n + uHeat * 0.12 + pow(1.0 - facing, 2.0) * 0.1;
-    gl_FragColor = vec4(vec3(v) * uFade, 1.0);
-  }
-`;
-
-/* ───────────────────────── blast particle shader ──────────────────────── */
-
-const blastVertex = /* glsl */ `
-  uniform float uAge;      // seconds since the blast
-  uniform float uPx;       // pixel-ratio-scaled point size scale
-  uniform float uLife;     // seconds before particles begin to fade
-  // Two attributes only, both used: position carries each particle's outward
-  // direction, aParams packs (speed, size, swirl, seed). Earlier this had
-  // seven attributes with position unused (all zeros) plus a colour
-  // attribute; iOS Safari mis-bound them, so particles got garbage sizes and
-  // colours (huge blurry red/green/blue/cyan/magenta/yellow blobs).
-  attribute vec4 aParams;
-  varying float vAlpha;
-
-  void main() {
-    float age = max(uAge, 0.0);
-    // Fast burst that eases off (drag): distance = v/k * (1 - e^(-k*age)).
-    float k = 0.85;
-    float dist = aParams.x / k * (1.0 - exp(-k * age));
-
-    // Slow rotation about the vertical axis as it expands — the debris
-    // winds into spiral arms instead of flying out as a plain sphere.
-    // Spiral winds up quickly, then the whole cloud keeps turning slowly.
-    float ang = aParams.z * (1.0 - exp(-0.7 * age)) + age * 0.22;
-    float c = cos(ang), s = sin(ang);
-    vec3 d = vec3(position.x * c - position.z * s, position.y, position.x * s + position.z * c);
-
-    vec3 pos = d * dist;
-    vec4 mv = modelViewMatrix * vec4(pos, 1.0);
-    gl_Position = projectionMatrix * mv;
-
-    // Size: perspective-scaled, but clamped so a mote passing the lens
-    // never swells into a disc and far ones never vanish.
-    float tw = 0.75 + 0.25 * sin(uAge * (2.0 + aParams.w * 5.0) + aParams.w * 40.0);
-    float px = aParams.y * uPx * (260.0 / max(-mv.z, 0.5)) * tw;
-    gl_PointSize = clamp(px, 1.5, 11.0 * uPx);
-
-    // Born with the flash, hold, then fade out slowly as they scatter.
-    float born = smoothstep(0.0, 0.10, uAge);
-    float fade = 1.0 - smoothstep(uLife, uLife + 1.6, uAge) * 0.55;
-    // Hot at birth, cooling to their own colour.
-    // Debris that is right on top of the lens fades out instead of smearing into
-    // a haze now that the camera flies through the middle of the burst.
-    float nearFade = smoothstep(0.8, 9.0, -mv.z);
-    vAlpha = born * fade * nearFade;
-  }
-`;
-
-const blastFragment = /* glsl */ `
-  varying float vAlpha;
-  void main() {
-    vec2 q = gl_PointCoord - 0.5;
-    float d = length(q);
-    // Pin-sharp core plus a short, soft halo: reads as a crisp point of light
-    // at any resolution instead of a blurry blob.
-    float core = 1.0 - smoothstep(0.0, 0.16, d);
-    float halo = (1.0 - smoothstep(0.0, 0.5, d));
-    halo *= halo * 0.38;
-    float a = clamp(core + halo, 0.0, 1.0);
-    gl_FragColor = vec4(vec3(1.05), a * vAlpha);
-  }
-`;
-
+/** A white dot: bright pin-sharp core and a short soft halo. */
+function makeDotTexture() {
+  const c = document.createElement("canvas");
+  c.width = 64;
+  c.height = 64;
+  const ctx = c.getContext("2d")!;
+  const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, "rgba(255,255,255,1)");
+  g.addColorStop(0.16, "rgba(255,255,255,1)");
+  g.addColorStop(0.3, "rgba(255,255,255,0.4)");
+  g.addColorStop(0.6, "rgba(255,255,255,0.08)");
+  g.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+}
 
 /**
  * Deep-space opening: a star hangs in the dark far ahead, the camera
@@ -173,13 +83,11 @@ const blastFragment = /* glsl */ `
  */
 export function SpaceStar({ isMobile }: { isMobile: boolean }) {
   const { camera, scene } = useThree();
-  const coreRef = useRef<THREE.Mesh>(null);
   // Uniforms are written through the materials themselves: R3F gives a
   // <shaderMaterial> its own copy of the `uniforms` prop, so mutating the
   // original object (as an earlier version did) never reached the GPU and
   // the blast stayed frozen at its initial age.
-  const starMatRef = useRef<THREE.ShaderMaterial>(null);
-  const blastMatRef = useRef<THREE.ShaderMaterial>(null);
+  const blastPointsRef = useRef<({ visible: boolean; material: THREE.Material | THREE.Material[] } | null)[]>([]);
   const haloRefs = useRef<(THREE.Sprite | null)[]>([]);
   const coronaRef = useRef<THREE.Sprite>(null);
   const flashRef = useRef<THREE.Sprite>(null);
@@ -194,22 +102,17 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
   const endPos = useMemo(() => new THREE.Vector3(), []);
 
   const glow = useMemo(() => getRadialGlowTexture(), []);
+  const dotTex = useMemo(() => makeDotTexture(), []);
   const rays = useMemo(() => getRayTexture(), []);
 
   const count = isMobile ? 3200 : 9000;
 
-  const starUniforms = useMemo(
-    () => ({ uTime: { value: 0 }, uHeat: { value: 0 }, uFade: { value: 1 } }),
-    []
-  );
-
-  const { geometry, blastUniforms, target } = useMemo(() => {
+  const { blast, target } = useMemo(() => {
     const dir = new Float32Array(count * 3);
     const speed = new Float32Array(count);
     const size = new Float32Array(count);
     const swirl = new Float32Array(count);
     const seed = new Float32Array(count);
-    const params = new Float32Array(count * 4);
 
     for (let i = 0; i < count; i++) {
       // 62% of the debris is thrown into a tilted galactic disc (so the
@@ -246,10 +149,6 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
       // Faster debris winds less; the disc winds more than the halo.
       swirl[i] = (inDisc ? 1.5 : 0.5) * (1.1 - sp / 90) * (seeded(i, 7) > 0.5 ? 1 : 0.8);
       seed[i] = seeded(i, 8);
-      params[i * 4] = speed[i];
-      params[i * 4 + 1] = size[i];
-      params[i * 4 + 2] = swirl[i];
-      params[i * 4 + 3] = seed[i];
     }
 
     // The one star the camera flies down to and the closing glow comes from:
@@ -272,20 +171,19 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
       swirl: swirl[best],
     };
 
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.BufferAttribute(dir, 3));
-    geo.setAttribute("aParams", new THREE.BufferAttribute(params, 4));
-    // Particles move far from the origin; never cull the cloud.
-    geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e5);
-    return {
-      target,
-      geometry: geo,
-      blastUniforms: {
-        uAge: { value: -1 },
-        uPx: { value: 1 },
-        uLife: { value: STAR_DURATION - STAR_BLAST_AT - 1.2 },
-      },
-    };
+    // Group particles into a few size buckets (PointsMaterial has one size per
+    // draw), each with its own position/colour buffers updated every frame.
+    const buckets = BLAST_BUCKETS.map((b, bi) => {
+      const lo = bi === 0 ? -1 : BLAST_BUCKETS[bi - 1].max;
+      const idx: number[] = [];
+      for (let i = 0; i < count; i++) if (size[i] > lo && size[i] <= b.max) idx.push(i);
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(idx.length * 3), 3));
+      geo.setAttribute("color", new THREE.BufferAttribute(new Float32Array(idx.length * 3), 3));
+      geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e5);
+      return { idx, geo, size: b.size, avg: Math.min(b.max, 2.4) * (bi === 0 ? 0.7 : bi === 1 ? 0.8 : 0.75) };
+    });
+    return { target, blast: { dir, speed, swirl, seed, buckets } };
   }, [count]);
 
   useEffect(() => {
@@ -364,22 +262,9 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
     // The sky starts empty: the star fades up out of nothing over the first
     // ~1.4s, a barely-there pinprick, then grows as the camera closes in.
     const appear = smooth(0.15, 1.4, t);
+    // (No star body: the star is only ever seen as the small glow sprite below,
+    // so there is no sphere or custom shader for it any more.)
     const pulse = 1 + Math.sin(t * 19) * 0.025 * heat + Math.sin(t * 7.3) * 0.015 * heat;
-    const blastSwell = tau > 0 ? 1 + smooth(0, 0.25, tau) * 0.9 : 1;
-    const coreFade = tau > 0 ? 1 - smooth(0.0, 0.5, tau) : 1;
-    if (coreRef.current) {
-      // No visible star before the blast: the camera flies through empty space
-      // and the blast simply happens ahead. (The mesh is kept only so the shader
-      // and refs stay valid; it is never shown.)
-      coreRef.current.visible = false;
-      coreRef.current.scale.setScalar(STAR_RADIUS * pulse * blastSwell * (0.15 + 0.85 * appear));
-    }
-    const su = starMatRef.current?.uniforms;
-    if (su) {
-      su.uTime.value = t;
-      su.uHeat.value = heat;
-      su.uFade.value = coreFade;
-    }
 
     // Halo layers: the glow the eye reads as "a star". They brighten with
     // heat and wink out with the core.
@@ -400,10 +285,59 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
     }
 
     /* ── the blast ── */
-    const bu = blastMatRef.current?.uniforms;
-    if (bu) {
-      bu.uAge.value = tau;
-      bu.uPx.value = state.gl.getPixelRatio();
+    if (tau > 0) {
+      const age = tau;
+      const life = STAR_DURATION - STAR_BLAST_AT - 1.2;
+      const growDist = 1 - Math.exp(-0.85 * age);
+      const swirlK = 1 - Math.exp(-0.7 * age);
+      const born = smooth(0, 0.1, age);
+      const fadeAll = 1 - smooth(life, life + 1.6, age) * 0.55;
+      const pxPerUnit = state.size.height / 2;
+      const maxPxDepth = blast.buckets.map((bk) => (bk.avg * 215) / 13);
+      blast.buckets.forEach((bk, bi) => {
+        const pts = blastPointsRef.current[bi];
+        if (!pts) return;
+        pts.visible = true;
+        const pos = bk.geo.attributes.position as THREE.BufferAttribute;
+        const col = bk.geo.attributes.color as THREE.BufferAttribute;
+        const pa = pos.array as Float32Array;
+        const ca = col.array as Float32Array;
+        for (let j = 0; j < bk.idx.length; j++) {
+          const i = bk.idx[j];
+          const dist = (blast.speed[i] / 0.85) * growDist;
+          const ang = blast.swirl[i] * swirlK + age * 0.22;
+          const cs = Math.cos(ang);
+          const sn = Math.sin(ang);
+          const dx = blast.dir[i * 3];
+          const dy = blast.dir[i * 3 + 1];
+          const dz = blast.dir[i * 3 + 2];
+          const px = STAR_POS.x + (dx * cs - dz * sn) * dist;
+          const py = STAR_POS.y + dy * dist;
+          const pz = STAR_POS.z + (dx * sn + dz * cs) * dist;
+          pa[j * 3] = px;
+          pa[j * 3 + 1] = py;
+          pa[j * 3 + 2] = pz;
+          // Brightness = colour (additive blending), so fading is just a darker
+          // grey: born-in, twinkle, slow fade-out, and fade near the lens.
+          const depth = (px - camera.position.x) * fwd.x + (py - camera.position.y) * fwd.y + (pz - camera.position.z) * fwd.z;
+          const tw = 0.75 + 0.25 * Math.sin(age * (2 + blast.seed[i] * 5) + blast.seed[i] * 40);
+          // PointsMaterial cannot cap point size the way the old shader did, so a
+          // particle that would grow past ~14px (close to the lens) fades out
+          // instead of swelling into a big soft disc.
+          const v = born * fadeAll * tw * smooth(0.8, 9, depth) * smooth(maxPxDepth[bi] * 0.55, maxPxDepth[bi], depth);
+          ca[j * 3] = v;
+          ca[j * 3 + 1] = v;
+          ca[j * 3 + 2] = v;
+        }
+        pos.needsUpdate = true;
+        col.needsUpdate = true;
+        // Same on-screen size as before: avg particle size * 260 / depth px.
+        (pts.material as THREE.PointsMaterial).size = (bk.avg * 215) / pxPerUnit;
+      });
+    } else {
+      blastPointsRef.current.forEach((p) => {
+        if (p) p.visible = false;
+      });
     }
 
     // Full-screen flash, parked just in front of the lens.
@@ -458,18 +392,7 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
 
   return (
     <group>
-      {/* The star: plasma sphere + stacked glow + faint rays. */}
-      <mesh ref={coreRef} position={STAR_POS} visible={false}>
-        <sphereGeometry args={[1, 64, 48]} />
-        <shaderMaterial
-          ref={starMatRef}
-          side={THREE.DoubleSide}
-          vertexShader={starVertex}
-          fragmentShader={starFragment}
-          uniforms={starUniforms}
-        />
-      </mesh>
-
+      {/* The star: stacked glow sprites. */}
       {[
         { color: "#ffffff" },
         { color: "#ffffff" },
@@ -508,18 +431,29 @@ export function SpaceStar({ isMobile }: { isMobile: boolean }) {
         />
       </sprite>
 
-      {/* The cosmos: one GPU-simulated point cloud. */}
-      <points geometry={geometry} position={STAR_POS} frustumCulled={false}>
-        <shaderMaterial
-          ref={blastMatRef}
-          vertexShader={blastVertex}
-          fragmentShader={blastFragment}
-          uniforms={blastUniforms}
-          transparent
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-        />
-      </points>
+      {/* The cosmos: standard points, motion computed on the CPU (see above). */}
+      {blast.buckets.map((bk, bi) => (
+        <points
+          key={bi}
+          ref={(el) => {
+            blastPointsRef.current[bi] = el;
+          }}
+          geometry={bk.geo}
+          frustumCulled={false}
+          visible={false}
+        >
+          <pointsMaterial
+            map={dotTex}
+            size={bk.size}
+            sizeAttenuation
+            vertexColors
+            transparent
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+            fog={false}
+          />
+        </points>
+      ))}
 
       {/* (Hidden: the lingering glow where the star died read as a grey haze
           behind the particles — the burst now sits on clean black.) */}
