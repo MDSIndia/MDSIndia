@@ -9,6 +9,73 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 const NM = "var(--font-display)";
 const SG = "var(--font-space-grotesk), 'Inter', sans-serif";
 
+/* Winner's Spirit artwork: the summit sits at the top-right of the
+   949×532 cutout. The sun glow is drawn in an SVG using the artwork's own
+   coordinates with the same "contain" fit as the <Image>, so it stays pinned
+   to the peak at every breakpoint. */
+const SUMMIT = { x: 858, y: 124, w: 949, h: 532, src: "/MDSAmbition.png" };
+
+function SunGlowBack() {
+  return (
+    <motion.svg
+      aria-hidden
+      viewBox={`0 0 ${SUMMIT.w} ${SUMMIT.h}`}
+      preserveAspectRatio="xMidYMid meet"
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      style={{ overflow: "visible", mixBlendMode: "screen" }}
+      animate={{ opacity: [0.85, 1, 0.85] }}
+      transition={{ repeat: Infinity, duration: 7, ease: "easeInOut" }}
+    >
+      <defs>
+        {/* wide, very soft atmospheric bloom */}
+        <radialGradient id="sun-halo" cx={SUMMIT.x} cy={SUMMIT.y} r="340" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="rgba(255,170,90,0.42)" />
+          <stop offset="0.25" stopColor="rgba(255,120,50,0.24)" />
+          <stop offset="0.6" stopColor="rgba(190,70,35,0.08)" />
+          <stop offset="1" stopColor="rgba(120,40,20,0)" />
+        </radialGradient>
+        {/* small hot core — kept tight and feathered so it reads as light, not a disc */}
+        <radialGradient id="sun-core" cx={SUMMIT.x} cy={SUMMIT.y} r="90" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="rgba(255,246,220,0.95)" />
+          <stop offset="0.2" stopColor="rgba(255,214,150,0.6)" />
+          <stop offset="0.55" stopColor="rgba(255,160,80,0.2)" />
+          <stop offset="1" stopColor="rgba(255,140,60,0)" />
+        </radialGradient>
+      </defs>
+      <circle cx={SUMMIT.x} cy={SUMMIT.y} r="340" fill="url(#sun-halo)" />
+      <circle cx={SUMMIT.x} cy={SUMMIT.y} r="90" fill="url(#sun-core)" />
+    </motion.svg>
+  );
+}
+
+/* Warm sunlight raking across the rock: a gradient painted only where the
+   artwork has pixels (alpha mask), strongest at the summit and falling off
+   down the ridge, so the near-black silhouette gets a lit edge. */
+function SunRimLight({ style }: { style?: CSSProperties }) {
+  return (
+    <svg
+      aria-hidden
+      viewBox={`0 0 ${SUMMIT.w} ${SUMMIT.h}`}
+      preserveAspectRatio="xMidYMid meet"
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      style={{ mixBlendMode: "screen", ...style }}
+    >
+      <defs>
+        <mask id="sun-rock-mask" maskUnits="userSpaceOnUse" x="0" y="0" width={SUMMIT.w} height={SUMMIT.h} style={{ maskType: "alpha" }}>
+          <image href={SUMMIT.src} width={SUMMIT.w} height={SUMMIT.h} />
+        </mask>
+        <radialGradient id="sun-rim" cx={SUMMIT.x} cy={SUMMIT.y} r="320" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="rgba(255,226,160,0.9)" />
+          <stop offset="0.25" stopColor="rgba(255,150,70,0.55)" />
+          <stop offset="0.6" stopColor="rgba(220,80,40,0.22)" />
+          <stop offset="1" stopColor="rgba(160,50,30,0)" />
+        </radialGradient>
+      </defs>
+      <rect x="0" y="0" width={SUMMIT.w} height={SUMMIT.h} fill="url(#sun-rim)" mask="url(#sun-rock-mask)" />
+    </svg>
+  );
+}
+
 interface PrincipleProps {
   number: string;
   headline: string;
@@ -42,6 +109,8 @@ interface PrincipleProps {
   headlineFontSize?: string;
   /** Label above the headline; "Core Value" by default. */
   label?: string;
+  /** Sun glow + rim light on the summit (Winner's Spirit artwork only). */
+  sunGlow?: boolean;
 }
 
 function PrincipleBlock({
@@ -64,10 +133,21 @@ function PrincipleBlock({
   imageContrast = 1.25,
   headlineFontSize = "clamp(3rem, 6.5vw, 7rem)",
   label = "Core Value",
+  sunGlow = false,
 }: PrincipleProps) {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const imageY = useTransform(scrollYProgress, [0, 1], ["-5%", "5%"]);
+
+  const rightFade = sunGlow ? "black 76%, transparent 99%" : "black 68%, transparent 96%";
+  const bottomFade = sunGlow ? "black 80%, transparent 100%" : "black 55%, transparent 76%";
+  const fadeGradients = `linear-gradient(to right, ${rightFade}), linear-gradient(to bottom, ${bottomFade})`;
+  const fadeMask = {
+    maskImage: fadeGradients,
+    maskComposite: "intersect",
+    WebkitMaskImage: fadeGradients,
+    WebkitMaskComposite: "source-in",
+  };
 
   /* ── Floating transparent PNG — no card, no frame, no background ── */
   const imageBlock = (
@@ -83,7 +163,7 @@ function PrincipleBlock({
       {/* continuous float — no background, no border, just the PNG */}
       <motion.div
         className="relative w-full h-full"
-        style={{ minHeight: "inherit" }}
+        style={{ minHeight: "inherit", ...(sunGlow ? { containerType: "size" } : {}) } as CSSProperties}
         animate={{ y: [0, -20, 0] }}
         transition={{
           repeat: Infinity,
@@ -92,27 +172,37 @@ function PrincipleBlock({
           ease: "easeInOut",
         }}
       >
-        <Image
-          src={imageSrc}
-          alt={imageAlt}
-          fill
-          className="object-contain"
-          sizes="(max-width: 1024px) 100vw, 58vw"
-          priority={priority}
-          style={{
-            filter: `brightness(${imageBrightness}) contrast(${imageContrast}) saturate(1.5) ${dropGlow}`,
-            ...(fadeRightBottom
+        {/* The glow + rim light are positioned in artwork coordinates, and the
+            edge fade has to land on the artwork's own edge, so for the sun
+            variant everything lives in a box that is exactly the image's
+            "contain" rectangle (not the looser column box). */}
+        <div
+          className={sunGlow ? "absolute left-1/2 top-1/2" : "absolute inset-0"}
+          style={
+            sunGlow
               ? {
-                  maskImage:
-                    "linear-gradient(to right, black 68%, transparent 96%), linear-gradient(to bottom, black 55%, transparent 76%)",
-                  maskComposite: "intersect",
-                  WebkitMaskImage:
-                    "linear-gradient(to right, black 68%, transparent 96%), linear-gradient(to bottom, black 55%, transparent 76%)",
-                  WebkitMaskComposite: "source-in",
+                  width: `min(100cqw, calc(100cqh * ${SUMMIT.w} / ${SUMMIT.h}))`,
+                  aspectRatio: `${SUMMIT.w} / ${SUMMIT.h}`,
+                  transform: "translate(-50%, -50%)",
                 }
-              : {}),
-          } as CSSProperties}
-        />
+              : undefined
+          }
+        >
+          {sunGlow && <SunGlowBack />}
+          <Image
+            src={imageSrc}
+            alt={imageAlt}
+            fill
+            className="object-contain"
+            sizes="(max-width: 1024px) 100vw, 58vw"
+            priority={priority}
+            style={{
+              filter: `brightness(${imageBrightness}) contrast(${imageContrast}) saturate(1.5) ${dropGlow}`,
+              ...(fadeRightBottom ? fadeMask : {}),
+            } as CSSProperties}
+          />
+          {sunGlow && <SunRimLight style={fadeRightBottom ? (fadeMask as CSSProperties) : undefined} />}
+        </div>
       </motion.div>
     </motion.div>
   );
@@ -137,7 +227,7 @@ function PrincipleBlock({
         <span
           style={{
             fontFamily: NM,
-            fontSize: "0.60rem",
+            fontSize: "0.95rem",
             letterSpacing: "0.50em",
             color: numberColor,
             textTransform: "uppercase" as const,
@@ -267,7 +357,7 @@ export function StorySection() {
           className="text-center mb-8 md:mb-12"
         >
           <span
-            className="text-xs font-medium tracking-[0.5em] uppercase block mb-5"
+            className="text-base font-medium tracking-[0.5em] uppercase block mb-5"
             style={{ color: "rgba(0,212,255,0.72)", fontFamily: SG }}
           >
             Our Foundation
@@ -367,8 +457,9 @@ export function StorySection() {
             floatDuration={8.5}
             floatDelay={1.2}
             fadeRightBottom
-            imageBrightness={2.0}
-            imageContrast={1.0}
+            imageBrightness={2.4}
+            imageContrast={1.1}
+            sunGlow
           />
 
         </div>

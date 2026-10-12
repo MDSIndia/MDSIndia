@@ -77,7 +77,7 @@ export function Navbar() {
           }}
         />
 
-        <div className="relative max-w-7xl mx-auto px-6 flex items-center justify-between">
+        <div className="relative max-w-[1720px] mx-auto px-6 md:px-8 flex items-center justify-between">
           {/* Logo */}
           <a href="/#hero" className="flex items-center gap-2.5 group">
             <Image

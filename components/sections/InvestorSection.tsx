@@ -73,7 +73,7 @@ export function MarketOpportunityFullContent() {
           className="text-center mb-8"
         >
           <span
-            className="text-xs font-medium tracking-[0.5em] uppercase"
+            className="text-base font-medium tracking-[0.5em] uppercase"
             style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(0,212,255,0.8)" }}
           >
             Investment Opportunity
@@ -289,7 +289,7 @@ export function InvestorSection() {
           {/* Left: text */}
           <div className="order-2 md:order-1 text-center md:text-left md:flex-1">
             <span
-              className="text-xs font-medium tracking-[0.5em] uppercase"
+              className="text-base font-medium tracking-[0.5em] uppercase"
               style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(0,212,255,0.8)" }}
             >
               Investment Opportunity

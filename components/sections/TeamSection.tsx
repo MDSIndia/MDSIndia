@@ -56,7 +56,7 @@ export function TeamSection() {
           className="text-center mb-10 md:mb-12"
         >
           <span
-            className="text-xs font-medium tracking-[0.5em] uppercase block mb-4"
+            className="text-base font-medium tracking-[0.5em] uppercase block mb-4"
             style={{ color: "rgba(0,212,255,0.78)", fontFamily: "var(--font-space-grotesk)" }}
           >
             The Builders

@@ -149,7 +149,7 @@ export const glass = {
 export function Eyebrow({ children, color = "rgba(0,212,255,0.8)" }: { children: ReactNode; color?: string }) {
   return (
     <span
-      className="text-xs font-medium tracking-[0.5em] uppercase block"
+      className="text-base font-medium tracking-[0.5em] uppercase block"
       style={{ fontFamily: SG, color }}
     >
       {children}
@@ -324,7 +324,7 @@ function ApplicationForm() {
     setError(null);
 
     if (!form.availability || !form.invest) {
-      setError("Please answer the availability and investment questions before submitting.");
+      setError("Please answer \"When can you start?\" and \"Are you willing to invest in the company?\" before submitting.");
       return;
     }
 
@@ -342,7 +342,7 @@ function ApplicationForm() {
           location: form.location,
           experience: form.experience,
           professional_background: form.background,
-          profile_or_resume_link: form.profile || "(not provided)",
+          profile_or_resume_link: form.profile,
           screening_venture_built_or_led: form.venture,
           screening_fundraising_and_finance: form.finance,
           screening_operations_and_compliance: form.operations,
@@ -415,8 +415,7 @@ function ApplicationForm() {
               )}
               {input("profile", "LinkedIn / Portfolio / Resume Link", {
                 type: "url",
-                required: false,
-                placeholder: "https://… (optional — you can also email your resume)",
+                placeholder: "https://… (your LinkedIn, portfolio or a link to your resume)",
               })}
             </div>
 

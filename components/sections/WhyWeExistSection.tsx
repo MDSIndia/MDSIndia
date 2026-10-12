@@ -315,6 +315,221 @@ function AboutMDSSphere() {
 }
 
 
+/* ── The orb in the hand, with a living face ────────────────────────────
+   The picture is split into the hand-and-beam (base) and the ball (its own
+   layer, face blanked). The ball bobs and tilts a little above the hand, and a
+   small SVG face is drawn over the blank visor: the eyes blink and glance
+   about, the mouth slowly morphs between a smile and a wider one, and the
+   beam's light pulses in the palm. Only transform/opacity/path animate; it is
+   switched off for reduced-motion users (static face). */
+const ORB_BALL = { left: 690, top: 70, w: 480, h: 540 };
+// Positions (artwork pixels) of the star glints cut into orbhand-stars.webp.
+const ORB_STARS: [number, number][] = [[997,559],[843,555],[775,570],[986,589],[962,575],[1000,610],[1054,558]];
+const ORB_FACE_INK = "#e9fcff";
+
+function OrbHand() {
+  const reduce = useReducedMotion();
+  const pc = (v: number, of: number) => `${(v / of) * 100}%`;
+  return (
+    <div className="absolute inset-0" role="img" aria-label="A glowing AI companion floating above an open hand">
+      <style>{`
+        @keyframes orbBob { 0%,100% { transform: translateY(0) rotate(-1.2deg); } 50% { transform: translateY(-2%) rotate(1deg) scale(1.022); } }
+        @keyframes orbBobSvg { 0%,100% { transform: translateY(0) rotate(-1.2deg); } 50% { transform: translateY(-11px) rotate(1deg); } }
+        @keyframes orbBlink { 0%,90%,100% { transform: scaleY(1); } 94% { transform: scaleY(0.08); } }
+        @keyframes orbGlance { 0%,22%,100% { transform: translateX(0); } 30%,50% { transform: translateX(7px); } 58%,78% { transform: translateX(-7px); } }
+        @keyframes orbGlow { 0%,100% { opacity: 0.25; transform: scale(0.9); } 50% { opacity: 0.85; transform: scale(1.12); } }
+        @keyframes orbFaceGlow { 0%,100% { opacity: 0.85; } 50% { opacity: 1; } }
+        .orb-ball { animation: orbBob 4.4s ease-in-out infinite; transform-origin: 50% 70%; }
+        .orb-ball-svg { animation: orbBobSvg 4.4s ease-in-out infinite; transform-box: view-box; transform-origin: 930px 378px; }
+        .orb-face { animation: orbGlance 9s ease-in-out infinite, orbFaceGlow 3.4s ease-in-out infinite; }
+        .orb-eye { animation: orbBlink 4.6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+        .orb-eye.r { animation-delay: 0.04s; }
+        @keyframes orbEmit { 0% { transform: scale(0.25); opacity: 0; } 14% { opacity: 1; } 100% { transform: scale(3.4); opacity: 0; } }
+        @keyframes orbBurstPulse { 0%,100% { opacity: 0.55; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.12); } }
+        @keyframes orbBeamRun { 0% { transform: translateY(0); opacity: 0; } 12% { opacity: 1; } 80% { opacity: 0.9; } 100% { transform: translateY(-250px); opacity: 0; } }
+        @keyframes orbBeamBreathe { 0%,100% { opacity: 0.35; } 50% { opacity: 0.8; } }
+        .orb-burst { transform-box: view-box; transform-origin: 910px 697px; animation: orbBurstPulse 3.8s ease-in-out infinite; }
+        .orb-emit { transform-box: view-box; transform-origin: 910px 697px; animation: orbEmit 4.2s ease-out infinite; opacity: 0; }
+        .orb-run { animation: orbBeamRun 2.6s ease-in infinite; }
+        .orb-beam-core { animation: orbBeamBreathe 3.2s ease-in-out infinite; }
+        @keyframes orbStarMove { 0% { transform: translate(0,0) scale(1); opacity: 0.55; } 25% { opacity: 1; } 50% { transform: translate(var(--mx), var(--my)) scale(1.25); opacity: 0.9; } 75% { opacity: 1; } 100% { transform: translate(0,0) scale(1); opacity: 0.55; } }
+        .orb-star { position: absolute; background-image: url(/images/why-we-exist/orbhand-stars.webp); background-size: 600% 200%; background-repeat: no-repeat; mix-blend-mode: screen; pointer-events: none; animation: orbStarMove 4s ease-in-out infinite; }
+        .orb-palm { animation: orbGlow 3.8s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .orb-ball, .orb-ball-svg, .orb-face, .orb-eye, .orb-palm, .orb-burst, .orb-emit, .orb-star, .orb-run, .orb-beam-core { animation: none !important; } }
+      `}</style>
+
+      <Image
+        src="/images/why-we-exist/orbhand-base18.webp"
+        alt=""
+        aria-hidden
+        fill
+        quality={100}
+        sizes="(max-width: 768px) 180vw, 1080px"
+        className="object-contain"
+      />
+
+      {/* Light in the palm where the beam lands. */}
+      <div
+        aria-hidden
+        className="orb-palm absolute pointer-events-none"
+        style={{
+          left: "53.2%",
+          top: "58%",
+          width: "17%",
+          height: "13%",
+          borderRadius: "50%",
+          background: "radial-gradient(ellipse, rgba(200,235,255,0.7) 0%, rgba(90,160,255,0.3) 45%, transparent 72%)",
+          filter: "blur(8px)",
+          mixBlendMode: "screen",
+        }}
+      />
+
+
+      {/* The light: glow radiating outward from the palm in expanding
+          rings, pulses of light running up the beam, and sparkles rising. All in
+          the artwork's own 1479x1063 coordinates, under the ball. */}
+      <svg aria-hidden className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1479 1063" style={{ mixBlendMode: "screen" }}>
+        <defs>
+          <linearGradient id="orbRun" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#bfe8ff" stopOpacity="0" />
+            <stop offset="0.5" stopColor="#ffffff" stopOpacity="0.95" />
+            <stop offset="1" stopColor="#bfe8ff" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="orbBeamG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#d8f4ff" stopOpacity="0" />
+            <stop offset="0.35" stopColor="#d8f4ff" stopOpacity="0.55" />
+            <stop offset="1" stopColor="#ffffff" stopOpacity="0.8" />
+          </linearGradient>
+          <radialGradient id="orbSpark">
+            <stop offset="0" stopColor="#ffffff" stopOpacity="1" />
+            <stop offset="0.4" stopColor="#9fd6ff" stopOpacity="0.85" />
+            <stop offset="1" stopColor="#4a8bff" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="orbEmitG">
+            <stop offset="0" stopColor="#bfe6ff" stopOpacity="0" />
+            <stop offset="0.45" stopColor="#bfe6ff" stopOpacity="0.12" />
+            <stop offset="0.68" stopColor="#ffffff" stopOpacity="0.95" />
+            <stop offset="0.85" stopColor="#8cc2ff" stopOpacity="0.45" />
+            <stop offset="1" stopColor="#4a8bff" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="orbHalo">
+            <stop offset="0" stopColor="#d8f2ff" stopOpacity="0.55" />
+            <stop offset="0.45" stopColor="#6fb0ff" stopOpacity="0.22" />
+            <stop offset="1" stopColor="#3a78ff" stopOpacity="0" />
+          </radialGradient>
+          <filter id="orbBlur2" x="-100%" y="-30%" width="300%" height="160%"><feGaussianBlur stdDeviation="3" /></filter>
+        </defs>
+
+        {/* beam core, breathing */}
+        <rect className="orb-beam-core" x="903" y="505" width="30" height="205" fill="url(#orbBeamG)" filter="url(#orbBlur2)" />
+
+
+        {/* pulses running up the beam */}
+        {[0, 0.9, 1.75].map((d, i) => (
+          <rect key={i} className="orb-run" x="906" y="620" width="24" height="90" fill="url(#orbRun)" filter="url(#orbBlur2)" style={{ animationDelay: `${d}s` }} />
+        ))}
+
+        {/* Glow radiating outward from the palm: soft rings of light expand and
+            fade, one after another, on top of a broad halo that breathes. */}
+        <g className="orb-burst">
+          <ellipse cx="910" cy="690" rx="300" ry="230" fill="url(#orbHalo)" />
+        </g>
+        {[0, 1.4, 2.8].map((d, i) => (
+          <ellipse key={i} className="orb-emit" cx="910" cy="690" rx="120" ry="96" fill="url(#orbEmitG)" style={{ animationDelay: `${d}s` }} />
+        ))}
+        <circle cx="910" cy="697" r="40" fill="url(#orbSpark)" opacity="0.85" />
+
+      </svg>
+
+      {/* The star glints that are already in the picture, cut out and set
+          moving: each drifts a little and twinkles, on its own timing. */}
+      {ORB_STARS.map(([x, y], i) => {
+        const col = i % 6;
+        const row = Math.floor(i / 6);
+        const size = 64;
+        return (
+          <div
+            key={i}
+            aria-hidden
+            className="orb-star"
+            style={
+              {
+                left: pc(x - size / 2, 1479),
+                top: pc(y - size / 2, 1063),
+                width: pc(size, 1479),
+                height: pc(size, 1063),
+                backgroundPosition: `${(col / 5) * 100}% ${(row / 1) * 100}%`,
+                ["--mx" as string]: `${(((i * 37) % 17) - 8) * 1.6}px`,
+                ["--my" as string]: `${(((i * 53) % 19) - 11) * 1.8}px`,
+                animationDelay: `${((i * 0.43) % 4).toFixed(2)}s`,
+                animationDuration: `${(3 + ((i * 7) % 5) * 0.55).toFixed(2)}s`,
+              } as CSSProperties
+            }
+          />
+        );
+      })}
+
+      <div
+        className="orb-ball absolute"
+        style={{
+          left: pc(ORB_BALL.left, 1479),
+          top: pc(ORB_BALL.top, 1063),
+          width: pc(ORB_BALL.w, 1479),
+          height: pc(ORB_BALL.h, 1063),
+        }}
+      >
+        <Image
+          src="/images/why-we-exist/orbhand-ball15.webp"
+          alt=""
+          aria-hidden
+          fill
+          quality={100}
+          sizes="(max-width: 768px) 80vw, 560px"
+          className="object-contain"
+        />
+      </div>
+
+      {/* The face, in the artwork's own 1479x1063 coordinates. */}
+      <svg aria-hidden className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1479 1063">
+        <defs>
+          <filter id="orbGlowF" x="-30%" y="-60%" width="160%" height="220%">
+            <feGaussianBlur stdDeviation="6" result="b" />
+            <feMerge>
+              <feMergeNode in="b" />
+              <feMergeNode in="b" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        <g className="orb-ball-svg">
+          <g className="orb-face">
+            <g filter="url(#orbGlowF)" fill="none" stroke={ORB_FACE_INK} strokeWidth="7" strokeLinecap="round">
+              <g className="orb-eye">
+                <path d="M941 270 A30.5 32 0 0 1 1002 270" />
+              </g>
+              <g className="orb-eye r">
+                <path d="M1041 270 A24 32 0 0 1 1089 270" />
+              </g>
+              <path d="M984 306 Q1018 359 1052 306">
+                {!reduce && (
+                  <animate
+                    attributeName="d"
+                    dur="4.2s"
+                    repeatCount="indefinite"
+                    calcMode="spline"
+                    keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1"
+                    values="M984 306 Q1018 359 1052 306;M979 304 Q1018 376 1057 304;M984 306 Q1018 359 1052 306;M988 307 Q1018 346 1048 307;M984 306 Q1018 359 1052 306"
+                  />
+                )}
+              </path>
+            </g>
+          </g>
+        </g>
+      </svg>
+    </div>
+  );
+}
+
 /* ── The Vision artwork, with restrained motion ──────────────────────────
    The picture is split into four stacked layers cut from the one image: the
    hand and everything else (base), and three soft-edged clusters. The
@@ -463,6 +678,156 @@ function VisionWorld() {
   );
 }
 
+/* ── The Vision artwork: a lit Earth with a futuristic city ────────────
+   One transparent picture (1536x1024) whose edges melt into the starfield.
+   Two of the hover-craft are cut out as their own layers so they can fly
+   about on their own. Everything else moves too, but gently: the whole scene
+   floats and breathes, a band of light sweeps across the planet and city, the
+   sun on the rim pulses, the atmosphere glows, and lights twinkle over the
+   continents and skyline. Only transform/opacity animate; reduced-motion
+   users get the still picture. */
+const EARTH = (name: string) => `/images/why-we-exist/vision-earth-${name}.webp`;
+const EARTH_SUN = { x: 1110, y: 190 };
+// Lights in the artwork's own 1536x1024 space: [x, y, start delay, radius].
+const EARTH_GLINTS: [number, number, number, number][] = [
+  [607, 452, 0.2, 5], [782, 438, 1.1, 4], [850, 520, 2.3, 4], [1042, 340, 0.7, 4],
+  [505, 490, 1.9, 4], [1335, 458, 3.0, 5], [700, 600, 2.6, 4], [955, 590, 0.4, 4],
+  [1145, 625, 1.5, 4], [482, 640, 3.4, 4], [880, 702, 2.0, 3.5], [1105, 840, 0.9, 3.5],
+  [420, 780, 2.8, 3.5], [1260, 790, 1.3, 3.5],
+];
+// Hover-craft cut out as layers: how far each cruises (artwork px), and how fast.
+const EARTH_CRAFT = [
+  { name: "shipB", dx: 46, dy: -10, dur: 7.5, delay: 0 },
+  { name: "shipC", dx: 26, dy: 5, dur: 9, delay: 1.6 },
+];
+
+function VisionEarth() {
+  const reduce = useReducedMotion();
+  const pct = (v: number, of: number) => `${(v / of) * 100}%`;
+  const edgeMask =
+    "radial-gradient(ellipse 60% 64% at 50% 50%, black 54%, transparent 100%), linear-gradient(to right, transparent 0%, black 10%), linear-gradient(to top, transparent 0%, black 16%)";
+  const maskStyle = {
+    maskImage: edgeMask,
+    maskComposite: "intersect",
+    WebkitMaskImage: edgeMask,
+    WebkitMaskComposite: "source-in",
+  } as CSSProperties;
+  const layer = (name: string, priority = false) => (
+    <Image
+      src={EARTH(name)}
+      alt=""
+      aria-hidden
+      fill
+      quality={100}
+      priority={priority}
+      sizes="(max-width: 768px) 100vw, 760px"
+      className="object-contain"
+    />
+  );
+  return (
+    <div className="absolute inset-0" role="img" aria-label="Earth glowing at night, with a futuristic city and light trails orbiting it">
+      {/* atmosphere glow behind the planet, breathing */}
+      <motion.div
+        aria-hidden
+        className="absolute pointer-events-none"
+        style={{
+          left: "18%", top: "4%", width: "66%", height: "92%", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(60,120,255,0.34) 0%, rgba(110,60,220,0.16) 50%, transparent 72%)",
+          filter: "blur(36px)",
+        }}
+        animate={reduce ? undefined : { opacity: [0.55, 1, 0.55], scale: [0.96, 1.06, 0.96] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      <motion.div
+        className="absolute inset-0"
+        animate={reduce ? undefined : { y: [0, -12, 0], scale: [1, 1.022, 1] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        style={maskStyle}
+      >
+        {layer("base", true)}
+
+        {/* hover-craft cruising along their light trails */}
+        {EARTH_CRAFT.map((c) => (
+          <motion.div
+            key={c.name}
+            className="absolute inset-0"
+            animate={reduce ? undefined : { x: [0, c.dx, 0], y: [0, c.dy, 0] }}
+            transition={{ duration: c.dur, delay: c.delay, repeat: Infinity, ease: "easeInOut" }}
+          >
+            {layer(c.name)}
+          </motion.div>
+        ))}
+
+        {!reduce && (
+          <>
+            {/* a band of light sweeping across the planet and city, clipped to
+                the artwork's own shape so it never spills onto the page */}
+            <div
+              aria-hidden
+              className="absolute inset-0 overflow-hidden pointer-events-none"
+              style={{
+                maskImage: `url(${EARTH("base")})`,
+                maskSize: "100% 100%",
+                maskRepeat: "no-repeat",
+                WebkitMaskImage: `url(${EARTH("base")})`,
+                WebkitMaskSize: "100% 100%",
+                WebkitMaskRepeat: "no-repeat",
+                mixBlendMode: "screen",
+              } as CSSProperties}
+            >
+              <motion.div
+                className="absolute top-[-10%] bottom-[-10%]"
+                style={{
+                  left: 0,
+                  width: "26%",
+                  background: "linear-gradient(100deg, transparent 0%, rgba(150,200,255,0.0) 20%, rgba(190,225,255,0.5) 50%, rgba(150,200,255,0.0) 80%, transparent 100%)",
+                  filter: "blur(6px)",
+                  skewX: -14,
+                }}
+                initial={{ x: "-140%" }}
+                animate={{ x: ["-140%", "460%", "460%"] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", times: [0, 0.7, 1] }}
+              />
+            </div>
+
+            {/* the sun catching the planet's rim */}
+            <motion.div
+              aria-hidden
+              className="absolute pointer-events-none"
+              style={{
+                left: pct(EARTH_SUN.x - 170, 1536), top: pct(EARTH_SUN.y - 170, 1024),
+                width: pct(340, 1536), height: pct(340, 1024), borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(255,240,200,0.85) 0%, rgba(255,170,80,0.38) 26%, transparent 64%)",
+                mixBlendMode: "screen",
+              }}
+              animate={{ opacity: [0.4, 1, 0.4], scale: [0.8, 1.18, 0.8] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            />
+
+            {/* city and continent lights twinkling on their own timings */}
+            <svg aria-hidden className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1536 1024" style={{ mixBlendMode: "screen" }}>
+              <defs>
+                <radialGradient id="earthSpark">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+                  <stop offset="40%" stopColor="#ffd9a0" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#6aa0ff" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+              {EARTH_GLINTS.map(([x, y, d, r], i) => (
+                <circle key={i} cx={x} cy={y} r={r} fill="url(#earthSpark)">
+                  <animate attributeName="opacity" values="0;0.95;0" dur={`${3.4 + (i % 4) * 0.8}s`} begin={`${d}s`} repeatCount="indefinite" />
+                  <animate attributeName="r" values={`${r * 0.6};${r * 2.8};${r * 0.6}`} dur={`${3.4 + (i % 4) * 0.8}s`} begin={`${d}s`} repeatCount="indefinite" />
+                </circle>
+              ))}
+            </svg>
+          </>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
 // Glints, in the artwork's own 1536x1024 space: [x, y, start delay].
 const VISION_TWINKLES: [number, number, number][] = [
   [455, 215, 0.4], [1090, 215, 1.8], [1330, 470, 1.1], [700, 330, 2.6], [850, 270, 0.9], [770, 470, 3.2],
@@ -533,7 +898,7 @@ export function AboutMDSFullContent() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, ease: EASE }}
-          className="mb-14 md:mb-18 text-left grid grid-cols-1 md:grid-cols-[1.35fr_1fr] gap-8 md:gap-12 items-center"
+          className="mb-14 md:mb-18 text-left grid grid-cols-1 md:grid-cols-[1.32fr_1fr] gap-4 md:gap-4 items-center"
         >
           <div>
           <motion.span
@@ -543,7 +908,7 @@ export function AboutMDSFullContent() {
             transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
             style={{
               fontFamily: SG,
-              fontSize: "calc(0.62rem + 1px)",
+              fontSize: "1rem",
               letterSpacing: "0.48em",
               color: "rgba(0,212,255,0.55)",
               textTransform: "uppercase" as const,
@@ -615,7 +980,7 @@ export function AboutMDSFullContent() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 1, delay: 0.2, ease: EASE }}
-            className="relative mx-auto w-full max-w-[540px]"
+            className="relative mx-auto w-full max-w-[620px] md:-ml-6 md:-mr-8 -mb-4 md:mb-0"
             style={{ aspectRatio: "1479 / 1063" }}
           >
             {/* Soft glow behind the artwork. It is a separate, unmasked layer:
@@ -647,17 +1012,7 @@ export function AboutMDSFullContent() {
                 WebkitMaskComposite: "source-in",
               }}
             >
-              <Image
-                src="/images/why-we-exist/orb-in-hand.png"
-                alt="A glowing AI companion floating above an open hand"
-                fill
-                // Served at full quality and at up to 2x the displayed width: the default
-                // (q75, 1x) recompression softened the orb's glints and the beam's
-                // sparkle detail, which are the fine details of this artwork.
-                quality={100}
-                sizes="(max-width: 768px) 180vw, 1080px"
-                className="object-contain"
-              />
+              <OrbHand />
             </div>
           </motion.div>
         </motion.div>
@@ -682,7 +1037,7 @@ export function AboutMDSFullContent() {
           <span
             style={{
               fontFamily: SG,
-              fontSize: "calc(0.62rem + 1px)",
+              fontSize: "1rem",
               letterSpacing: "0.48em",
               color: "rgba(122,164,255,0.60)",
               textTransform: "uppercase" as const,
@@ -747,7 +1102,7 @@ export function AboutMDSFullContent() {
               transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
               style={{
                 fontFamily: SG,
-                fontSize: "calc(0.62rem + 1px)",
+                fontSize: "1rem",
                 letterSpacing: "0.48em",
                 color: "rgba(168,85,247,0.65)",
                 textTransform: "uppercase" as const,
@@ -833,7 +1188,7 @@ export function AboutMDSFullContent() {
               transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
               style={{
                 fontFamily: SG,
-                fontSize: "calc(0.62rem + 1px)",
+                fontSize: "1rem",
                 letterSpacing: "0.48em",
                 color: "rgba(122,164,255,0.60)",
                 textTransform: "uppercase" as const,
@@ -892,148 +1247,69 @@ export function AboutMDSFullContent() {
               context, emotions, behaviors, preferences, and personal experiences, enabling more
               natural, intuitive, and emotionally intelligent interactions in a way No AI Technology did before.
             </motion.p>
-          </div>
 
-          {/* Right — the three technologies and what they understand */}
-          <div className="flex flex-col items-center md:items-start gap-6">
-            {[
-              {
-                label: "Powered by",
-                items: ["Emotional AI", "Affective AI", "MDS's Human-Centered AI"],
-              },
-              {
-                label: "Understands",
-                items: ["Context", "Emotions", "Behaviors", "Preferences", "Personal Experiences"],
-              },
-            ].map((group, g, groups) => (
-              <motion.div
-                key={group.label}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: 0.2 + g * 0.12, ease: EASE }}
-                className="text-center md:text-left"
-              >
-                <span
-                  style={{
-                    fontFamily: SG,
-                    fontSize: "calc(0.62rem + 1px)",
-                    letterSpacing: "0.48em",
-                    color: "rgba(168,85,247,0.65)",
-                    textTransform: "uppercase" as const,
-                    display: "block",
-                    marginBottom: "0.75rem",
-                  }}
+            {/* The three technologies and what they understand */}
+            <div className="flex flex-col items-center md:items-start gap-6 mt-8">
+              {[
+                {
+                  label: "Powered by",
+                  items: ["Emotional AI", "Affective AI", "MDS's Human-Centered AI"],
+                },
+                {
+                  label: "Understands",
+                  items: ["Context", "Emotions", "Behaviors", "Preferences", "Personal Experiences"],
+                },
+              ].map((group, g, groups) => (
+                <motion.div
+                  key={group.label}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8, delay: 0.2 + g * 0.12, ease: EASE }}
+                  className="text-center md:text-left"
                 >
-                  {group.label}
-                </span>
-                <div className="flex flex-wrap justify-center md:justify-start gap-2.5">
-                  {group.items.map((t, k) => {
-                    // One colour per chip, continuing through the second group
-                    // so no two neighbouring chips match.
-                    const offset = groups.slice(0, g).reduce((n, grp) => n + grp.items.length, 0);
-                    const c = CHIP_COLORS[(offset + k) % CHIP_COLORS.length];
-                    return (
-                      <span
-                        key={t}
-                        className="px-4 py-2 rounded-full text-xs font-semibold uppercase"
-                        style={{
-                          fontFamily: SG,
-                          letterSpacing: "0.12em",
-                          color: c,
-                          background: `${c}1c`,
-                          border: `1px solid ${c}66`,
-                          boxShadow: `0 0 18px ${c}22, inset 0 1px 0 ${c}22`,
-                          backdropFilter: "blur(14px) saturate(150%)",
-                          WebkitBackdropFilter: "blur(14px) saturate(150%)",
-                        }}
-                      >
-                        {t}
-                      </span>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        <div className="my-14 md:my-20" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
-
-        {/* 5 ── Vision */}
-        <motion.div
-          initial={{ opacity: 0, y: 28 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.9, ease: EASE }}
-          className="mb-14 md:mb-20 relative grid grid-cols-1 md:grid-cols-[1fr_1.05fr] gap-8 md:gap-10 items-center"
-        >
-          {/* Text — sits directly on the page, no card */}
-          <div className="relative z-10">
-            <span
-              style={{
-                fontFamily: SG,
-                fontSize: "calc(0.62rem + 1px)",
-                letterSpacing: "0.48em",
-                color: "rgba(168,85,247,0.65)",
-                textTransform: "uppercase" as const,
-                display: "block",
-                marginBottom: "0.75rem",
-              }}
-            >
-              Vision
-            </span>
-
-            <h3
-              style={{
-                fontFamily: NM,
-                fontSize: "clamp(1.35rem, 2.6vw, 2.3rem)",
-                lineHeight: 1.18,
-                letterSpacing: "0.01em",
-                marginBottom: "1rem",
-              }}
-            >
-              <span style={{ color: "rgba(255,255,255,0.93)" }}>To be the most innovative technology company </span>
-              <span
-                style={{
-                  background: "linear-gradient(135deg, #a855f7 0%, #7B2FBE 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                in the world.
-              </span>
-            </h3>
-
-            <p
-              style={{
-                fontFamily: SG,
-                fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
-                lineHeight: 1.8,
-                color: "#FFFFFF",
-              }}
-              className="text-left md:text-justify"
-            >
-              Our long-term goal is to become the most innovative technology company in the world
-              within the next 10 years and to help transform the world into a more advanced and
-              futuristic society by accelerating progress that might otherwise take at least 30
-              years or more to achieve.
-            </p>
-
-            <p
-              style={{
-                fontFamily: SG,
-                fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
-                lineHeight: 1.8,
-                color: "#FFFFFF",
-                marginTop: "0.9rem",
-              }}
-              className="text-left md:text-justify"
-            >
-              The next 10 years at MDS will be defined not by following market trends, but by
-              creating them.
-            </p>
+                  <span
+                    style={{
+                      fontFamily: SG,
+                      fontSize: "1rem",
+                      letterSpacing: "0.48em",
+                      color: "rgba(168,85,247,0.65)",
+                      textTransform: "uppercase" as const,
+                      display: "block",
+                      marginBottom: "0.75rem",
+                    }}
+                  >
+                    {group.label}
+                  </span>
+                  <div className="flex flex-wrap justify-center md:justify-start gap-2.5">
+                    {group.items.map((t, k) => {
+                      // One colour per chip, continuing through the second group
+                      // so no two neighbouring chips match.
+                      const offset = groups.slice(0, g).reduce((n, grp) => n + grp.items.length, 0);
+                      const c = CHIP_COLORS[(offset + k) % CHIP_COLORS.length];
+                      return (
+                        <span
+                          key={t}
+                          className="px-4 py-2 rounded-full text-xs font-semibold uppercase"
+                          style={{
+                            fontFamily: SG,
+                            letterSpacing: "0.12em",
+                            color: c,
+                            background: `${c}1c`,
+                            border: `1px solid ${c}66`,
+                            boxShadow: `0 0 18px ${c}22, inset 0 1px 0 ${c}22`,
+                            backdropFilter: "blur(14px) saturate(150%)",
+                            WebkitBackdropFilter: "blur(14px) saturate(150%)",
+                          }}
+                        >
+                          {t}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
 
           <motion.div
@@ -1073,6 +1349,93 @@ export function AboutMDSFullContent() {
               <VisionWorld />
             </div>
           </motion.div>
+        </motion.div>
+
+        <div className="my-14 md:my-20" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
+
+        {/* 5 ── Vision */}
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, ease: EASE }}
+          className="mb-14 md:mb-20 relative grid grid-cols-1 md:grid-cols-[0.82fr_1.18fr] gap-4 md:gap-2 items-center"
+        >
+          {/* Text — sits directly on the page, no card */}
+          <div className="relative z-10 order-2 md:order-1 text-left -mt-4 md:mt-0">
+            <span
+              style={{
+                fontFamily: SG,
+                fontSize: "1rem",
+                letterSpacing: "0.48em",
+                color: "rgba(168,85,247,0.65)",
+                textTransform: "uppercase" as const,
+                display: "block",
+                marginBottom: "0.75rem",
+              }}
+            >
+              Vision
+            </span>
+
+            <h3
+              style={{
+                fontFamily: NM,
+                fontSize: "clamp(1.35rem, 2.6vw, 2.3rem)",
+                lineHeight: 1.18,
+                letterSpacing: "0.01em",
+                marginBottom: "1rem",
+              }}
+            >
+              <span style={{ color: "rgba(255,255,255,0.93)" }}>To be the most innovative technology company </span>
+              <span
+                style={{
+                  background: "linear-gradient(135deg, #a855f7 0%, #7B2FBE 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                in the world.
+              </span>
+            </h3>
+
+            <p
+              style={{
+                fontFamily: SG,
+                fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
+                lineHeight: 1.8,
+                color: "#FFFFFF",
+              }}
+              className="text-left"
+            >
+              Our long-term goal is to become the most innovative technology company in the world
+              within the next 10 years and to help transform the world into a more advanced and
+              futuristic society by accelerating progress that might otherwise take at least 30
+              years or more to achieve.
+            </p>
+
+            <p
+              style={{
+                fontFamily: SG,
+                fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
+                lineHeight: 1.8,
+                color: "#FFFFFF",
+                marginTop: "0.9rem",
+              }}
+              className="text-left"
+            >
+              The next 10 years at MDS will be defined not by following market trends, but by
+              creating them.
+            </p>
+          </div>
+
+          {/* The Earth artwork, in its own column, centred on the text. */}
+          <div
+            className="relative order-1 md:order-2 mx-auto w-full max-w-[600px] md:max-w-none pointer-events-none"
+            style={{ aspectRatio: "3 / 2" }}
+          >
+            <VisionEarth />
+          </div>
         </motion.div>
 
         {/* 5a ── Alan Kay quote + the innovation philosophy behind it */}
@@ -1163,7 +1526,7 @@ export function AboutMDSFullContent() {
           <span
             style={{
               fontFamily: SG,
-              fontSize: "calc(0.62rem + 1px)",
+              fontSize: "1rem",
               letterSpacing: "0.48em",
               color: "rgba(0,212,255,0.55)",
               textTransform: "uppercase" as const,

@@ -65,7 +65,7 @@ export function ContactSection() {
           className="text-center mb-10"
         >
           <span
-            className="text-xs font-medium tracking-[0.5em] uppercase"
+            className="text-base font-medium tracking-[0.5em] uppercase"
             style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(0,212,255,0.8)" }}
           >
             AI Communication Portal

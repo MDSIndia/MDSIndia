@@ -154,7 +154,7 @@ export function NoorvaSection() {
           className="text-center mb-3"
         >
           <span
-            className="text-xs font-medium tracking-[0.5em] uppercase"
+            className="text-base font-medium tracking-[0.5em] uppercase"
             style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(139,92,246,0.90)" }}
           >
             The Noorva Ecosystem

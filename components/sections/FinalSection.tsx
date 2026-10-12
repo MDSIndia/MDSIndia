@@ -52,7 +52,7 @@ export function FinalSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="text-xs tracking-[0.5em] uppercase mb-8"
+          className="text-base tracking-[0.5em] uppercase mb-8"
           style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: "rgba(255,255,255,0.42)" }}
         >
           We Don&apos;t Just Build Software — We Build The Future
