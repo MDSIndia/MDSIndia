@@ -93,6 +93,7 @@ export function HeroSection() {
         }}
       />
 
+
       {/* Text overlay. The wrapper is what the journey fades and lifts as the camera
           flies into the city (see JourneyController, data-zoom). */}
       <div className="hero-fade relative z-10 w-full">
