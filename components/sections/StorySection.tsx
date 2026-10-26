@@ -4,6 +4,8 @@ import { useRef } from "react";
 import type { CSSProperties } from "react";
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { Slide } from "@/components/layout/Slide";
+import { useJourney } from "@/hooks/useJourney";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const NM = "var(--font-display)";
@@ -137,7 +139,10 @@ function PrincipleBlock({
 }: PrincipleProps) {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const imageY = useTransform(scrollYProgress, [0, 1], ["-5%", "5%"]);
+  // The scroll parallax is for the ordinary vertical page; in the journey the
+  // panel itself is what moves.
+  const journey = useJourney();
+  const imageY = useTransform(scrollYProgress, [0, 1], journey ? ["0%", "0%"] : ["-5%", "5%"]);
 
   const rightFade = sunGlow ? "black 76%, transparent 99%" : "black 68%, transparent 96%";
   const bottomFade = sunGlow ? "black 80%, transparent 100%" : "black 55%, transparent 76%";
@@ -158,7 +163,7 @@ function PrincipleBlock({
       transition={{ duration: 1.1, ease: EASE }}
       /* scroll parallax sits on this wrapper */
       style={{ y: imageY }}
-      className="relative w-full lg:w-[58%] shrink-0 h-72 sm:h-96 lg:h-[620px]"
+      className="relative w-full lg:w-[58%] shrink-0 h-72 sm:h-96 lg:h-[min(620px,64vh)]"
     >
       {/* continuous float — no background, no border, just the PNG */}
       <motion.div
@@ -340,14 +345,15 @@ function PrincipleBlock({
 
 export function StorySection() {
   return (
-    <section id="story" className="relative overflow-hidden" style={{ background: "transparent" }}>
+    <section id="story" className="relative overflow-hidden hrow" style={{ background: "transparent" }}>
       <div
         className="absolute top-0 left-0 right-0 h-24 pointer-events-none z-10"
         style={{ background: "linear-gradient(to bottom, #020208, transparent)" }}
       />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 md:px-12 xl:px-16 py-10 md:py-16">
+      <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 md:px-12 xl:px-16 py-10 md:py-16 hrow">
 
+        <Slide label="Our Foundation">
         {/* Section header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -390,11 +396,13 @@ export function StorySection() {
             sustainability.
           </p>
         </motion.div>
+        </Slide>
 
         {/* Blocks */}
-        <div className="space-y-8 md:space-y-14">
+        <div className="space-y-8 md:space-y-14 hrow">
 
           {/* 01 — INNOVATION */}
+          <Slide label="Innovation">
           <PrincipleBlock
             number="01"
             headline="Innovation"
@@ -414,8 +422,10 @@ export function StorySection() {
             floatDuration={9}
             floatDelay={0.6}
           />
+          </Slide>
 
           {/* 02 — EXCEPTIONAL CUSTOMER EXPERIENCE */}
+          <Slide label="Customer Experience">
           <PrincipleBlock
             number="02"
             headline="Customer Experience"
@@ -436,8 +446,10 @@ export function StorySection() {
             floatDuration={7}
             floatDelay={0}
           />
+          </Slide>
 
           {/* 03 — WINNER'S SPIRIT */}
+          <Slide label="Winner's Spirit">
           <PrincipleBlock
             number="03"
             headline="Winner's Spirit"
@@ -461,6 +473,7 @@ export function StorySection() {
             imageContrast={1.1}
             sunGlow
           />
+          </Slide>
 
         </div>
       </div>

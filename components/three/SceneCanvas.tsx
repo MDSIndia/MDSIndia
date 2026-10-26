@@ -68,6 +68,8 @@ export function SceneCanvas() {
   return (
     <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
       <Canvas
+        // hero / noorva render nothing here, so don't spend a frame loop on them
+        frameloop={activeScene === "cosmos" || activeScene === "earth" ? "always" : "demand"}
         camera={{ position: [0, 0, 8], fov: isMobile ? 68 : 60 }}
         dpr={isMobile ? 1 : [1, 1.5]}
         gl={{

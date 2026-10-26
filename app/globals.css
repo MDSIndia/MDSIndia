@@ -880,3 +880,233 @@ body.custom-cursor-active * { cursor: none !important; }
 .intro-root {
   animation: introFadeIn 0.6s ease-out;
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   THE JOURNEY — the homepage, on every screen size.
+   The page never moves: `.hscroll` is a fixed 3D stage, every section's
+   slides (`.hslide`) are full-screen panels stacked in it, and
+   JourneyController flies a camera through them as you scroll (the document's
+   own scroll distance is a spacer, #journey-spacer, that only acts as the
+   timeline). The `jmode` class on <html> is set by JourneyProvider; other
+   routes and reduced-motion visitors keep the ordinary stacked page.
+   ════════════════════════════════════════════════════════════════════════ */
+html.jmode { --jtop: 96px; --jbot: 44px; }
+
+html.jmode .hpage { min-height: 0; }
+
+html.jmode .hscroll {
+  will-change: transform;
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* The wrappers that only group slides take no part in the layout: the slides
+   position themselves against the stage. */
+html.jmode .hmain,
+html.jmode .hgroup,
+html.jmode .hrow,
+html.jmode section {
+  position: static !important;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible;
+}
+html.jmode .scene-top-fade,
+html.jmode .scene-bottom-fade,
+html.jmode .hdivider { display: none; }
+
+/* A panel. */
+html.jmode [data-slide] {
+  position: absolute !important;
+  inset: 0;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  margin: 0 !important;
+  backface-visibility: hidden;
+}
+/* The leaves of a panel's doors (see Doors.tsx): invisible wrappers outside the
+   journey; during it each is a full copy of the panel, the second sitting on
+   the first until the doors open. */
+.door-half { display: contents; }
+html.jmode .door-half {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+html.jmode .door-half[data-door="r"] { visibility: hidden; pointer-events: none; }
+/* Promote the moving layers to the GPU so scrolling only re-composites them
+   instead of repainting the (masked, clipped) panels every frame. */
+html.jmode [data-slide],
+html.jmode .door-half { will-change: transform; }
+html.jmode .hslide-inner,
+html.jmode .hfooter-inner { will-change: transform; }
+html.jmode .hslide > .door-half {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--jtop) 5vw var(--jbot);
+  overflow: hidden;
+  /* content that has scrolled up fades out under the navbar instead of
+     cutting off against it */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 calc(var(--jtop) - 10px), #000 calc(100% - var(--jbot) + 10px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 calc(var(--jtop) - 10px), #000 calc(100% - var(--jbot) + 10px), transparent 100%);
+}
+html.jmode .hslide-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1240px;
+  margin-block: auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 3vh, 2.5rem);
+}
+html.jmode .hslide-inner > * { margin-top: 0 !important; margin-bottom: 0 !important; }
+html.jmode .hrow > * { margin-top: 0 !important; }
+
+@media (max-width: 767px) {
+  html.jmode { --jtop: 76px; --jbot: 28px; }
+  html.jmode .hslide > .door-half { padding-left: 20px; padding-right: 20px; }
+}
+
+/* The hero cue: a nudge to start travelling. */
+html.jmode .hero-cue { display: flex !important; }
+
+/* The footer is the last panel. */
+html.jmode .hfooter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--jtop) 5vw var(--jbot) !important;
+  overflow: hidden;
+  background: transparent !important;
+  border-top: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html.jmode .hfooter > .hfooter-inner { width: 100%; max-width: 1100px; margin-block: auto; }
+
+/* Statement panels: a short heading + a paragraph read better centred on a
+   full-screen panel than hugging the left edge. */
+html.jmode .hstatement { max-width: 1000px; margin-inline: auto; text-align: center !important; }
+html.jmode .hstatement p,
+html.jmode .hstatement h3 { text-align: center !important; margin-inline: auto; }
+html.jmode .hstatement div { justify-content: center; }
+
+/* Footer: a closing "Think Beyond" statement above the usual columns. */
+.hfooter-hero { display: none; }
+html.jmode .hfooter-hero { display: block; text-align: center; margin-bottom: clamp(1.5rem, 5vh, 4rem); }
+html.jmode .hero-slide { display: block; overflow: hidden; }
+html.jmode .hero-slide > .door-half { display: flex; align-items: center; overflow: hidden; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   LIQUID FLOW — a slow, always-moving wash of colour behind the whole site.
+   Only transforms are animated (no blur filters, no blend modes), so it
+   stays on the compositor and costs almost nothing per frame.
+   ════════════════════════════════════════════════════════════════════════ */
+.liquid-flow {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.liquid-blob {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+}
+.liquid-blob-a {
+  width: 70vmax; height: 70vmax; left: -30vmax; top: -35vmax;
+  background: radial-gradient(circle, rgba(0, 85, 255, 0.16) 0%, rgba(0, 85, 255, 0) 62%);
+  animation: liquidA 38s ease-in-out infinite alternate;
+}
+.liquid-blob-b {
+  width: 62vmax; height: 62vmax; right: -28vmax; top: 10vh;
+  background: radial-gradient(circle, rgba(123, 47, 190, 0.17) 0%, rgba(123, 47, 190, 0) 62%);
+  animation: liquidB 46s ease-in-out infinite alternate;
+}
+.liquid-blob-c { display: none;
+  width: 70vmax; height: 70vmax; left: 10vw; bottom: -38vmax;
+  background: radial-gradient(circle, rgba(0, 212, 255, 0.11) 0%, rgba(0, 212, 255, 0) 62%);
+  animation: liquidC 52s ease-in-out infinite alternate;
+}
+@keyframes liquidA {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(14vw, 10vh, 0) scale(1.18); }
+  100% { transform: translate3d(4vw, 24vh, 0) scale(0.92); }
+}
+@keyframes liquidB {
+  0%   { transform: translate3d(0, 0, 0) scale(1.05); }
+  50%  { transform: translate3d(-16vw, -8vh, 0) scale(0.9); }
+  100% { transform: translate3d(-6vw, 18vh, 0) scale(1.2); }
+}
+@keyframes liquidC {
+  0%   { transform: translate3d(0, 0, 0) scale(0.95); }
+  50%  { transform: translate3d(18vw, -12vh, 0) scale(1.15); }
+  100% { transform: translate3d(-10vw, -20vh, 0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .liquid-blob { animation: none; }
+}
+
+/* ── Scroll performance ───────────────────────────────────────────────────
+   During the journey the whole stage moves every frame, so anything that
+   re-samples what is behind it (backdrop blur) would be recomputed each
+   frame — the biggest single cost. The cards keep their translucent fill;
+   only the blur is dropped. Ornaments that animate on their own pause while
+   the page is actually being scrolled (the `jscrolling` class). */
+html.jmode *,
+html.jmode *::before,
+html.jmode *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html.jscrolling .liquid-blob,
+html.jscrolling [style*="starDrift"] {
+  animation-play-state: paused !important;
+}
+
+/* Hero: the artwork slowly pushes in and drifts, so the city never sits dead
+   still. Transform only (compositor), and off for reduced motion. */
+.hero-city-drift {
+  transform-origin: 60% 65%;
+  animation: heroCityDrift 46s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes heroCityDrift {
+  0%   { transform: scale(1.015) translate3d(0, 0, 0); }
+  100% { transform: scale(1.07) translate3d(-0.8%, -0.6%, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-city-drift { animation: none; }
+}
+
+/* Hero fly-in: the layers JourneyController scales/fades as the camera enters the city. */
+.hero-city-zoom { will-change: transform; }
+.hero-fade { will-change: opacity, transform; }
+
+/* About panel: the heading sits at the top of the scene so the globe on the
+   podium in the artwork below it stays clear. */
+html.jmode .about-scene .hslide-inner { margin-block: 0 auto; }
+[data-zoom-layer] { will-change: transform; }
+
+/* About MDS as a plain (non-journey) section: a full-width, full-height scene —
+   the city artwork behind the heading, with the globe standing on its podium.
+   Breaks out of the page's centred column to run edge to edge. */
+html:not(.jmode) .about-scene {
+  position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  min-height: 100vh;
+  padding: 7rem 1.5rem 4rem;
+  overflow: hidden;
+}
+html:not(.jmode) .about-scene .hslide-inner { position: relative; z-index: 1; max-width: 72rem; margin: 0 auto; }

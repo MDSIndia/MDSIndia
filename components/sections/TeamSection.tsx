@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { Slide } from "@/components/layout/Slide";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -41,10 +42,11 @@ export function TeamSection() {
     // clicking "Team" in the nav scrolls this section's top edge flush
     // with the viewport top, leaving the heading partially hidden
     // behind the navbar instead of clearing it.
-    <section id="team" className="section-padding relative overflow-hidden scroll-mt-24">
+    <section id="team" className="hgroup section-padding relative overflow-hidden scroll-mt-24">
       <div className="scene-top-fade" />
       <div className="scene-bottom-fade" />
 
+      <Slide label="Team">
       <div className="relative max-w-7xl mx-auto">
 
         {/* Header */}
@@ -263,6 +265,7 @@ export function TeamSection() {
         </div>
 
       </div>
+      </Slide>
     </section>
   );
 }

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useInView, useMotionValue, animate, useTransform } from "framer-motion";
 import { ArrowRight, ArrowUpRight, Brain, Crosshair, Microscope, Zap } from "lucide-react";
+import { Slide } from "@/components/layout/Slide";
 
 function AnimatedNumber({ target, suffix = "" }: { target: number; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -56,12 +57,6 @@ const whyPoints = [
 export function MarketOpportunityFullContent() {
   return (
     <section className="section-padding relative overflow-hidden">
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0,55,210,0.10) 0%, transparent 70%)",
-        }}
-      />
       <div className="scene-top-fade" />
       <div className="scene-bottom-fade" />
 
@@ -268,7 +263,7 @@ const MARKET_STATEMENT =
 
 export function InvestorSection() {
   return (
-    <section id="invest" className="section-padding relative overflow-hidden">
+    <section id="invest" className="hgroup section-padding relative overflow-hidden">
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -278,6 +273,7 @@ export function InvestorSection() {
       <div className="scene-top-fade" />
       <div className="scene-bottom-fade" />
 
+      <Slide label="Invest" bg={<div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0,55,210,0.10) 0%, transparent 70%)", }} />}>
       <div className="relative max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -454,6 +450,7 @@ export function InvestorSection() {
           </div>
         </motion.div>
       </div>
+      </Slide>
     </section>
   );
 }

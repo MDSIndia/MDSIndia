@@ -2,7 +2,12 @@
 import Image from "next/image";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { Compass, ArrowUpRight, ChevronDown } from "lucide-react";
-import { HeroRiverFlow } from "./HeroRiverFlow";
+import { Doors } from "@/components/layout/Doors";
+import { HeroCityLife } from "./HeroCityLife";
+
+// object-position of each hero image, as fractions — the city-life canvas uses the same crop.
+const DESKTOP_POS: [number, number] = [0.5, 0.58];
+const MOBILE_POS: [number, number] = [0.6, 0.6];
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -17,40 +22,43 @@ export function HeroSection() {
   return (
     <section
       id="hero"
-      className="relative w-full min-h-screen flex items-center overflow-hidden"
+      data-slide
+      data-label="Home"
+      data-zoom
+      className="hero-slide relative w-full min-h-[100svh] flex items-center overflow-hidden"
     >
+      <Doors label="Home" className="hero-door">
       {/* Static background image — swapped by breakpoint via Tailwind's
-          responsive `hidden`/`block` rather than a single `<picture>`,
-          so both variants stay simple `next/image fill` covers.
-          object-position shifted down from the default centered crop —
-          the source image's own top third is mostly plain night sky
-          with no skyline/glow in it, so a centered crop on a wide
-          desktop viewport (which crops top/bottom to cover) was cutting
-          the lit street-level/river detail at the bottom just to keep
-          an equal slice of that empty sky at the top, reading as a bare
-          "gap" right where the navbar sits. Pushing the visible window
-          down keeps the glowing skyline/river filling the frame and
-          crops the empty sky instead. */}
+          responsive `hidden`/`block` rather than a single `<picture>`, so both
+          variants stay simple `next/image fill` covers. object-position keeps the
+          skyline, river and the figure on the balcony in frame when the viewport
+          crops the image to cover. */}
+      {/* The artwork drifts very slowly (a gentle push-in) with the living-city
+          canvas riding on it, so lights and traffic stay locked to the picture. */}
+      <div className="hero-city-zoom absolute inset-0">
+      <div className="hero-city-drift absolute inset-0">
       <Image
-        src="/herodesktop.png"
+        src="/images/hero/hero_desktop_hd.webp"
         alt=""
         fill
         priority
         sizes="100vw"
         className="hidden md:block object-cover"
-        style={{ objectPosition: "50% 78%" }}
+        style={{ objectPosition: "50% 58%" }}
       />
       <Image
-        src="/heromobile.png"
+        src="/images/hero/hero_mobile_hd.webp"
         alt=""
         fill
         priority
         sizes="100vw"
         className="block md:hidden object-cover"
-        style={{ objectPosition: "50% 78%" }}
+        style={{ objectPosition: "60% 60%" }}
       />
-      <HeroRiverFlow variant="desktop" reducedMotion={!!reducedMotion} />
-      <HeroRiverFlow variant="mobile" reducedMotion={!!reducedMotion} />
+      <HeroCityLife variant="desktop" position={DESKTOP_POS} reducedMotion={!!reducedMotion} className="hidden md:block" />
+      <HeroCityLife variant="mobile" position={MOBILE_POS} reducedMotion={!!reducedMotion} className="block md:hidden" />
+      </div>
+      </div>
 
       {/* Dark gradient over the hero image so the overlaid text stays
           legible regardless of what's underneath — heavier at the
@@ -60,7 +68,7 @@ export function HeroSection() {
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "linear-gradient(115deg, rgba(2,2,8,0.8) 0%, rgba(2,2,8,0.5) 32%, rgba(2,2,8,0.18) 55%, rgba(2,2,8,0.08) 100%), linear-gradient(to top, rgba(2,2,8,0.72) 0%, rgba(2,2,8,0.12) 40%, rgba(2,2,8,0.25) 100%)",
+            "linear-gradient(115deg, rgba(2,2,8,0.62) 0%, rgba(2,2,8,0.34) 32%, rgba(2,2,8,0.08) 55%, rgba(2,2,8,0) 100%), linear-gradient(to top, rgba(2,2,8,0.5) 0%, rgba(2,2,8,0.04) 40%, rgba(2,2,8,0.12) 100%)",
         }}
       />
 
@@ -70,13 +78,15 @@ export function HeroSection() {
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(2,2,8,0.22) 72%, rgba(2,2,8,0.5) 100%)",
+            "radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(2,2,8,0.12) 75%, rgba(2,2,8,0.32) 100%)",
         }}
       />
 
-      {/* Text overlay */}
+      {/* Text overlay. The wrapper is what the journey fades and lifts as the camera
+          flies into the city (see JourneyController, data-zoom). */}
+      <div className="hero-fade relative z-10 w-full">
       <motion.div
-        className="relative z-10 w-full px-6 sm:px-10 md:px-20"
+        className="relative w-full px-6 sm:px-10 md:px-20"
         initial="hidden"
         animate="show"
         variants={{ hidden: {}, show: { transition: { staggerChildren: 0.14, delayChildren: 0.15 } } }}
@@ -134,13 +144,15 @@ export function HeroSection() {
           </motion.div>
         </div>
       </motion.div>
+      </div>
 
       {/* Scroll cue — a small, quiet nudge that there's more below,
           not shown for reduced-motion (it's a bounce animation and
           nothing but decoration). */}
       {!reducedMotion && (
+        <div className="hero-fade absolute inset-0 z-10 pointer-events-none">
         <motion.div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 hidden sm:flex flex-col items-center gap-1.5 pointer-events-none"
+          className="hero-cue absolute bottom-8 left-1/2 -translate-x-1/2 z-10 hidden sm:flex flex-col items-center gap-1.5 pointer-events-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.7 }}
           transition={{ duration: 1, delay: 0.3, ease: EASE }}
@@ -163,7 +175,9 @@ export function HeroSection() {
             <ChevronDown className="size-4" style={{ color: "rgba(255,255,255,0.55)" }} />
           </motion.div>
         </motion.div>
+        </div>
       )}
+      </Doors>
     </section>
   );
 }

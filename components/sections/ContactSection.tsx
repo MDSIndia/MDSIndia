@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
+import { Slide } from "@/components/layout/Slide";
 
 export function ContactSection() {
   const [formData, setFormData] = useState({
@@ -49,14 +50,9 @@ export function ContactSection() {
   };
 
   return (
-    <section id="contact" className="section-padding relative overflow-hidden">
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: "radial-gradient(ellipse 60% 60% at 50% 50%, rgba(0,55,210,0.12) 0%, transparent 70%)",
-        }}
-      />
+    <section id="contact" className="hgroup section-padding relative overflow-hidden">
 
+      <Slide label="Contact" bg={<div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 60% 60% at 50% 50%, rgba(0,55,210,0.12) 0%, transparent 70%)", }} />}>
       <div className="relative max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -285,6 +281,7 @@ export function ContactSection() {
           </AnimatePresence>
         </motion.div>
       </div>
+      </Slide>
     </section>
   );
 }

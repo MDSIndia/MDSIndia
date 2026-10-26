@@ -4,7 +4,9 @@ import type { CSSProperties, ReactNode } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { motion, useReducedMotion } from "framer-motion";
+import { Activity, GraduationCap, Heart, Rocket, Scale, Sprout, Sun } from "lucide-react";
 import { StorySection } from "./StorySection";
+import { Slide } from "@/components/layout/Slide";
 
 // Three.js only loads in the browser, and only once this section renders.
 const AboutGlobe = dynamic(() => import("@/components/three/AboutGlobe"), { ssr: false });
@@ -87,66 +89,170 @@ function OrbitParticle({
   );
 }
 
-/* ── Noorva orbit visual ── */
+/* ── Noorva Companion visual ──
+   The Noorva companion itself — the glowing orb with its living face — floating
+   over a pool of light, with the things it helps with circling it on two tilted
+   rings (real 3D: labels pass in front of the orb on the near side of a ring and
+   behind it on the far side). Everything animates by transform/opacity only, and
+   stops for reduced motion. The orb's picture and face are the same artwork used
+   in the "Why We Exist" hand (see OrbHand), cropped to just the ball. */
+const NB_TILT = 64; // degrees the rings lean back
+const NB_RINGS = [
+  { size: 98, seconds: 58, reverse: false, labels: [{ t: "Relationships", c: "#F472B6", deg: 0 }, { t: "Wellbeing", c: "#4ADE80", deg: 120 }, { t: "Decisions", c: "#FBBF24", deg: 240 }] },
+  { size: 68, seconds: 40, reverse: true, labels: [{ t: "Learning", c: "#00D4FF", deg: 60 }, { t: "Productivity", c: "#A78BFA", deg: 180 }, { t: "Growth", c: "#2DD4BF", deg: 300 }] },
+];
+
 function NoorvaOrbit() {
-  const orbits = [
-    { radius: 46, duration: 3.2, delay: 0,    color: "#00D4FF", size: 9 },
-    { radius: 46, duration: 3.2, delay: 1.6,  color: "rgba(0,212,255,0.65)", size: 5 },
-    { radius: 80, duration: 5.5, delay: 0,    color: "#a855f7", size: 8 },
-    { radius: 80, duration: 5.5, delay: 2.75, color: "rgba(168,85,247,0.65)", size: 5 },
-    { radius: 118, duration: 9,  delay: 0,    color: "#7AA4FF", size: 7 },
-    { radius: 118, duration: 9,  delay: 4.5,  color: "rgba(122,164,255,0.55)", size: 4 },
-  ];
-
   return (
-    <div className="relative mx-auto" style={{ width: 260, height: 260 }}>
-      {/* Orbit rings */}
-      {[46, 80, 118].map((r) => (
-        <div
-          key={r}
-          style={{
-            position: "absolute",
-            width: r * 2,
-            height: r * 2,
-            top: `calc(50% - ${r}px)`,
-            left: `calc(50% - ${r}px)`,
-            borderRadius: "50%",
-            border: "1px solid rgba(255,255,255,0.12)",
-          }}
-        />
-      ))}
+    <div className="relative mx-auto" style={{ width: "min(100%, 480px)", aspectRatio: "1 / 1" }}>
+      <style>{`
+        @keyframes nbSpin { from { transform: rotateX(${NB_TILT}deg) rotateZ(0deg); } to { transform: rotateX(${NB_TILT}deg) rotateZ(360deg); } }
+        @keyframes nbSpinRev { from { transform: rotateX(${NB_TILT}deg) rotateZ(0deg); } to { transform: rotateX(${NB_TILT}deg) rotateZ(-360deg); } }
+        @keyframes nbUnspin { from { transform: rotateZ(0deg) rotateX(-${NB_TILT}deg); } to { transform: rotateZ(-360deg) rotateX(-${NB_TILT}deg); } }
+        @keyframes nbUnspinRev { from { transform: rotateZ(0deg) rotateX(-${NB_TILT}deg); } to { transform: rotateZ(360deg) rotateX(-${NB_TILT}deg); } }
+        @keyframes nbBob { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-3.5%) rotate(1deg); } }
+        @keyframes nbPool { 0%,100% { opacity: 0.6; transform: translate(-50%,-50%) scale(0.94); } 50% { opacity: 1; transform: translate(-50%,-50%) scale(1.06); } }
+        @keyframes nbBlink { 0%,90%,100% { transform: scaleY(1); } 94% { transform: scaleY(0.08); } }
+        @keyframes nbGlance { 0%,22%,100% { transform: translateX(0); } 30%,50% { transform: translateX(7px); } 58%,78% { transform: translateX(-7px); } }
+        .nb-ring { animation: nbSpin var(--nb-s) linear infinite; }
+        .nb-ring.rev { animation-name: nbSpinRev; }
+        .nb-chip { animation: nbUnspin var(--nb-s) linear infinite; }
+        .nb-ring.rev .nb-chip { animation-name: nbUnspinRev; }
+        .nb-ball { animation: nbBob 5s ease-in-out infinite; }
+        .nb-pool { animation: nbPool 5s ease-in-out infinite; }
+        .nb-eye { animation: nbBlink 4.6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+        .nb-eye.r { animation-delay: 0.04s; }
+        .nb-face { animation: nbGlance 9s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .nb-ring, .nb-chip, .nb-ball, .nb-pool, .nb-eye, .nb-face { animation: none !important; } }
+      `}</style>
 
-      {/* Outer ambient glow */}
+      {/* wide, soft ambience behind everything */}
       <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          borderRadius: "50%",
-          background:
-            "radial-gradient(circle, rgba(0,85,255,0.14) 0%, rgba(123,47,190,0.09) 55%, transparent 75%)",
-          pointerEvents: "none",
-        }}
+        className="absolute pointer-events-none"
+        style={{ inset: "2%", borderRadius: "50%", background: "radial-gradient(circle, rgba(70,110,255,0.20) 0%, rgba(123,47,190,0.10) 48%, transparent 70%)" }}
       />
 
-      {/* Center glow */}
+      {/* pool of light the companion floats above */}
       <div
+        className="nb-pool absolute pointer-events-none"
         style={{
-          position: "absolute",
-          top: "50%",
           left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: 22,
-          height: 22,
+          top: "76%",
+          width: "58%",
+          height: "13%",
           borderRadius: "50%",
-          background: "radial-gradient(circle, #00D4FF 0%, #7B2FBE 65%, transparent 100%)",
-          boxShadow: "0 0 36px rgba(0,212,255,0.85), 0 0 72px rgba(123,47,190,0.45)",
+          transform: "translate(-50%,-50%)",
+          background: "radial-gradient(ellipse at center, rgba(150,210,255,0.55) 0%, rgba(70,130,255,0.25) 42%, transparent 72%)",
+          filter: "blur(10px)",
         }}
       />
 
-      {/* Particles */}
-      {orbits.map((o, i) => (
-        <OrbitParticle key={i} {...o} />
-      ))}
+      {/* the 3D scene: rings + labels + orb share one depth space */}
+      <div className="absolute inset-0" style={{ perspective: "1100px", transformStyle: "preserve-3d" }}>
+        <div className="absolute inset-0" style={{ transformStyle: "preserve-3d" }}>
+          {/* rings, centred just below the orb's middle */}
+          {NB_RINGS.map((r) => (
+            <div
+              key={r.size}
+              className={`absolute nb-ring ${r.reverse ? "rev" : ""}`}
+              style={{
+                left: `${50 - r.size / 2}%`,
+                top: `${55 - r.size / 2}%`,
+                width: `${r.size}%`,
+                height: `${r.size}%`,
+                transformStyle: "preserve-3d",
+                ["--nb-s" as string]: `${r.seconds}s`,
+              } as CSSProperties}
+            >
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{ border: "1px solid rgba(160,190,255,0.20)", boxShadow: "0 0 24px rgba(90,140,255,0.10), inset 0 0 24px rgba(90,140,255,0.08)" }}
+              />
+              {r.labels.map((l) => (
+                <div
+                  key={l.t}
+                  className="absolute"
+                  style={{
+                    left: `${50 + 50 * Math.sin((l.deg * Math.PI) / 180)}%`,
+                    top: `${50 - 50 * Math.cos((l.deg * Math.PI) / 180)}%`,
+                    transform: "translate(-50%, -50%)",
+                    transformStyle: "preserve-3d",
+                  }}
+                >
+                  <span
+                    className="nb-chip inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3.5 py-1.5"
+                    style={{
+                      ["--nb-s" as string]: `${r.seconds}s`,
+                      fontFamily: SG,
+                      fontSize: "0.68rem",
+                      fontWeight: 600,
+                      letterSpacing: "0.14em",
+                      textTransform: "uppercase",
+                      color: "rgba(255,255,255,0.92)",
+                      background: "linear-gradient(145deg, rgba(34,40,78,0.92) 0%, rgba(11,13,30,0.94) 100%)",
+                      border: "1px solid rgba(255,255,255,0.16)",
+                      boxShadow: `0 8px 26px rgba(0,0,0,0.5), 0 0 18px ${l.c}38, inset 0 1px 0 rgba(255,255,255,0.10)`,
+                    } as CSSProperties}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: l.c, boxShadow: `0 0 8px ${l.c}` }} />
+                    {l.t}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ))}
+
+          {/* the companion */}
+          <div
+            className="absolute"
+            style={{ left: "50%", top: "45%", width: "46%", aspectRatio: "480 / 540", transform: "translate(-50%, -50%)" }}
+          >
+            <div className="nb-ball absolute inset-0">
+              <Image
+                src="/images/why-we-exist/orbhand-ball15.webp"
+                alt="The Noorva companion"
+                fill
+                quality={100}
+                sizes="(max-width: 768px) 60vw, 300px"
+                className="object-contain"
+              />
+              {/* the face, drawn in the artwork's coordinates (the ball's crop of it) */}
+              <svg aria-hidden className="absolute inset-0 w-full h-full pointer-events-none" viewBox="690 70 480 540">
+                <defs>
+                  <filter id="nbFaceGlow" x="-30%" y="-60%" width="160%" height="220%">
+                    <feGaussianBlur stdDeviation="6" result="b" />
+                    <feMerge>
+                      <feMergeNode in="b" />
+                      <feMergeNode in="b" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <g className="nb-face">
+                  <g filter="url(#nbFaceGlow)" fill="none" stroke="#e9fcff" strokeWidth="7" strokeLinecap="round">
+                    <g className="nb-eye">
+                      <path d="M941 270 A30.5 32 0 0 1 1002 270" />
+                    </g>
+                    <g className="nb-eye r">
+                      <path d="M1041 270 A24 32 0 0 1 1089 270" />
+                    </g>
+                    <path d="M984 306 Q1018 359 1052 306">
+                      <animate
+                        attributeName="d"
+                        dur="4.2s"
+                        repeatCount="indefinite"
+                        calcMode="spline"
+                        keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1"
+                        values="M984 306 Q1018 359 1052 306;M979 304 Q1018 376 1057 304;M984 306 Q1018 359 1052 306;M988 307 Q1018 346 1048 307;M984 306 Q1018 359 1052 306"
+                      />
+                    </path>
+                  </g>
+                </g>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -214,6 +320,97 @@ function RingHalf({ front }: { front: boolean }) {
 
 // Podium size relative to the artwork (1 = original).
 const PODIUM_SCALE = 0.75;
+
+/* ── The About panel's backdrop: the city plaza artwork, with the spinning
+   globe (and its ring) standing on the plaza's podium. ──
+
+   The artwork is shown with an `object-fit: cover` crop, so anything placed "on"
+   it has to be placed in the picture's own coordinates. The inner box below is
+   the picture's shape, sized to cover the panel (container query units) and
+   centred, so percentages inside it are percentages of the picture and the globe
+   stays on the podium at every screen size. */
+const CITY_W = 1672;
+const CITY_H = 941;
+// Where the podium's top face sits in the artwork, and how big the globe is.
+const PODIUM = { x: 53.6, y: 73.4 }; // % of the picture
+const GLOBE_W = 16.5; // globe diameter, % of the picture's width
+const BALL = { x: 613 / 1201, y: 525 / 1309, w: 0.558 }; // the ball inside the 1201×1309 globe artwork
+
+function AboutCityBackdrop() {
+  const asm = GLOBE_W / BALL.w; // width of the whole globe assembly, % of the picture
+  // Centre of the globe: one radius above the podium top, hovering a little.
+  const cy = PODIUM.y - ((GLOBE_W / 2) * CITY_W) / CITY_H - 2.2;
+  return (
+    <div className="about-bg absolute inset-0 overflow-hidden pointer-events-none" style={{ containerType: "size" }} aria-hidden>
+      <div
+        className="absolute"
+        style={{
+          left: "50%",
+          top: "50%",
+          width: `max(100cqw, calc(100cqh * ${CITY_W / CITY_H}))`,
+          aspectRatio: `${CITY_W} / ${CITY_H}`,
+          transform: "translate(-50%, -50%)",
+        }}
+      >
+        {/* Everything that is "in" the picture dives together: the camera flies toward the
+            globe (the focal point is the globe's centre), see JourneyController. */}
+        <div data-zoom-layer data-keep-origin data-zoom-blur="7" className="absolute inset-0" style={{ transformOrigin: `${PODIUM.x}% ${cy}%` }}>
+        <Image src="/images/about/about_city_dim.webp" alt="" fill priority sizes="100vw" className="object-cover" />
+
+        {/* a soft pool of light on the podium under the globe */}
+        <div
+          className="absolute"
+          style={{
+            left: `${PODIUM.x}%`,
+            top: `${PODIUM.y - 1}%`,
+            width: "24%",
+            aspectRatio: "6 / 1",
+            transform: "translate(-50%, -50%)",
+            borderRadius: "50%",
+            background: "radial-gradient(ellipse at center, rgba(120,190,255,0.38) 0%, rgba(80,130,255,0.14) 45%, transparent 72%)",
+          }}
+        />
+
+        {/* the globe + ring, centred on its ball */}
+        <div
+          className="absolute"
+          style={{
+            left: `${PODIUM.x}%`,
+            top: `${cy}%`,
+            width: `${asm}%`,
+            aspectRatio: "1201 / 1309",
+            transform: `translate(${-BALL.x * 100}%, ${-BALL.y * 100}%)`,
+          }}
+        >
+          <RingHalf front={false} />
+          <div
+            className="absolute"
+            style={{
+              left: "23.15%",
+              top: "14.51%",
+              width: "55.8%",
+              aspectRatio: "1",
+              borderRadius: "50%",
+            }}
+          >
+            <div className="absolute inset-0 overflow-hidden" style={{ borderRadius: "50%" }}>
+              <AboutGlobe />
+            </div>
+          </div>
+          <RingHalf front />
+        </div>
+        </div>
+      </div>
+
+      {/* keeps the title and intro legible over the bright sky */}
+      <div
+        className="absolute inset-0"
+        style={{ background: "linear-gradient(to bottom, rgba(2,2,8,0.62) 0%, rgba(2,2,8,0.3) 34%, rgba(2,2,8,0) 55%, rgba(2,2,8,0.25) 100%)" }}
+      />
+
+    </div>
+  );
+}
 
 function AboutMDSSphere() {
   // Vertical: starts below the ring, fades out at the bottom. Horizontal:
@@ -681,10 +878,10 @@ function VisionWorld() {
 /* ── The Vision artwork: a lit Earth with a futuristic city ────────────
    One transparent picture (1536x1024) whose edges melt into the starfield.
    Two of the hover-craft are cut out as their own layers so they can fly
-   about on their own. Everything else moves too, but gently: the whole scene
-   floats and breathes, a band of light sweeps across the planet and city, the
-   sun on the rim pulses, the atmosphere glows, and lights twinkle over the
-   continents and skyline. Only transform/opacity animate; reduced-motion
+   about on their own. Everything else moves too: the whole scene floats and
+   breathes, comets of light run along the glowing orbit ribbons, a hologram
+   ripple spreads from the city's base, the sun on the rim pulses, the
+   atmosphere glows, and lights twinkle over the continents and skyline. Only transform/opacity animate; reduced-motion
    users get the still picture. */
 const EARTH = (name: string) => `/images/why-we-exist/vision-earth-${name}.webp`;
 const EARTH_SUN = { x: 1110, y: 190 };
@@ -695,6 +892,18 @@ const EARTH_GLINTS: [number, number, number, number][] = [
   [1145, 625, 1.5, 4], [482, 640, 3.4, 4], [880, 702, 2.0, 3.5], [1105, 840, 0.9, 3.5],
   [420, 780, 2.8, 3.5], [1260, 790, 1.3, 3.5],
 ];
+// Orbit ribbons in the artwork (traced from the picture) that comets of light run along.
+const EARTH_RIBBON =
+  "M780 593 L810 590 L840 586 L870 582 L900 579 L930 574 L960 570 L990 567 L1020 560 L1050 556 L1080 553 L1110 546 L1140 542 L1170 539 L1200 536 L1230 530 L1260 525 L1290 518 L1320 512 L1350 504 L1380 494 L1410 482 L1440 470 L1462 448 L1462 415 L1440 388 L1400 365 L1350 347 L1300 335";
+const EARTH_LOOP = "M528 232 C580 208 680 204 718 222 C690 244 590 254 528 232 Z";
+// d: path, dur: seconds per lap, at: how far round the lap it starts (0-1), r: head radius,
+// c: head colour, tail: number of trailing dots.
+const EARTH_COMETS = [
+  { d: EARTH_RIBBON, dur: 6.5, at: 0, r: 7, c: "#f1d6ff", tail: 9 },
+  { d: EARTH_RIBBON, dur: 6.5, at: 0.5, r: 6, c: "#d6ecff", tail: 8 },
+  { d: EARTH_LOOP, dur: 4.2, at: 0.1, r: 5, c: "#c9f0ff", tail: 8 },
+];
+
 // Hover-craft cut out as layers: how far each cruises (artwork px), and how fast.
 const EARTH_CRAFT = [
   { name: "shipB", dx: 46, dy: -10, dur: 7.5, delay: 0 },
@@ -761,35 +970,45 @@ function VisionEarth() {
 
         {!reduce && (
           <>
-            {/* a band of light sweeping across the planet and city, clipped to
-                the artwork's own shape so it never spills onto the page */}
-            <div
-              aria-hidden
-              className="absolute inset-0 overflow-hidden pointer-events-none"
-              style={{
-                maskImage: `url(${EARTH("base")})`,
-                maskSize: "100% 100%",
-                maskRepeat: "no-repeat",
-                WebkitMaskImage: `url(${EARTH("base")})`,
-                WebkitMaskSize: "100% 100%",
-                WebkitMaskRepeat: "no-repeat",
-                mixBlendMode: "screen",
-              } as CSSProperties}
-            >
-              <motion.div
-                className="absolute top-[-10%] bottom-[-10%]"
-                style={{
-                  left: 0,
-                  width: "26%",
-                  background: "linear-gradient(100deg, transparent 0%, rgba(150,200,255,0.0) 20%, rgba(190,225,255,0.5) 50%, rgba(150,200,255,0.0) 80%, transparent 100%)",
-                  filter: "blur(6px)",
-                  skewX: -14,
-                }}
-                initial={{ x: "-140%" }}
-                animate={{ x: ["-140%", "460%", "460%"] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", times: [0, 0.7, 1] }}
-              />
-            </div>
+            {/* comets of light running along the orbit ribbons, each trailing a
+                fading tail, plus a hologram ripple spreading from the city's base */}
+            <svg aria-hidden className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1536 1024" style={{ mixBlendMode: "screen" }}>
+              <defs>
+                <radialGradient id="earthComet">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+                  <stop offset="45%" stopColor="#d9c4ff" stopOpacity="0.7" />
+                  <stop offset="100%" stopColor="#8a5cff" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+              {[0, 3].map((d) => (
+                <ellipse key={d} cx="770" cy="850" rx="120" ry="22" fill="none" stroke="rgba(120,200,255,0.55)" strokeWidth="2">
+                  <animate attributeName="rx" values="120;690" dur="6s" begin={`${d}s`} repeatCount="indefinite" />
+                  <animate attributeName="ry" values="22;120" dur="6s" begin={`${d}s`} repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0;0.7;0" keyTimes="0;0.2;1" dur="6s" begin={`${d}s`} repeatCount="indefinite" />
+                </ellipse>
+              ))}
+              {EARTH_COMETS.map((c, ci) =>
+                Array.from({ length: c.tail + 1 }, (_, k) => {
+                  const lag = c.dur * 0.012;
+                  const begin = -(c.at * c.dur + (c.tail - k) * lag);
+                  const head = k === 0;
+                  const r = head ? c.r : Math.max(1.2, c.r * (1 - k / (c.tail + 1)) * 0.8);
+                  return (
+                    <circle key={`${ci}-${k}`} r={r * (head ? 2.4 : 1.4)} fill={head ? "url(#earthComet)" : c.c} opacity="0">
+                      <animateMotion path={c.d} dur={`${c.dur}s`} begin={`${begin}s`} repeatCount="indefinite" />
+                      <animate
+                        attributeName="opacity"
+                        values={`0;${head ? 1 : (1 - k / (c.tail + 1)) * 0.75};${head ? 1 : (1 - k / (c.tail + 1)) * 0.75};0`}
+                        keyTimes="0;0.06;0.9;1"
+                        dur={`${c.dur}s`}
+                        begin={`${begin}s`}
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                  );
+                })
+              )}
+            </svg>
 
             {/* the sun catching the planet's rim */}
             <motion.div
@@ -835,10 +1054,13 @@ const VISION_TWINKLES: [number, number, number][] = [
 
 /* ─── Full expanded "About MDS" content ──────────────────────────────── */
 
-export function AboutMDSFullContent() {
+export function AboutMDSFullContent({ scene = false }: { scene?: boolean }) {
+  // `scene`: the About header is a full-width scene (city backdrop, globe on the
+  // podium) — the homepage; elsewhere the globe sits in the page flow.
   return (
-    <div className="relative max-w-6xl mx-auto">
+    <div className="relative max-w-6xl mx-auto hrow">
 
+        <Slide label="About MDS" className={scene ? "about-scene" : ""} bg={scene ? <AboutCityBackdrop /> : undefined}>
         {/* ── Header ── */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -877,21 +1099,24 @@ export function AboutMDSFullContent() {
           </p>
         </motion.div>
 
-        {/* Rotating globe */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.9, ease: EASE }}
-          className="mb-10 md:mb-14"
-        >
-          <AboutMDSSphere />
-        </motion.div>
-
+        {/* Rotating globe (in the journey it lives on the podium in the backdrop) */}
+        {!scene && (
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.9, ease: EASE }}
+            className="mb-10 md:mb-14"
+          >
+            <AboutMDSSphere />
+          </motion.div>
+        )}
+        </Slide>
         {/* ══════════════════════════════════════════════════════════════
             PREMIUM BODY — replaces original 4-paragraph block
         ══════════════════════════════════════════════════════════════ */}
 
+        <Slide label="Why We Exist">
         {/* 2 ── Why We Exist */}
         <motion.div
           initial={{ opacity: 0, y: 28 }}
@@ -1016,23 +1241,24 @@ export function AboutMDSFullContent() {
             </div>
           </motion.div>
         </motion.div>
-
-        <div className="my-12 md:my-16" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
+        </Slide>
+        <div className="hdivider my-12 md:my-16" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
 
         {/* 2a ── The 3 Core Values, between Why We Exist and what MDS is building */}
-        <div className="-mx-6 md:-mx-10">
+        <div className="-mx-6 md:-mx-10 hrow">
           <StorySection />
         </div>
 
-        <div className="my-12 md:my-16" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
+        <div className="hdivider my-12 md:my-16" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
 
+        <Slide label="Humanized AI">
         {/* 2b ── Personal Humanized AI — what MDS is doing today */}
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, ease: EASE }}
-          className="mb-14 md:mb-18 text-left"
+          className="mb-14 md:mb-18 text-left hstatement"
         >
           <span
             style={{
@@ -1077,289 +1303,391 @@ export function AboutMDSFullContent() {
             life.
           </BodyP>
         </motion.div>
+        </Slide>
+        <div className="hdivider my-12 md:my-16" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
 
-        <div className="my-12 md:my-16" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
-
+        <Slide label="Noorva">
         {/* 3 ── The Flagship — Noorva */}
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, ease: EASE }}
-          className="mb-14 md:mb-18 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-14 items-center"
+          className="mb-14 md:mb-18 max-w-5xl mx-auto text-center"
         >
-          {/* Orbit visual */}
-          <div className="flex items-center justify-center order-2 md:order-1">
-            <NoorvaOrbit />
-          </div>
+          <motion.span
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
+            style={{
+              fontFamily: SG,
+              fontSize: "1rem",
+              letterSpacing: "0.48em",
+              color: "rgba(168,85,247,0.65)",
+              textTransform: "uppercase" as const,
+              display: "block",
+              marginBottom: "0.75rem",
+            }}
+          >
+            The Flagship
+          </motion.span>
 
-          {/* Text */}
-          <div className="order-1 md:order-2">
-            <motion.span
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
+          <motion.h3
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.9, delay: 0.1, ease: EASE }}
+            style={{
+              fontFamily: NM,
+              fontSize: "clamp(1.6rem, 3.2vw, 2.8rem)",
+              lineHeight: 1.15,
+              letterSpacing: "0.01em",
+              marginBottom: "1.25rem",
+              fontWeight: 700,
+            }}
+          >
+            <span style={{ color: "rgba(255,255,255,0.93)" }}>Noorva Companion —</span>{" "}
+            <br className="hidden md:block" />
+            <span
               style={{
-                fontFamily: SG,
-                fontSize: "1rem",
-                letterSpacing: "0.48em",
-                color: "rgba(168,85,247,0.65)",
-                textTransform: "uppercase" as const,
-                display: "block",
-                marginBottom: "0.75rem",
+                background: "linear-gradient(135deg, #a855f7 0%, #7B2FBE 50%, #00D4FF 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
               }}
             >
-              The Flagship
-            </motion.span>
+              your personal lifestyle companion.
+            </span>
+          </motion.h3>
 
-            <motion.h3
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.9, delay: 0.1, ease: EASE }}
-              style={{
-                fontFamily: NM,
-                fontSize: "clamp(1.35rem, 2.6vw, 2.3rem)",
-                lineHeight: 1.18,
-                letterSpacing: "0.01em",
-                marginBottom: "1rem",
-                fontWeight: 700,
-              }}
-            >
-              <span style={{ color: "rgba(255,255,255,0.93)" }}>Noorva Companion —&nbsp;</span>
-              <span
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.85, delay: 0.18, ease: EASE }}
+            className="mx-auto"
+            style={{
+              fontFamily: SG,
+              fontSize: "clamp(0.92rem, 1.2vw, 1.05rem)",
+              lineHeight: 1.8,
+              color: "rgba(255,255,255,0.88)",
+              maxWidth: 740,
+            }}
+          >
+            At the center of the Noorva Ecosystem is Noorva Companion, MDS&apos;s flagship product
+            and personal lifestyle companion. Noorva Companion is designed to help people navigate:
+          </motion.p>
+
+          {/* What it helps with */}
+          <div className="mt-8 md:mt-10 flex flex-wrap justify-center gap-3 md:gap-4 max-w-4xl mx-auto">
+            {[
+              { t: "Daily life", Icon: Sun, c: "#FBBF24" },
+              { t: "Relationships", Icon: Heart, c: "#F472B6" },
+              { t: "Personal growth", Icon: Sprout, c: "#4ADE80" },
+              { t: "Productivity", Icon: Rocket, c: "#A78BFA" },
+              { t: "Wellbeing", Icon: Activity, c: "#2DD4BF" },
+              { t: "Learning", Icon: GraduationCap, c: "#00D4FF" },
+              { t: "Decision-making", Icon: Scale, c: "#7AA4FF" },
+            ].map(({ t, Icon, c }, i) => (
+              <motion.div
+                key={t}
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.7, delay: 0.25 + i * 0.06, ease: EASE }}
+                className="flex w-[calc(50%-0.375rem)] sm:w-[calc(25%-0.75rem)] flex-col items-center gap-3 rounded-2xl px-4 py-5 transition-transform duration-500 hover:-translate-y-1"
                 style={{
-                  background:
-                    "linear-gradient(135deg, #a855f7 0%, #7B2FBE 50%, #00D4FF 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
+                  background: "linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",
+                  border: "1px solid rgba(255,255,255,0.09)",
                 }}
               >
-                your personal lifestyle companion.
-              </span>
-            </motion.h3>
-
-            <motion.p
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.85, delay: 0.18, ease: EASE }}
-              style={{
-                fontFamily: SG,
-                fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
-                lineHeight: 1.8,
-                color: "#FFFFFF",
-              }}
-              className="text-left md:text-justify"
-            >
-              At the center of the Noorva Ecosystem is Noorva Companion, MDS&apos;s flagship product
-              and personal lifestyle companion. Noorva Companion is designed to help people navigate
-              daily life, relationships, personal growth, productivity, wellbeing, learning, and
-              decision-making through deeply personalized and emotionally aware interactions.
-            </motion.p>
-
-            <BodyP delay={0.26} style={{ marginTop: "1rem" }}>
-              Our long-term vision is to create the world&apos;s most human-centered AI ecosystem,
-              one that enables millions of people to form meaningful relationships with AI that
-              feel natural, trustworthy, and genuinely helpful.
-            </BodyP>
+                <span
+                  className="flex h-11 w-11 items-center justify-center rounded-xl"
+                  style={{ background: `${c}1f`, border: `1px solid ${c}44`, color: c }}
+                >
+                  <Icon className="size-5" strokeWidth={1.8} />
+                </span>
+                <span
+                  style={{
+                    fontFamily: SG,
+                    fontSize: "0.88rem",
+                    fontWeight: 500,
+                    letterSpacing: "0.02em",
+                    color: "rgba(255,255,255,0.9)",
+                  }}
+                >
+                  {t}
+                </span>
+              </motion.div>
+            ))}
           </div>
 
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.85, delay: 0.6, ease: EASE }}
+            className="mx-auto mt-6"
+            style={{
+              fontFamily: SG,
+              fontSize: "clamp(0.92rem, 1.2vw, 1.05rem)",
+              lineHeight: 1.8,
+              color: "rgba(255,255,255,0.88)",
+              maxWidth: 740,
+            }}
+          >
+            …through deeply personalized and emotionally aware interactions.
+          </motion.p>
+
+          {/* The long-term vision */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.85, delay: 0.7, ease: EASE }}
+            className="relative mx-auto mt-10 md:mt-12 overflow-hidden rounded-2xl px-6 py-6 md:px-9 md:py-7 text-left"
+            style={{
+              maxWidth: 820,
+              background: "linear-gradient(135deg, rgba(168,85,247,0.10) 0%, rgba(0,212,255,0.06) 100%)",
+              border: "1px solid rgba(255,255,255,0.10)",
+            }}
+          >
+            <span
+              className="absolute left-0 top-0 h-full w-[3px]"
+              style={{ background: "linear-gradient(to bottom, #a855f7, #00D4FF)" }}
+            />
+            <span
+              style={{
+                fontFamily: SG,
+                fontSize: "0.72rem",
+                letterSpacing: "0.4em",
+                color: "rgba(0,212,255,0.7)",
+                textTransform: "uppercase" as const,
+                display: "block",
+                marginBottom: "0.6rem",
+              }}
+            >
+              Long-term vision
+            </span>
+            <p
+              style={{
+                fontFamily: SG,
+                fontSize: "clamp(0.95rem, 1.3vw, 1.12rem)",
+                lineHeight: 1.75,
+                color: "rgba(255,255,255,0.92)",
+              }}
+            >
+              To create the world&apos;s most human-centered AI ecosystem, one that enables millions of
+              people to form meaningful relationships with AI that feel natural, trustworthy, and
+              genuinely helpful.
+            </p>
+          </motion.div>
         </motion.div>
+        </Slide>
+        <div className="hdivider my-12 md:my-16" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
 
-        <div className="my-12 md:my-16" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
-
+        <Slide label="Noorva Ecosystem">
         {/* 4 ── How It Works */}
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, ease: EASE }}
-          className="mb-14 md:mb-18 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-14 items-center"
+          className="mb-14 md:mb-18 max-w-5xl mx-auto text-center"
         >
-          {/* Left — text */}
-          <div>
-            <motion.span
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
+          <motion.span
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
+            style={{
+              fontFamily: SG,
+              fontSize: "1rem",
+              letterSpacing: "0.48em",
+              color: "rgba(122,164,255,0.60)",
+              textTransform: "uppercase" as const,
+              display: "block",
+              marginBottom: "0.75rem",
+            }}
+          >
+            The Noorva Ecosystem
+          </motion.span>
+
+          <motion.h3
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.9, delay: 0.1, ease: EASE }}
+            style={{
+              fontFamily: NM,
+              fontSize: "clamp(1.6rem, 3.2vw, 2.8rem)",
+              lineHeight: 1.15,
+              letterSpacing: "0.01em",
+              marginBottom: "1.25rem",
+              fontWeight: 700,
+            }}
+          >
+            <span style={{ color: "rgba(255,255,255,0.92)" }}>A new category of </span>
+            <span
+              style={{
+                background: "linear-gradient(135deg, #7AA4FF 0%, #00D4FF 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              human-centered AI.
+            </span>
+          </motion.h3>
+
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.85, delay: 0.2, ease: EASE }}
+            className="mx-auto"
+            style={{
+              fontFamily: SG,
+              fontSize: "clamp(0.92rem, 1.2vw, 1.05rem)",
+              lineHeight: 1.8,
+              color: "rgba(255,255,255,0.88)",
+              maxWidth: 760,
+            }}
+          >
+            To achieve this, MDS is developing the Noorva Ecosystem, a new category of
+            human-centered AI powered by Emotional AI, Affective AI, and our proprietary
+            Human-centered AI technologies. These technologies are designed to understand
+            context, emotions, behaviors, preferences, and personal experiences, enabling more
+            natural, intuitive, and emotionally intelligent interactions in a way No AI Technology did before.
+          </motion.p>
+
+          {/* Powered by — three technology cards */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.25, ease: EASE }}
+            className="mt-10 md:mt-12"
+          >
+            <span
               style={{
                 fontFamily: SG,
-                fontSize: "1rem",
+                fontSize: "0.8rem",
                 letterSpacing: "0.48em",
-                color: "rgba(122,164,255,0.60)",
+                color: "rgba(168,85,247,0.7)",
                 textTransform: "uppercase" as const,
                 display: "block",
-                marginBottom: "0.75rem",
+                marginBottom: "1rem",
               }}
             >
-              The Noorva Ecosystem
-            </motion.span>
-
-            <motion.h3
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.9, delay: 0.1, ease: EASE }}
-              style={{
-                fontFamily: NM,
-                fontSize: "clamp(1.3rem, 2.4vw, 2.1rem)",
-                lineHeight: 1.2,
-                letterSpacing: "0.01em",
-                marginBottom: "1.25rem",
-                fontWeight: 700,
-              }}
-            >
-              <span style={{ color: "rgba(255,255,255,0.92)" }}>
-                A new category of{" "}
-              </span>
-              <span
-                style={{
-                  background: "linear-gradient(135deg, #7AA4FF 0%, #00D4FF 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                human-centered AI.
-              </span>
-            </motion.h3>
-
-            <motion.p
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.85, delay: 0.2, ease: EASE }}
-              style={{
-                fontFamily: SG,
-                fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
-                lineHeight: 1.8,
-                color: "#FFFFFF",
-              }}
-              className="text-left md:text-justify"
-            >
-              To achieve this, MDS is developing the Noorva Ecosystem, a new category of
-              human-centered AI powered by Emotional AI, Affective AI, and our proprietary
-              Human-centered AI technologies. These technologies are designed to understand
-              context, emotions, behaviors, preferences, and personal experiences, enabling more
-              natural, intuitive, and emotionally intelligent interactions in a way No AI Technology did before.
-            </motion.p>
-
-            {/* The three technologies and what they understand */}
-            <div className="flex flex-col items-center md:items-start gap-6 mt-8">
-              {[
-                {
-                  label: "Powered by",
-                  items: ["Emotional AI", "Affective AI", "MDS's Human-Centered AI"],
-                },
-                {
-                  label: "Understands",
-                  items: ["Context", "Emotions", "Behaviors", "Preferences", "Personal Experiences"],
-                },
-              ].map((group, g, groups) => (
-                <motion.div
-                  key={group.label}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: 0.2 + g * 0.12, ease: EASE }}
-                  className="text-center md:text-left"
-                >
-                  <span
+              Powered by
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
+              {["Emotional AI", "Affective AI", "MDS's Human-Centered AI"].map((t, k) => {
+                const c = CHIP_COLORS[k % CHIP_COLORS.length];
+                return (
+                  <div
+                    key={t}
+                    className="relative overflow-hidden rounded-2xl px-5 py-5 text-left transition-transform duration-500 hover:-translate-y-1"
                     style={{
-                      fontFamily: SG,
-                      fontSize: "1rem",
-                      letterSpacing: "0.48em",
-                      color: "rgba(168,85,247,0.65)",
-                      textTransform: "uppercase" as const,
-                      display: "block",
-                      marginBottom: "0.75rem",
+                      background: "linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",
+                      border: "1px solid rgba(255,255,255,0.09)",
                     }}
                   >
-                    {group.label}
-                  </span>
-                  <div className="flex flex-wrap justify-center md:justify-start gap-2.5">
-                    {group.items.map((t, k) => {
-                      // One colour per chip, continuing through the second group
-                      // so no two neighbouring chips match.
-                      const offset = groups.slice(0, g).reduce((n, grp) => n + grp.items.length, 0);
-                      const c = CHIP_COLORS[(offset + k) % CHIP_COLORS.length];
-                      return (
-                        <span
-                          key={t}
-                          className="px-4 py-2 rounded-full text-xs font-semibold uppercase"
-                          style={{
-                            fontFamily: SG,
-                            letterSpacing: "0.12em",
-                            color: c,
-                            background: `${c}1c`,
-                            border: `1px solid ${c}66`,
-                            boxShadow: `0 0 18px ${c}22, inset 0 1px 0 ${c}22`,
-                            backdropFilter: "blur(14px) saturate(150%)",
-                            WebkitBackdropFilter: "blur(14px) saturate(150%)",
-                          }}
-                        >
-                          {t}
-                        </span>
-                      );
-                    })}
+                    <span
+                      className="absolute left-0 top-0 h-[2px] w-full"
+                      style={{ background: `linear-gradient(to right, ${c}, transparent 80%)` }}
+                    />
+                    <span
+                      style={{
+                        fontFamily: SG,
+                        fontSize: "0.7rem",
+                        letterSpacing: "0.3em",
+                        color: c,
+                        display: "block",
+                        marginBottom: "0.6rem",
+                      }}
+                    >
+                      {String(k + 1).padStart(2, "0")}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: NM,
+                        fontSize: "clamp(1rem, 1.3vw, 1.2rem)",
+                        fontWeight: 600,
+                        lineHeight: 1.25,
+                        color: "rgba(255,255,255,0.95)",
+                      }}
+                    >
+                      {t}
+                    </span>
                   </div>
-                </motion.div>
-              ))}
+                );
+              })}
             </div>
-          </div>
+          </motion.div>
 
+          {/* Understands — quiet tags, colour only in the dot */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 1, delay: 0.2, ease: EASE }}
-            className="relative mx-auto w-full max-w-[640px] md:-mr-6"
-            style={{ aspectRatio: "3 / 2" }}
+            transition={{ duration: 0.8, delay: 0.35, ease: EASE }}
+            className="mt-9 md:mt-10"
           >
-            {/* Soft glow behind the artwork (a separate layer so it is not
-                clipped by the mask below). */}
-            <div
-              className="absolute pointer-events-none"
+            <span
               style={{
-                left: "12%",
-                top: "4%",
-                width: "76%",
-                height: "76%",
-                borderRadius: "50%",
-                background:
-                  "radial-gradient(circle, rgba(90,140,255,0.26) 0%, rgba(123,47,190,0.12) 52%, transparent 72%)",
-                filter: "blur(40px)",
-              }}
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                // The wrist runs off the artwork's bottom-right corner and bottom
-                // edge; fade both into the page rather than ending in a flat cut.
-                maskImage: "linear-gradient(to top left, transparent 0%, rgba(0,0,0,0.6) 9%, black 24%), linear-gradient(to top, transparent 0%, rgba(0,0,0,0.5) 5%, black 16%)",
-                maskComposite: "intersect",
-                WebkitMaskImage: "linear-gradient(to top left, transparent 0%, rgba(0,0,0,0.6) 9%, black 24%), linear-gradient(to top, transparent 0%, rgba(0,0,0,0.5) 5%, black 16%)",
-                WebkitMaskComposite: "source-in",
+                fontFamily: SG,
+                fontSize: "0.8rem",
+                letterSpacing: "0.48em",
+                color: "rgba(168,85,247,0.7)",
+                textTransform: "uppercase" as const,
+                display: "block",
+                marginBottom: "1rem",
               }}
             >
-              <VisionWorld />
+              Understands
+            </span>
+            <div className="flex flex-wrap justify-center gap-3 max-w-3xl mx-auto">
+              {["Context", "Emotions", "Behaviors", "Preferences", "Personal Experiences"].map((t, k) => {
+                const c = CHIP_COLORS[(k + 3) % CHIP_COLORS.length];
+                return (
+                  <span
+                    key={t}
+                    className="inline-flex items-center gap-2.5 rounded-xl px-4 py-2.5 transition-transform duration-300 hover:-translate-y-0.5"
+                    style={{
+                      fontFamily: SG,
+                      fontSize: "0.85rem",
+                      fontWeight: 500,
+                      letterSpacing: "0.02em",
+                      color: "rgba(255,255,255,0.82)",
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                    }}
+                  >
+                    <span
+                      className="h-1.5 w-1.5 rounded-full"
+                      style={{ background: c, boxShadow: `0 0 8px ${c}` }}
+                    />
+                    {t}
+                  </span>
+                );
+              })}
             </div>
           </motion.div>
         </motion.div>
+        </Slide>
+        <div className="hdivider my-14 md:my-20" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
 
-        <div className="my-14 md:my-20" style={{ height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.10), transparent)" }} />
-
+        <Slide label="Vision">
         {/* 5 ── Vision */}
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, ease: EASE }}
-          className="mb-14 md:mb-20 relative grid grid-cols-1 md:grid-cols-[0.82fr_1.18fr] gap-4 md:gap-2 items-center"
+          className="mb-14 md:mb-20 relative grid grid-cols-1 md:grid-cols-[0.72fr_1.28fr] gap-4 md:gap-2 items-center"
         >
           {/* Text — sits directly on the page, no card */}
           <div className="relative z-10 order-2 md:order-1 text-left -mt-4 md:mt-0">
@@ -1431,20 +1759,22 @@ export function AboutMDSFullContent() {
 
           {/* The Earth artwork, in its own column, centred on the text. */}
           <div
-            className="relative order-1 md:order-2 mx-auto w-full max-w-[600px] md:max-w-none pointer-events-none"
+            className="relative order-1 md:order-2 mx-auto w-full max-w-[600px] md:max-w-none md:-mr-8 pointer-events-none"
             style={{ aspectRatio: "3 / 2" }}
           >
             <VisionEarth />
           </div>
         </motion.div>
+        </Slide>
 
+        <Slide label="Philosophy">
         {/* 5a ── Alan Kay quote + the innovation philosophy behind it */}
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 1, ease: EASE }}
-          className="mb-10 md:mb-14 text-left"
+          className="mb-10 md:mb-14 text-left hstatement"
         >
           {/* The quote, highlighted through the type alone — no box. Larger
               and brighter than the body, with a soft white glow, the key
@@ -1514,14 +1844,16 @@ export function AboutMDSFullContent() {
             it into reality.
           </BodyP>
         </motion.div>
+        </Slide>
 
+        <Slide label="Next Decade">
         {/* 5b ── The next decade */}
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, ease: EASE }}
-          className="mb-10 md:mb-14 text-left"
+          className="mb-10 md:mb-14 text-left hstatement"
         >
           <span
             style={{
@@ -1596,7 +1928,7 @@ export function AboutMDSFullContent() {
          
           
         </motion.div>
-
+        </Slide>
       </div>
   );
 }
@@ -1605,7 +1937,7 @@ export function AboutMDSFullContent() {
 
 export function WhyWeExistSection() {
   return (
-    <section id="about-mds" className="section-padding relative overflow-hidden scroll-mt-24">
+    <section id="about-mds" className="section-padding relative overflow-hidden scroll-mt-24 hgroup">
       <div className="scene-top-fade" />
       <div className="scene-bottom-fade" />
 

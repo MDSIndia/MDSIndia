@@ -5,10 +5,12 @@ import { PageChrome } from "@/components/layout/PageChrome";
 import { IntroOverlay } from "@/components/Intro/IntroOverlay";
 import { useIntro } from "@/hooks/useIntro";
 import { getLenis } from "@/lib/lenis";
+import { getJourneyAnchor, journeyGoTo } from "@/lib/journey";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { WhyWeExistSection } from "@/components/sections/WhyWeExistSection";
 import { InvestorSection } from "@/components/sections/InvestorSection";
 import { TeamSection } from "@/components/sections/TeamSection";
+import { AdvisorySection } from "@/components/sections/AdvisorySection";
 import { ContactSection } from "@/components/sections/ContactSection";
 
 export default function Home() {
@@ -45,6 +47,13 @@ export default function Home() {
     if (!hash) return;
     const id = hash.slice(1);
     const timer = window.setTimeout(() => {
+      // During the journey the page never moves — its sections are panels in a
+      // fixed scene — so a link's target is a point on the scroll timeline.
+      const journeyTop = getJourneyAnchor(id);
+      if (journeyTop !== null) {
+        if (!journeyGoTo(journeyTop, 2)) window.scrollTo({ top: journeyTop, behavior: "smooth" });
+        return;
+      }
       const el = document.getElementById(id);
       if (!el) return;
       const lenis = getLenis();
@@ -72,6 +81,7 @@ export default function Home() {
           <WhyWeExistSection />
           <InvestorSection />
           <TeamSection />
+          <AdvisorySection />
           <ContactSection />
         </PageChrome>
       )}

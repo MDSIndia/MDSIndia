@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import { useScrollProgress } from "@/hooks/useScrollProgress";
+import { useJourney } from "@/hooks/useJourney";
 
 // Every href is home-anchored ("/#id") rather than a bare "#id" — a
 // bare hash link only scrolls within whatever page you're currently
@@ -19,12 +20,14 @@ const navLinks = [
   { label: "About MDS",  href: "/#about-mds",  id: "about-mds" },
   { label: "Invest",     href: "/#invest",     id: "invest" },
   { label: "Team",       href: "/#team",       id: "team" },
+  { label: "Advisory",   href: "/#advisory",   id: "advisory" },
   { label: "Careers",    href: "/careers",     id: "careers" },
   { label: "Contact",    href: "/#contact",    id: "contact" },
 ];
 
 export function Navbar() {
   const progress = useScrollProgress();
+  const journey = useJourney();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
@@ -34,6 +37,15 @@ export function Navbar() {
   }, [progress]);
 
   useEffect(() => {
+    // During the journey the controller says which section the camera is in.
+    if (journey) {
+      const current = document.documentElement.dataset.jsection;
+      if (current) setActiveSection(current);
+      const onSection = (e: Event) => setActiveSection((e as CustomEvent<string>).detail);
+      window.addEventListener("journey-section", onSection);
+      return () => window.removeEventListener("journey-section", onSection);
+    }
+
     const sectionIds = navLinks.map((l) => l.id);
     const observers: IntersectionObserver[] = [];
 
@@ -51,7 +63,7 @@ export function Navbar() {
     });
 
     return () => observers.forEach((o) => o.disconnect());
-  }, []);
+  }, [journey]);
 
   return (
     <>
@@ -69,7 +81,7 @@ export function Navbar() {
             scrolled ? "opacity-100" : "opacity-0"
           }`}
           style={{
-            background: "rgba(8, 8, 20, 0.55)",
+            background: "rgba(8, 8, 20, 0.95)",
             backdropFilter: "blur(20px) saturate(160%)",
             WebkitBackdropFilter: "blur(20px) saturate(160%)",
             borderBottom: "1px solid rgba(255, 255, 255, 0.10)",
@@ -77,7 +89,7 @@ export function Navbar() {
           }}
         />
 
-        <div className="relative max-w-[1720px] mx-auto px-6 md:px-8 flex items-center justify-between">
+        <div className="relative max-w-[1720px] mx-auto px-5 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Logo */}
           <a href="/#hero" className="flex items-center gap-2.5 group">
             <Image
@@ -92,14 +104,14 @@ export function Navbar() {
           </a>
 
           {/* Desktop Links */}
-          <nav className="hidden md:flex items-center gap-9">
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-9">
             {navLinks.map((link) => {
               const isActive = activeSection === link.id;
               return (
                 <a
                   key={link.label}
                   href={link.href}
-                  className={`relative text-sm font-medium tracking-wide transition-colors duration-300 group py-1${
+                  className={`relative whitespace-nowrap text-sm font-medium tracking-wide transition-colors duration-300 group py-1${
                     link.id === "careers" ? " hidden lg:inline-block" : ""
                   }`}
                   style={{ fontFamily: "var(--font-space-grotesk), Inter, sans-serif", color: isActive ? "#fff" : "rgba(255,255,255,0.55)" }}
@@ -130,7 +142,7 @@ export function Navbar() {
           </nav>
 
           {/* Primary CTA */}
-          <div className="hidden md:flex items-center">
+          <div className="hidden lg:flex items-center">
             <a
               href="https://noorva.ai"
               target="_blank"
@@ -144,7 +156,7 @@ export function Navbar() {
 
           {/* Mobile toggle */}
           <button
-            className="md:hidden flex items-center justify-center rounded-full focus-visible:rounded-full transition-transform duration-300 hover:scale-105"
+            className="lg:hidden flex items-center justify-center rounded-full focus-visible:rounded-full transition-transform duration-300 hover:scale-105"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
             style={{
@@ -183,7 +195,7 @@ export function Navbar() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -12, scale: 0.97 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="md:hidden fixed left-4 right-4 z-[99] rounded-[28px] overflow-hidden"
+            className="lg:hidden fixed left-4 right-4 z-[99] rounded-[28px] overflow-hidden"
             style={{
               top: "5.5rem",
               background: "rgba(10, 10, 24, 0.72)",

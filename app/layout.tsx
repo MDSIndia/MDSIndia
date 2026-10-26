@@ -3,6 +3,7 @@ import { Outfit } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { LenisProvider } from "@/components/providers/LenisProvider";
+import { LiquidTransition } from "@/components/layout/LiquidTransition";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -73,6 +74,7 @@ export default function RootLayout({
         style={{ backgroundColor: "#020208", color: "#ffffff" }}
       >
         <LenisProvider>{children}</LenisProvider>
+        <LiquidTransition />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-DN53L6G5J7"
           strategy="afterInteractive"

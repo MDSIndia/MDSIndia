@@ -5,7 +5,9 @@ import Image from "next/image";
 export function Footer() {
   return (
     <footer
-      className="relative py-12 md:py-16 px-4 sm:px-6 overflow-hidden"
+      data-slide
+      data-label="MDS"
+      className="hfooter relative py-12 md:py-16 px-4 sm:px-6 overflow-hidden"
       style={{
         borderTop: "1px solid rgba(255,255,255,0.12)",
         background: "rgba(255,255,255,0.025)",
@@ -15,7 +17,40 @@ export function Footer() {
     >
       <div className="ambient-glow ambient-glow-cyan w-96 h-48 bottom-0 left-1/2 -translate-x-1/2" />
 
-      <div className="max-w-7xl mx-auto relative">
+      <div className="max-w-7xl mx-auto relative hfooter-inner">
+        {/* Closing statement — only shown on the horizontal homepage, where the
+            footer is the last full-screen slide. */}
+        <div className="hfooter-hero" aria-hidden>
+          <span
+            className="neue-machina block"
+            style={{ fontSize: "clamp(3rem, 8.5vw, 8rem)", lineHeight: 0.95, letterSpacing: "0.01em" }}
+          >
+            Think{" "}
+            <span
+              style={{
+                background: "linear-gradient(135deg, #00D4FF 0%, #7AA4FF 45%, #A855F7 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              Beyond.
+            </span>
+          </span>
+          <span
+            className="block mt-5"
+            style={{
+              fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
+              fontSize: "clamp(0.8rem, 1vw, 0.95rem)",
+              letterSpacing: "0.42em",
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.45)",
+            }}
+          >
+            Human-centered technology for a better future
+          </span>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12 mb-12 md:mb-16">
           {/* Brand */}
           <div className="md:col-span-2">

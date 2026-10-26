@@ -6,6 +6,8 @@ import type { CSSProperties, ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { JourneyController } from "@/components/layout/JourneyController";
+import { JourneyProvider, useJourney } from "@/hooks/useJourney";
 
 const CustomCursor = dynamic(
   () => import("@/components/shared/CustomCursor").then((m) => ({ default: m.CustomCursor })),
@@ -93,20 +95,43 @@ function useReloadGoesHome() {
   }, [pathname, router]);
 }
 
+function Chrome({ children }: { children: ReactNode }) {
+  const journey = useJourney();
+  return (
+    <>
+      <CustomCursor />
+      {/* slow, drifting colour that gives the whole site a flowing, liquid backdrop */}
+      <div className="liquid-flow" aria-hidden>
+        <span className="liquid-blob liquid-blob-a" />
+        <span className="liquid-blob liquid-blob-b" />
+        
+      </div>
+      <GlobalStars />
+      <SceneCanvas />
+
+      <div className="hpage relative min-h-screen" style={{ zIndex: 1 }}>
+        <Navbar />
+        {/* On the homepage .hscroll is the fixed 3D stage the journey plays in
+            (JourneyController places every panel in it); everywhere else it is
+            just a normal stacked page. */}
+        <div className="hscroll">
+          <main className="hmain">{children}</main>
+          <Footer />
+        </div>
+        {/* The journey's timeline: its height is the scroll distance. */}
+        {journey && <div id="journey-spacer" aria-hidden />}
+        <JourneyController />
+      </div>
+    </>
+  );
+}
+
 export function PageChrome({ children }: { children: ReactNode }) {
   useReloadGoesHome();
 
   return (
-    <>
-      <CustomCursor />
-      <GlobalStars />
-      <SceneCanvas />
-
-      <div className="relative min-h-screen" style={{ zIndex: 1 }}>
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
-      </div>
-    </>
+    <JourneyProvider>
+      <Chrome>{children}</Chrome>
+    </JourneyProvider>
   );
 }
