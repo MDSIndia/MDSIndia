@@ -102,23 +102,28 @@ const MOBILE_SIZE: [number, number] = [853, 1844];
 // tracking the nearest strand row to row (rather than the single
 // brightest pixel per row) so the trace follows one coherent braid
 // instead of jumping between the river's several bright strands.
-const DESKTOP_FADE: [number, number] = [560, 705];
+const DESKTOP_FADE: [number, number] = [574, 700];
 const MOBILE_FADE: [number, number] = [828, 980];
 
+// Traced along the river's brightest strand (a ridge-follow of the glow, smoothed), so the
+// dots ride the water's own flow rather than drifting onto the banks.
 const DESKTOP_PATH = smoothPath([
-  [1053, 562], [1086, 568], [1098, 574], [1099, 580], [1098, 586],
-  [1122, 592], [1148, 598], [1131, 604], [1143, 610], [1168, 616],
-  [1174, 622], [1169, 628], [1145, 634], [1135, 640], [1130, 646],
-  [1105, 652], [1103, 658], [1128, 664], [1141, 670], [1142, 676],
-  [1145, 682], [1115, 688], [1125, 694], [1095, 700], [1083, 706],
-  [1062, 712], [1051, 718], [1023, 724], [1006, 730], [991, 736],
-  [971, 742], [954, 748], [958, 754], [925, 760], [891, 766],
-  [918, 772], [946, 778], [932, 784], [940, 790], [911, 796],
-  [898, 802], [904, 808], [878, 814], [863, 820], [833, 826],
-  [856, 832], [822, 838], [801, 844], [767, 850], [740, 856],
-  [760, 862], [762, 868], [728, 874], [701, 880], [685, 886],
-  [689, 892], [659, 898], [628, 904], [614, 910], [616, 916],
-  [606, 922], [599, 928], [571, 934],
+  [1100, 574], [1102, 580], [1106, 586], [1111, 592],
+  [1115, 598], [1123, 604], [1132, 610], [1138, 616],
+  [1142, 622], [1142, 628], [1136, 634], [1127, 640],
+  [1120, 646], [1121, 652], [1128, 658], [1139, 664],
+  [1151, 670], [1160, 676], [1163, 682], [1160, 688],
+  [1153, 694], [1142, 700], [1128, 706], [1110, 712],
+  [1091, 718], [1071, 724], [1050, 730], [1030, 736],
+  [1013, 742], [1000, 748], [990, 754], [982, 760],
+  [978, 766], [975, 772], [973, 778], [972, 784],
+  [970, 790], [966, 796], [960, 802], [951, 808],
+  [938, 814], [925, 820], [912, 826], [895, 832],
+  [880, 838], [864, 844], [847, 850], [831, 856],
+  [817, 862], [802, 868], [788, 874], [775, 880],
+  [764, 886], [755, 892], [747, 898], [739, 904],
+  [731, 910], [723, 916], [715, 922], [710, 928],
+  [706, 934],
 ]);
 
 const MOBILE_PATH = smoothPath([
@@ -155,7 +160,7 @@ const SPARK_COUNT = 11;
 // LAP_SECONDS means each spark takes longer to travel the full path,
 // i.e. a slower-looking flow (this is a duration, not a speed, so
 // bigger = slower).
-const LAP_SECONDS = 6.5;
+const LAP_SECONDS = 10;
 
 // A real braided river/light-trail is never one perfectly even string
 // of identical beads — it's several parallel threads of light, each a
@@ -268,7 +273,7 @@ export function HeroRiverFlow({
         {!reducedMotion &&
           Array.from({ length: SPARK_COUNT }).map((_, i) => {
             const sizeJitter = 0.75 + seeded(i, 411) * 0.6;
-            const speedJitter = 0.85 + seeded(i, 412) * 0.3;
+            const speedJitter = 1; // one shared speed: spacing stays even, no bunching or gaps
             const opacity = 0.7 + seeded(i, 413) * 0.3;
             return (
               <ellipse

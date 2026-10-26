@@ -4,9 +4,9 @@ import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { Compass, ArrowUpRight, ChevronDown } from "lucide-react";
 import { Doors } from "@/components/layout/Doors";
 import { HeroCityLife } from "./HeroCityLife";
+import { HeroRiverFlow } from "./HeroRiverFlow";
 
-// object-position of each hero image, as fractions — the city-life canvas uses the same crop.
-const DESKTOP_POS: [number, number] = [0.5, 0.58];
+// object-position of the phone hero image, as fractions — the city-life canvas uses the same crop.
 const MOBILE_POS: [number, number] = [0.6, 0.6];
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -38,13 +38,13 @@ export function HeroSection() {
       <div className="hero-city-zoom absolute inset-0">
       <div className="hero-city-drift absolute inset-0">
       <Image
-        src="/images/hero/hero_desktop_hd.webp"
+        src="/herodesktop.png"
         alt=""
         fill
         priority
         sizes="100vw"
         className="hidden md:block object-cover"
-        style={{ objectPosition: "50% 58%" }}
+        style={{ objectPosition: "50% 78%" }}
       />
       <Image
         src="/images/hero/hero_mobile_hd.webp"
@@ -55,7 +55,8 @@ export function HeroSection() {
         className="block md:hidden object-cover"
         style={{ objectPosition: "60% 60%" }}
       />
-      <HeroCityLife variant="desktop" position={DESKTOP_POS} reducedMotion={!!reducedMotion} className="hidden md:block" />
+      {/* Desktop: the night city on the glowing river — light streaks flow along the water. */}
+      <HeroRiverFlow variant="desktop" reducedMotion={!!reducedMotion} />
       <HeroCityLife variant="mobile" position={MOBILE_POS} reducedMotion={!!reducedMotion} className="block md:hidden" />
       </div>
       </div>
@@ -82,6 +83,16 @@ export function HeroSection() {
         }}
       />
 
+      {/* Phones only: the copy is centred over the busiest part of the picture, so
+          darken that band (and a little above and below it) to keep it legible. */}
+      <div
+        className="absolute inset-0 pointer-events-none md:hidden"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(2,2,8,0.22) 0%, rgba(2,2,8,0.5) 28%, rgba(2,2,8,0.62) 50%, rgba(2,2,8,0.42) 76%, rgba(2,2,8,0.2) 100%)",
+        }}
+      />
+
       {/* Text overlay. The wrapper is what the journey fades and lifts as the camera
           flies into the city (see JourneyController, data-zoom). */}
       <div className="hero-fade relative z-10 w-full">
@@ -103,6 +114,8 @@ export function HeroSection() {
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
+              // (a drop-shadow, not text-shadow: the text is a clipped background)
+              filter: "drop-shadow(0 2px 14px rgba(0,0,0,0.65))",
             }}
           >
             {/* Four deliberate lines on desktop (block spans) so the
@@ -119,8 +132,9 @@ export function HeroSection() {
             className="font-semibold mb-8"
             style={{
               fontFamily: "var(--font-space-grotesk), Inter, sans-serif",
-              fontSize: "clamp(0.9rem, 1.2vw, 1.05rem)",
-              color: "rgba(255,255,255,0.80)",
+              fontSize: "clamp(1rem, 1.2vw, 1.05rem)",
+              color: "rgba(255,255,255,0.95)",
+              textShadow: "0 1px 12px rgba(0,0,0,0.75)",
               letterSpacing: "0.02em",
             }}
           >

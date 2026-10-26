@@ -22,8 +22,8 @@ const team = [
   },
   {
     name: "Rakesh",
-    role: "Chief Technology Officer",
-    short: "CTO",
+    role: "Chief AI Officer",
+    short: "CAIO",
     tagline: "Engineer. Architect. Problem-Solver.",
     description:
       "The technical force behind MDS's vision — turning ambitious ideas into resilient, scalable systems. Rakesh leads engineering with precision and care, building the infrastructure that lets MDS's products perform at the level its mission demands.",

@@ -25,7 +25,9 @@ const advisors = [
       "T-Hub Top 50 Women Achievers, 2022",
       "Past Chairperson, CII Indian Women Network, Telangana (2019–20)",
     ],
-    photo: "/Nandita-avatar.jpg",
+    photo: "/Nandita-full3.jpg",
+    // the whole, uncropped portrait (1168×1347, with a little backdrop added above the head)
+    photoAspect: "1168 / 1497",
     accent: "#4F8CFF",
     glow: "79,140,255",
   },
@@ -108,7 +110,7 @@ export function AdvisorySection() {
               <div className="relative p-2.5 sm:p-3.5 pb-0">
                 <div
                   className="id-card-photo-frame relative w-full overflow-hidden mx-auto"
-                  style={{ aspectRatio: "1 / 1", maxWidth: "88%", border: `1px solid rgba(${member.glow},0.35)` }}
+                  style={{ aspectRatio: member.photoAspect, maxWidth: "88%", border: `1px solid rgba(${member.glow},0.35)` }}
                 >
                   <div className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-[1.07]">
                     <Image
@@ -119,7 +121,7 @@ export function AdvisorySection() {
                       sizes="(max-width: 640px) 80vw, 400px"
                       style={{
                         objectFit: "cover",
-                        objectPosition: "top center",
+                        objectPosition: "center",
                         filter: "contrast(1.05) saturate(1.02) brightness(0.97)",
                       }}
                     />
